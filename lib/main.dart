@@ -7,21 +7,71 @@ class App extends StatelessWidget {
 
   _generateSettings({ int currentDepthLevel = 1, String keyPostfix = '' }) {
     const int maxDepthLevel = 3;
-    return Iterable.generate(10 * currentDepthLevel, (i) {
+    return List.generate(10 * currentDepthLevel, (i) {
       String itemKeyPostfix = '$keyPostfix${keyPostfix.isEmpty ? '' : '_'}$i';
       String itemPostfix = itemKeyPostfix.replaceAll('_', '.');
 
-      return (i % 5 == 0) ? SettingsPattern.listSubscreen(
-          label: 'Настройки $itemPostfix',
-          secondaryText: 'Страница настроек',
-          group: currentDepthLevel > maxDepthLevel ? null : _generateSettings(
-            currentDepthLevel: currentDepthLevel + 1,
-            keyPostfix: itemKeyPostfix
+      return (i % 9 == 0) ? SettingsPattern.dependency(
+        id: 'SETTING$itemKeyPostfix',
+        label: 'Группа $itemPostfix',
+        secondaryText: 'Состояние зависимостей',
+        defaultValue: true,
+        dependent: <SettingsPattern>[
+          SettingsPattern.toggleSwitch(
+            id: 'SETTING$itemKeyPostfix.1',
+            label: 'Зависимая настройка $itemPostfix.1',
+            defaultValue: i % 2 == 0,
+            secondaryText: 'Описание настройки',
+          ),
+          SettingsPattern.listSubscreen(
+            label: 'Зависимая настройка $itemPostfix.2',
+            secondaryText: 'Страница настроек',
+            group: currentDepthLevel > maxDepthLevel ? null : _generateSettings(
+              currentDepthLevel: currentDepthLevel + 1,
+              keyPostfix: itemKeyPostfix
+            )
           )
+        ],
+      ) :
+      (i % 8 == 0 || i % 7 == 0) ? SettingsPattern.section(
+        title: 'Секция $itemPostfix',
+        group: <SettingsPattern>[
+          SettingsPattern.toggleSwitch(
+            id: 'SETTING$itemKeyPostfix.1',
+            label: 'Настройка $itemPostfix.1',
+            defaultValue: i % 2 == 0,
+            secondaryText: 'Описание настройки',
+          ),
+          SettingsPattern.listSubscreen(
+            label: 'Настройки $itemPostfix.2',
+            secondaryText: 'Страница настроек',
+            group: currentDepthLevel > maxDepthLevel ? null : _generateSettings(
+              currentDepthLevel: currentDepthLevel + 1,
+              keyPostfix: itemKeyPostfix
+            )
+          )
+        ],
+        enabled: false
+      ) :
+      (i % 6 == 0) ? SettingsPattern.slider(
+        id: 'SETTING$itemKeyPostfix',
+        label: 'Настройки $itemPostfix',
+        secondaryText: 'Страница настроек',
+        enabled: false
+      ) :
+      (i % 5 == 0) ? SettingsPattern.listSubscreen(
+        label: 'Настройки $itemPostfix',
+        secondaryText: 'Страница настроек',
+        group: currentDepthLevel > maxDepthLevel ? null : _generateSettings(
+          currentDepthLevel: currentDepthLevel + 1,
+          keyPostfix: itemKeyPostfix
+        ),
+        enabled: false
       ) :
       (i % 4 == 0) ? SettingsPattern.multipleChoice(
         id: 'SETTING$itemKeyPostfix',
         label: 'Настройка $itemPostfix',
+        secondaryText: 'Несколько из списка',
         options: [
           SelectionOption(label: 'Опция 1', value: 1),
           SelectionOption(label: 'Опция 2', value: 2),
@@ -29,7 +79,7 @@ class App extends StatelessWidget {
           SelectionOption(label: 'Опция 4', value: 4),
         ],
         defaultValue: [1, 3],
-        secondaryText: 'Несколько из списка',
+        enabled: false
       ) :
       (i % 3 == 0) ? SettingsPattern.singleChoice(
         id: 'SETTING$itemKeyPostfix',
@@ -42,29 +92,32 @@ class App extends StatelessWidget {
         ],
         defaultValue: 1,
         secondaryText: 'Один из списка',
+        enabled: false
       ) :
       (i % 2 == 0) ? SettingsPattern.dateTime(
         id: 'SETTING$itemKeyPostfix',
         label: 'Настройка $itemPostfix',
         defaultValue: DateTime(2020),
         secondaryText: 'Дата и время',
+        enabled: false
       ) : SettingsPattern.toggleSwitch(
         id: 'SETTING$itemKeyPostfix',
         label: 'Настройка $itemPostfix',
         defaultValue: i % 2 == 0,
         secondaryText: 'Описание настройки',
+        enabled: false
       );
     });
   }
 
-  Iterable<SettingsPattern> get _settings => _generateSettings();
+  List<SettingsPattern> get _settings => _generateSettings();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: SettingsPage(
-        title: 'Settings',
-        group: _settings,
+      home: SettingsScaffold(
+        title: Text('Settings'),
+        body: Settings(group: _settings),
         helpBuilder: (context) => Text('Help Message'),
       ),
     );
