@@ -38,6 +38,8 @@ abstract class SettingsMenuEntry<T> extends StatefulWidget {
     this.defaultValue,
     this.activeBuilder,
     this.inactiveBuilder,
+    this.showTopDivider = true,
+    this.showBottomDivider = true,
     this.enabled,
     @required this.type
   });
@@ -51,6 +53,8 @@ abstract class SettingsMenuEntry<T> extends StatefulWidget {
   final T defaultValue;
   final WidgetBuilder activeBuilder;
   final WidgetBuilder inactiveBuilder;
+  final bool showTopDivider;
+  final bool showBottomDivider;
   final bool enabled;
   final SettingsMenuItemType type;
 }
@@ -58,7 +62,9 @@ abstract class SettingsMenuEntry<T> extends StatefulWidget {
 class SettingsMenuItem<T> extends SettingsMenuEntry {
   SettingsMenuItem._(SettingsMenuItem item, {
     Key key,
-    bool enabled
+    bool enabled,
+    bool showTopDivider,
+    bool showBottomDivider
   }) : super(
       id: item.id,
       label: item.label,
@@ -69,7 +75,9 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
       defaultValue: item.defaultValue,
       activeBuilder: item.activeBuilder,
       inactiveBuilder: item.inactiveBuilder,
-      enabled: enabled == false ? enabled : item.enabled,
+      showTopDivider: showTopDivider,
+      showBottomDivider: showBottomDivider,
+      enabled: enabled != null ? enabled : item.enabled,
       type: item.type
   );
 
@@ -91,8 +99,6 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
   SettingsMenuItem.section({
     String title,
     @required List<SettingsMenuItem> group,
-    bool showTopDivider = true,
-    bool showBottomDivider = true,
     bool enabled = true
   }) : super(
       sectionTitle: title,
@@ -261,8 +267,26 @@ class Settings<T> extends StatelessWidget {
   final bool enabled;
 
   Widget _buildItem(BuildContext context, int index) {
-    SettingsMenuItem item = group.elementAt(index);
-    return SettingsMenuItem._(item, enabled: enabled);
+    SettingsMenuItem item = group[index];
+    bool showTopDivider;
+    bool showBottomDivider;
+
+    if (item.type == SettingsMenuItemType.section) {
+      bool isNotFirst = item != group.first;
+      bool isNotLast = item != group.last;
+      bool isNotSectionPreviousItem = isNotFirst &&
+          group[index - 1].type != SettingsMenuItemType.section;
+
+      showTopDivider = isNotFirst && isNotSectionPreviousItem;
+      showBottomDivider = isNotLast;
+    }
+
+    return SettingsMenuItem._(
+      item,
+      enabled: enabled,
+      showTopDivider: showTopDivider,
+      showBottomDivider: showBottomDivider,
+    );
   }
 
   @override
@@ -336,11 +360,32 @@ class _SettingsMenuItemSectionState<T> extends State<SettingsMenuItem<T>> {
     );
   }
 
+  Widget _buildItem(SettingsMenuItem item) {
+    bool showTopDivider;
+    bool showBottomDivider;
+
+    if (item.type == SettingsMenuItemType.section) {
+      int index = widget.group.indexOf(item);
+      bool isNotFirst = item != widget.group.first;
+      bool isNotLast = item != widget.group.last;
+      bool isNotSectionPreviousItem = isNotFirst &&
+          widget.group[index - 1].type != SettingsMenuItemType.section;
+
+      showTopDivider = isNotFirst && isNotSectionPreviousItem;
+      showBottomDivider = isNotLast;
+    }
+
+    return SettingsMenuItem._(
+      item,
+      enabled: widget.enabled,
+      showTopDivider: showTopDivider,
+      showBottomDivider: showBottomDivider,
+    );
+  }
+
   Widget _buildContent(BuildContext context) {
     return Column(
-      children: widget.group.map(
-        (item) => SettingsMenuItem._(item, enabled: widget.enabled)
-      ).toList(),
+      children: widget.group.map(_buildItem).toList(),
     );
   }
 
@@ -348,10 +393,10 @@ class _SettingsMenuItemSectionState<T> extends State<SettingsMenuItem<T>> {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        Divider(height: 1),
+        widget.showTopDivider ? Divider(height: 1) : Container(),
         _buildTitle(context),
         _buildContent(context),
-        Divider(height: 1),
+        widget.showBottomDivider ? Divider(height: 1) : Container(),
       ],
     );
   }
@@ -777,8 +822,6 @@ class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
         SettingsMenuItem.section(
           group: widget.group,
           enabled: widget.enabled == false ? false : _value,
-          showBottomDivider: false,
-          showTopDivider: false,
         )
       ],
     );
