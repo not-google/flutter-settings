@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 const double _kListTileHeight = 56.0;
 const double _kSecondaryWidth = 50.0;
 
-enum SettingsPatternType {
+enum SettingsMenuItemType {
   toggleSwitch,
   section,
   // Selection Patterns
@@ -27,8 +27,8 @@ class SelectionOption<T> {
   final T value;
 }
 
-abstract class SettingsPatternBase<T> {
-  SettingsPatternBase({
+abstract class SettingsMenuEntry<T> extends StatefulWidget {
+  SettingsMenuEntry({
     this.id,
     this.sectionTitle,
     this.label,
@@ -36,23 +36,44 @@ abstract class SettingsPatternBase<T> {
     this.group,
     this.options,
     this.defaultValue,
+    this.activeBuilder,
+    this.inactiveBuilder,
     this.enabled,
-    @required this.patternType
+    @required this.type
   });
 
   final String id;
   final String sectionTitle;
-  final List<SettingsPattern> group;
+  final List<SettingsMenuItem> group;
   final String label;
   final String secondaryText;
   final List<SelectionOption> options;
   final T defaultValue;
+  final WidgetBuilder activeBuilder;
+  final WidgetBuilder inactiveBuilder;
   final bool enabled;
-  final SettingsPatternType patternType;
+  final SettingsMenuItemType type;
 }
 
-class SettingsPattern<T> extends SettingsPatternBase {
-  SettingsPattern.toggleSwitch({
+class SettingsMenuItem<T> extends SettingsMenuEntry {
+  SettingsMenuItem._(SettingsMenuItem item, {
+    Key key,
+    bool enabled
+  }) : super(
+      id: item.id,
+      label: item.label,
+      sectionTitle: item.sectionTitle,
+      secondaryText: item.secondaryText,
+      group: item.group,
+      options: item.options,
+      defaultValue: item.defaultValue,
+      activeBuilder: item.activeBuilder,
+      inactiveBuilder: item.inactiveBuilder,
+      enabled: enabled == false ? enabled : item.enabled,
+      type: item.type
+  );
+
+  SettingsMenuItem.toggleSwitch({
     @required String id,
     @required String label,
     String secondaryText,
@@ -64,21 +85,23 @@ class SettingsPattern<T> extends SettingsPatternBase {
       secondaryText: secondaryText,
       defaultValue: defaultValue,
       enabled: enabled,
-      patternType: SettingsPatternType.toggleSwitch
+      type: SettingsMenuItemType.toggleSwitch,
   );
 
-  SettingsPattern.section({
+  SettingsMenuItem.section({
     String title,
-    @required List<SettingsPattern> group,
+    @required List<SettingsMenuItem> group,
+    bool showTopDivider = true,
+    bool showBottomDivider = true,
     bool enabled = true
   }) : super(
       sectionTitle: title,
       group: group,
       enabled: enabled,
-      patternType: SettingsPatternType.section
+      type: SettingsMenuItemType.section,
   );
 
-  SettingsPattern.singleChoice({
+  SettingsMenuItem.singleChoice({
     @required String id,
     @required String label,
     String secondaryText,
@@ -89,12 +112,13 @@ class SettingsPattern<T> extends SettingsPatternBase {
       id: id,
       label: label,
       secondaryText: secondaryText,
+      options: options,
       defaultValue: defaultValue,
       enabled: enabled,
-      patternType: SettingsPatternType.singleChoice
+      type: SettingsMenuItemType.singleChoice,
   );
 
-  SettingsPattern.multipleChoice({
+  SettingsMenuItem.multipleChoice({
     @required String id,
     @required String label,
     String secondaryText,
@@ -106,11 +130,12 @@ class SettingsPattern<T> extends SettingsPatternBase {
       label: label,
       secondaryText: secondaryText,
       defaultValue: defaultValue,
+      options: options,
       enabled: enabled,
-      patternType: SettingsPatternType.multipleChoice
+      type: SettingsMenuItemType.multipleChoice
   );
 
-  SettingsPattern.slider({
+  SettingsMenuItem.slider({
     @required String id,
     @required String label,
     String secondaryText,
@@ -122,10 +147,10 @@ class SettingsPattern<T> extends SettingsPatternBase {
       secondaryText: secondaryText,
       defaultValue: defaultValue,
       enabled: enabled,
-      patternType: SettingsPatternType.slider
+      type: SettingsMenuItemType.slider
   );
 
-  SettingsPattern.dateTime({
+  SettingsMenuItem.dateTime({
     @required String id,
     @required String label,
     String secondaryText,
@@ -137,225 +162,114 @@ class SettingsPattern<T> extends SettingsPatternBase {
       secondaryText: secondaryText,
       defaultValue: defaultValue,
       enabled: enabled,
-      patternType: SettingsPatternType.dateTime
+      type: SettingsMenuItemType.dateTime
   );
 
-  SettingsPattern.listSubscreen({
+  SettingsMenuItem.listSubscreen({
     @required String label,
     String secondaryText,
-    @required List<SettingsPattern> group,
+    @required List<SettingsMenuItem> group,
     bool enabled = true
   }) : super(
       label: label,
       secondaryText: secondaryText,
       group: group,
       enabled: enabled,
-      patternType: SettingsPatternType.listSubscreen
+      type: SettingsMenuItemType.listSubscreen
   );
 
-  SettingsPattern.masterSwitch({
+  SettingsMenuItem.masterSwitch({
     @required String id,
     @required String label,
     String secondaryText,
-    bool defaultValue = false
-  }) : super(
-      id: id,
-      label: label,
-      secondaryText: secondaryText,
-      defaultValue: defaultValue,
-      patternType: SettingsPatternType.masterSwitch
-  );
-
-  SettingsPattern.individualSwitch({
-    @required String id,
-    @required String label,
-    String secondaryText,
-    bool defaultValue = false
-  }) : super(
-      id: id,
-      label: label,
-      secondaryText: secondaryText,
-      defaultValue: defaultValue,
-      patternType: SettingsPatternType.individualSwitch
-  );
-
-  SettingsPattern.dependency({
-    @required String id,
-    @required String label,
-    secondaryText,
-    @required List<SettingsPattern> dependent,
+    @required WidgetBuilder inactiveBuilder,
+    List<SettingsMenuItem> group,
     bool defaultValue = false,
     bool enabled = true
   }) : super(
       id: id,
       label: label,
       secondaryText: secondaryText,
-      group: dependent,
+      inactiveBuilder: inactiveBuilder,
+      group: group,
       defaultValue: defaultValue,
       enabled: enabled,
-      patternType: SettingsPatternType.dependency
+      type: SettingsMenuItemType.masterSwitch
   );
-}
 
-class SettingsPatternWidget extends StatelessWidget {
-  SettingsPatternWidget(this.pattern, {
-    Key key,
-    this.enable
-  }) : super(key: key);
+  SettingsMenuItem.individualSwitch({
+    @required String id,
+    @required String label,
+    String secondaryText,
+    @required WidgetBuilder activeBuilder,
+    @required WidgetBuilder inactiveBuilder,
+    bool defaultValue = false,
+    bool enabled = true
+  }) : super(
+      id: id,
+      label: label,
+      secondaryText: secondaryText,
+      activeBuilder: activeBuilder,
+      inactiveBuilder: inactiveBuilder,
+      defaultValue: defaultValue,
+      enabled: enabled,
+      type: SettingsMenuItemType.individualSwitch
+  );
 
-  final SettingsPattern pattern;
-  final bool enable;
-
-  Widget _buildToggleSwitch() {
-    return SettingsToggleSwitch(
-        id: pattern.id,
-        label: pattern.label,
-        secondaryText: pattern.secondaryText,
-        defaultValue: pattern.defaultValue,
-        enabled: enable != null ? enable : pattern.enabled
-    );
-  }
-
-  Widget _buildSection() {
-    return SettingsSection(
-        title: pattern.sectionTitle,
-        group: pattern.group,
-        enabled: enable != null ? enable : pattern.enabled
-    );
-  }
-
-  Widget _buildSingleChoice() {
-    return SettingsSingleChoice(
-        id: pattern.id,
-        label: pattern.label,
-        secondaryText: pattern.secondaryText,
-        options: pattern.options,
-        defaultValue: pattern.defaultValue,
-        enabled: enable != null ? enable : pattern.enabled
-    );
-  }
-
-  Widget _buildMultipleChoice() {
-    return SettingsMultipleChoice(
-        id: pattern.id,
-        label: pattern.label,
-        secondaryText: pattern.secondaryText,
-        options: pattern.options,
-        defaultValue: pattern.defaultValue,
-        enabled: enable != null ? enable : pattern.enabled
-    );
-  }
-
-  Widget _buildSlider() {
-    return SettingsSlider(
-        id: pattern.id,
-        label: pattern.label,
-        secondaryText: pattern.secondaryText,
-        defaultValue: pattern.defaultValue,
-        enabled: enable != null ? enable : pattern.enabled
-    );
-  }
-
-  Widget _buildDateTime() {
-    return SettingsDateTime(
-        id: pattern.id,
-        label: pattern.label,
-        secondaryText: pattern.secondaryText,
-        defaultValue: pattern.defaultValue,
-        enabled: enable != null ? enable : pattern.enabled
-    );
-  }
-
-  Widget _buildListSubscreen() {
-    return SettingsListSubscreen(
-        label: pattern.label,
-        secondaryText: pattern.secondaryText,
-        group: pattern.group,
-        enabled: enable != null ? enable : pattern.enabled
-    );
-  }
-
-  Widget _buildMasterSwitch() {
-    return Container();
-  }
-
-  Widget _buildIndividualSwitch() {
-    return Container();
-  }
-
-  Widget _buildDependency() {
-    return SettingsDependency(
-      label: pattern.label,
-      secondaryText: pattern.secondaryText,
-      dependent: pattern.group,
-      defaultValue: pattern.defaultValue,
-      enabled: enable != null ? enable : pattern.enabled,
-    );
-  }
+  SettingsMenuItem.dependency({
+    @required String id,
+    @required String label,
+    String secondaryText,
+    @required List<SettingsMenuItem> group,
+    bool defaultValue = false,
+    bool enabled = true
+  }) : super(
+      id: id,
+      label: label,
+      secondaryText: secondaryText,
+      group: group,
+      defaultValue: defaultValue,
+      enabled: enabled,
+      type: SettingsMenuItemType.dependency
+  );
 
   @override
-  Widget build(BuildContext context) {
-    switch(pattern.patternType) {
-      case SettingsPatternType.section: return _buildSection();
-      case SettingsPatternType.singleChoice: return _buildSingleChoice();
-      case SettingsPatternType.multipleChoice: return _buildMultipleChoice();
-      case SettingsPatternType.dateTime: return _buildDateTime();
-      case SettingsPatternType.slider: return _buildSlider();
-      case SettingsPatternType.listSubscreen: return _buildListSubscreen();
-      case SettingsPatternType.masterSwitch: return _buildMasterSwitch();
-      case SettingsPatternType.individualSwitch: return _buildIndividualSwitch();
-      case SettingsPatternType.dependency: return _buildDependency();
-      case SettingsPatternType.toggleSwitch: return _buildToggleSwitch();
+  State<StatefulWidget> createState() {
+    switch(type) {
+      case SettingsMenuItemType.toggleSwitch: return _SettingsMenuItemToggleSwitchState();
+      case SettingsMenuItemType.section: return _SettingsMenuItemSectionState();
+      case SettingsMenuItemType.singleChoice: return _SettingsMenuItemSingleChoiceState();
+      case SettingsMenuItemType.multipleChoice: return _SettingsMenuItemMultipleChoiceState();
+      case SettingsMenuItemType.dateTime: return _SettingsMenuItemDateTimeState();
+      case SettingsMenuItemType.slider: return _SettingsMenuItemSliderState();
+      case SettingsMenuItemType.listSubscreen: return _SettingsMenuItemListSubscreenState();
+      case SettingsMenuItemType.masterSwitch: return _SettingsMenuItemMasterSwitchState();
+      case SettingsMenuItemType.individualSwitch: return _SettingsMenuItemIndividualSwitchState();
+      case SettingsMenuItemType.dependency: return _SettingsMenuItemDependencyState();
       default: return null;
     }
   }
 }
 
 class Settings<T> extends StatelessWidget {
-  Settings({
+  Settings(this.group, {
     Key key,
-    @required this.group
+    this.enabled
   }) : super(key: key);
 
-  final List<SettingsPattern<T>> group;
-
-  Widget _buildSection(
-      BuildContext context,
-      SettingsPattern pattern,
-      SettingsPattern previousPattern
-      ) {
-    bool isNotFirst = group.first != pattern;
-    bool isNotLast = group.last != pattern;
-    bool isNotPreviousPatternSection =
-        (previousPattern != null) &&
-            (previousPattern.patternType != SettingsPatternType.section);
-    return SettingsSection(
-      title: pattern.sectionTitle,
-      group: pattern.group,
-      enabled: pattern.enabled,
-      showTopDivider: isNotFirst && isNotPreviousPatternSection,
-      showBottomDivider: isNotLast,
-    );
-  }
-
-  Widget _buildPattern(BuildContext context, SettingsPattern pattern) {
-    return SettingsPatternWidget(pattern);
-  }
+  final List<SettingsMenuItem<T>> group;
+  final bool enabled;
 
   Widget _buildItem(BuildContext context, int index) {
-    SettingsPattern pattern = group.elementAt(index);
-    SettingsPattern previousPattern = index > 0 ? group.elementAt(index - 1) : null;
-    switch(pattern.patternType) {
-      case SettingsPatternType.section: return _buildSection(context, pattern, previousPattern);
-      default: return SettingsPatternWidget(pattern);
-    }
+    SettingsMenuItem item = group.elementAt(index);
+    return SettingsMenuItem._(item, enabled: enabled);
   }
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-        itemCount: group.length,
-        itemBuilder: _buildItem
+      itemCount: group.length,
+      itemBuilder: _buildItem
     );
   }
 }
@@ -402,57 +316,13 @@ class SettingsScaffold extends StatelessWidget {
   }
 }
 
-class SettingsSection extends StatelessWidget {
-  SettingsSection({
-    Key key,
-    this.title,
-    @required this.group,
-    this.enabled = true,
-    this.showTopDivider = true,
-    this.showBottomDivider = true
-  }) : super(
-      key: key
-  );
-
-  final String title;
-  final List<SettingsPattern> group;
-  final bool enabled;
-  final bool showTopDivider;
-  final bool showBottomDivider;
-
-  Widget _buildSection(
-      BuildContext context,
-      SettingsPattern pattern,
-      SettingsPattern previousPattern
-      ) {
-    bool isNotFirst = group.first != pattern;
-    bool isNotLast = group.last != pattern;
-    bool isNotPreviousPatternSection =
-        (previousPattern != null) &&
-        (previousPattern.patternType != SettingsPatternType.section);
-    return SettingsSection(
-        title: pattern.sectionTitle,
-        group: pattern.group,
-        enabled: enabled,
-        showTopDivider: isNotFirst && isNotPreviousPatternSection,
-        showBottomDivider: isNotLast,
-    );
-  }
-
-  Widget _buildPattern(BuildContext context, SettingsPattern pattern) {
-    int index = group.indexOf(pattern);
-    SettingsPattern previousPattern = index > 0 ? group.elementAt(index - 1) : null;
-    switch(pattern.patternType) {
-      case SettingsPatternType.section: return _buildSection(context, pattern, previousPattern);
-      default: return SettingsPatternWidget(pattern, enable: enabled);
-    }
-  }
+class _SettingsMenuItemSectionState<T> extends State<SettingsMenuItem<T>> {
 
   Widget _buildTitle(BuildContext context) {
-    return title == null ? Container() : Container(
+    return widget.sectionTitle == null ? Container() : Container(
       alignment: Alignment.centerLeft,
       child: Text(
-        title,
+        widget.sectionTitle,
         style:  Theme.of(context).textTheme.body2.copyWith(
           color: Theme.of(context).primaryColor
         )
@@ -468,8 +338,8 @@ class SettingsSection extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return Column(
-      children: (group).map(
-        (SettingsPattern pattern) => _buildPattern(context, pattern)
+      children: widget.group.map(
+        (item) => SettingsMenuItem._(item, enabled: widget.enabled)
       ).toList(),
     );
   }
@@ -478,38 +348,16 @@ class SettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        showTopDivider ? Divider(height: 1) : Container(),
+        Divider(height: 1),
         _buildTitle(context),
         _buildContent(context),
-        showBottomDivider ? Divider(height: 1) : Container(),
+        Divider(height: 1),
       ],
     );
   }
 }
 
-class SettingsToggleSwitch extends StatefulWidget {
-  SettingsToggleSwitch({
-    Key key,
-    @required this.id,
-    @required this.label,
-    this.secondaryText,
-    this.defaultValue = false,
-    this.enabled = true
-  }) : super(
-      key: key
-  );
-
-  final String id;
-  final String label;
-  final String secondaryText;
-  final bool defaultValue;
-  final bool enabled;
-
-  @override
-  _SettingsToggleSwitchState createState() => _SettingsToggleSwitchState();
-}
-class _SettingsToggleSwitchState extends State<SettingsToggleSwitch> {
-
+class _SettingsMenuItemToggleSwitchState<T> extends State<SettingsMenuItem<T>> {
   bool _value;
 
   @override
@@ -518,8 +366,10 @@ class _SettingsToggleSwitchState extends State<SettingsToggleSwitch> {
     _value = widget.defaultValue;
   }
 
-  _handleChanged(bool value) {
-    setState(() => _value = value);
+  void _handleChanged(bool newValue) {
+    setState(() {
+      _value = newValue;
+    });
   }
 
   @override
@@ -568,32 +418,98 @@ class ConfirmationDialog extends StatelessWidget {
   }
 }
 
-class SettingsSingleChoice<T> extends StatelessWidget {
-  SettingsSingleChoice({
+class _SettingsMenuItemSingleChoiceState<T> extends State<SettingsMenuItem<T>> {
+  Widget _buildSettingsScaffold(BuildContext context) {
+    return SettingsScaffold(
+      title: Text(widget.label),
+      body: SingleChoiceControl(
+        options: widget.options,
+        defaultValue: widget.defaultValue,
+      )
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Visibility(
+        visible: false,
+        child: CircleAvatar()
+      ),
+      title: Text(widget.label),
+      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: _buildSettingsScaffold)
+      ),
+      enabled: widget.enabled,
+    );
+  }
+}
+
+class SingleChoiceControl<T> extends StatefulWidget {
+  SingleChoiceControl({
     Key key,
-    @required this.id,
-    @required this.label,
-    this.secondaryText,
     @required this.options,
-    this.defaultValue,
-    this.enabled = true
+    this.defaultValue
   }) : super(key: key);
 
-  final String id;
-  final String label;
-  final String secondaryText;
   final List<SelectionOption<T>> options;
   final T defaultValue;
-  final bool enabled;
+
+  @override
+  _SingleChoiceControlState createState() => _SingleChoiceControlState();
+}
+class _SingleChoiceControlState<T> extends State<SingleChoiceControl<T>> {
+  T _value;
+
+  @override
+  initState() {
+    super.initState();
+    _value = widget.defaultValue;
+  }
+
+  void _handleChanged(newValue) {
+    setState(() {
+      _value = newValue;
+    });
+  }
+
+  Widget _buildRadioListTile(BuildContext context, int index) {
+    SelectionOption option = widget.options[index];
+    return RadioListTile(
+      secondary: Visibility(
+        visible: false,
+        child: CircleAvatar()
+      ),
+      title: Text(option.label),
+      value: option.value,
+      groupValue: _value,
+      selected: _value == option.value,
+      onChanged: _handleChanged,
+      controlAffinity: ListTileControlAffinity.trailing
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: widget.options.length,
+      itemBuilder: _buildRadioListTile
+    );
+  }
+}
+
+class _SettingsMenuItemMultipleChoiceState<T> extends State<SettingsMenuItem<T>> {
 
   Widget _buildAlertDialog(BuildContext context) {
     return ConfirmationDialog(
-      title: Text(label),
+      title: Text(widget.label),
+      contentPadding: const EdgeInsets.only(top: 16.0),
       content: SizedBox(
-        height: options.length * _kListTileHeight,
-        child: RadioListView(
-          options: options,
-          defaultValue: defaultValue,
+        height: widget.options.length * _kListTileHeight,
+        child: MultipleChoiceControl(
+          options: widget.options,
+          value: widget.defaultValue,
         ),
       ),
       onConfirm: () => Navigator.of(context).pop(),
@@ -607,149 +523,61 @@ class SettingsSingleChoice<T> extends StatelessWidget {
         visible: false,
         child: CircleAvatar()
       ),
-      title: Text(label),
-      subtitle: secondaryText == null ? null : Text(secondaryText),
+      title: Text(widget.label),
+      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       onTap: () => showDialog(
-          context: context,
-          builder: _buildAlertDialog
+        context: context,
+        builder: _buildAlertDialog
       ),
-      enabled: enabled,
+      enabled: widget.enabled,
     );
   }
 }
 
-class RadioListView<T> extends StatefulWidget {
-  RadioListView({
+class MultipleChoiceControl<T> extends StatefulWidget {
+  MultipleChoiceControl({
     Key key,
     @required this.options,
-    this.defaultValue
+    @required this.value
   }) : super(key: key);
 
-  final List<SelectionOption<T>> options;
-  final T defaultValue;
+  final List<SelectionOption> options;
+  final List<T> value;
 
   @override
-  _RadioListViewState createState() => _RadioListViewState();
+  _MultipleChoiceControlState<T> createState() => _MultipleChoiceControlState();
 }
-class _RadioListViewState<T> extends State<RadioListView<T>> {
-
-  T _value;
+class _MultipleChoiceControlState<T> extends State<MultipleChoiceControl<T>> {
+  List<T> _value;
 
   @override
   initState() {
     super.initState();
-    _value = widget.defaultValue;
+    _value = widget.value;
   }
 
-  _handleChanged(value) => setState(() => _value = value);
-
-  Widget _buildRadioListTile(BuildContext context, int index) {
-    SelectionOption option = widget.options[index];
-    return RadioListTile(
-        title: Text(option.label),
-        value: option.value,
-        groupValue: _value,
-        selected: _value == option.value,
-        onChanged: _handleChanged
-    );
+  void _add(T optionValue) {
+    setState(() {
+      _value.add(optionValue);
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: widget.options.length,
-        itemBuilder: _buildRadioListTile
-    );
+  void _remove(T optionValue) {
+    setState(() {
+      _value.remove(optionValue);
+    });
   }
-}
-
-class SettingsMultipleChoice<T> extends StatelessWidget {
-  SettingsMultipleChoice({
-    Key key,
-    @required this.id,
-    @required this.label,
-    this.secondaryText,
-    @required this.options,
-    this.defaultValue,
-    this.enabled = true
-  }) : super(key: key);
-
-  final String id;
-  final String label;
-  final String secondaryText;
-  final List<SelectionOption> options;
-  final List<T> defaultValue;
-  final bool enabled;
-
-  Widget _buildAlertDialog(BuildContext context) {
-    return ConfirmationDialog(
-      title: Text(label),
-      contentPadding: const EdgeInsets.only(top: 16.0),
-      content: SizedBox(
-        height: options.length * _kListTileHeight,
-        child: CheckboxListView(
-          options: options,
-          defaultValue: defaultValue,
-        ),
-      ),
-      onConfirm: () => Navigator.of(context).pop(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Visibility(
-          visible: false,
-          child: CircleAvatar()
-      ),
-      title: Text(label),
-      subtitle: secondaryText == null ? null : Text(secondaryText),
-      onTap: () => showDialog(
-          context: context,
-          builder: _buildAlertDialog
-      ),
-      enabled: enabled,
-    );
-  }
-}
-
-class CheckboxListView<T> extends StatefulWidget {
-  CheckboxListView({
-    Key key,
-    @required this.options,
-    this.defaultValue
-  }) : super(key: key);
-
-  final List<SelectionOption> options;
-  final List<T> defaultValue;
-
-  @override
-  _CheckboxListViewState createState() => _CheckboxListViewState();
-}
-class _CheckboxListViewState<T> extends State<CheckboxListView<T>> {
-
-  List<T> _values;
-
-  @override
-  initState() {
-    super.initState();
-    _values = widget.defaultValue;
-  }
-
-  void _check(T value) => setState(() => _values.add(value));
-  void _uncheck(T value) => setState(() => _values.remove(value));
 
   Widget _buildCheckboxListTile(BuildContext context, int index) {
     SelectionOption option = widget.options[index];
-    bool checked = _values.contains(option.value);
+    bool checked = widget.value.contains(option.value);
     return CheckboxListTile(
         title: Text(option.label),
         value: checked,
         selected: checked,
-        onChanged: (bool checked) => checked
-            ? _check(option.value)
-            : _uncheck(option.value)
+        onChanged: (bool isChecked) => isChecked
+          ? _add(option.value)
+          : _remove(option.value)
     );
   }
 
@@ -762,27 +590,7 @@ class _CheckboxListViewState<T> extends State<CheckboxListView<T>> {
   }
 }
 
-class SettingsSlider extends StatefulWidget {
-  SettingsSlider({
-    Key key,
-    @required this.id,
-    @required this.label,
-    this.secondaryText,
-    this.defaultValue = 0,
-    this.enabled = true
-  }) : super(key: key);
-
-  final String id;
-  final String label;
-  final String secondaryText;
-  final double defaultValue;
-  final bool enabled;
-
-  @override
-  _SettingsSliderState createState() => _SettingsSliderState();
-}
-class _SettingsSliderState extends State<SettingsSlider> {
-
+class _SettingsMenuItemSliderState<T> extends State<SettingsMenuItem<T>> {
   double _value;
 
   @override
@@ -791,7 +599,11 @@ class _SettingsSliderState extends State<SettingsSlider> {
     _value = widget.defaultValue;
   }
 
-  _handleChanged(double value) => setState(() => _value = value);
+  void _handleChanged(double newValue) {
+    setState(() {
+      _value = newValue;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -880,27 +692,7 @@ class SliderListTile extends StatelessWidget {
   }
 }
 
-class SettingsDateTime extends StatefulWidget {
-  SettingsDateTime({
-    Key key,
-    @required this.id,
-    @required this.label,
-    this.secondaryText,
-    this.defaultValue,
-    this.enabled = true
-  }) : super(key: key);
-
-  final String id;
-  final String label;
-  final String secondaryText;
-  final DateTime defaultValue;
-  final bool enabled;
-
-  @override
-  _SettingsDateTimeState createState() => _SettingsDateTimeState();
-}
-class _SettingsDateTimeState extends State<SettingsDateTime> {
-
+class _SettingsMenuItemDateTimeState<T> extends State<SettingsMenuItem<T>> {
   DateTime _value;
 
   @override
@@ -929,24 +721,12 @@ class _SettingsDateTimeState extends State<SettingsDateTime> {
   }
 }
 
-class SettingsListSubscreen extends StatelessWidget {
-  SettingsListSubscreen({
-    Key key,
-    @required this.label,
-    this.secondaryText,
-    @required this.group,
-    this.enabled = true
-  }) : super(key: key);
-
-  final String label;
-  final String secondaryText;
-  final List<SettingsPattern> group;
-  final bool enabled;
+class _SettingsMenuItemListSubscreenState<T> extends State<SettingsMenuItem<T>> {
 
   Widget _buildSettingsScaffold(BuildContext context) {
     return SettingsScaffold(
-      title: Text(label),
-      body: Settings(group: group),
+      title: Text(widget.label),
+      body: Settings(widget.group),
     );
   }
 
@@ -957,34 +737,15 @@ class SettingsListSubscreen extends StatelessWidget {
           visible: false,
           child: CircleAvatar()
       ),
-      title: Text(label),
-      subtitle: secondaryText == null ? null : Text(secondaryText),
+      title: Text(widget.label),
+      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: _buildSettingsScaffold)),
-      enabled: enabled,
+      enabled: widget.enabled,
     );
   }
 }
 
-class SettingsDependency extends StatefulWidget {
-  SettingsDependency({
-    Key key,
-    @required this.label,
-    this.secondaryText,
-    @required this.dependent,
-    this.defaultValue = false,
-    this.enabled = true
-  }) : super(key: key);
-
-  final String label;
-  final String secondaryText;
-  final List<SettingsPattern> dependent;
-  final bool defaultValue;
-  final bool enabled;
-
-  @override
-  _SettingsDependencyState createState() => _SettingsDependencyState();
-}
-class _SettingsDependencyState extends State<SettingsDependency> {
+class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
   bool _value;
 
   @override
@@ -993,7 +754,11 @@ class _SettingsDependencyState extends State<SettingsDependency> {
     _value = widget.defaultValue;
   }
 
-  void _handleChanged(bool value) => setState(() => _value = value);
+  void _handleChanged(bool newValue) {
+    setState(() {
+      _value = newValue;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1009,12 +774,151 @@ class _SettingsDependencyState extends State<SettingsDependency> {
           value: _value,
           onChanged: widget.enabled ? _handleChanged : null,
         ),
-        SettingsSection(
-          group: widget.dependent,
-          enabled: _value,
+        SettingsMenuItem.section(
+          group: widget.group,
+          enabled: widget.enabled == false ? false : _value,
           showBottomDivider: false,
           showTopDivider: false,
         )
+      ],
+    );
+  }
+}
+
+class _SettingsMenuItemMasterSwitchState<T> extends State<SettingsMenuItem<T>> {
+
+  Widget _buildSettingsScaffold(BuildContext context) {
+    return SettingsScaffold(
+      title: Text(widget.label),
+      body: MasterSwitchControl(
+        title: Text(widget.label),
+        initialValue: widget.defaultValue,
+        activeBuilder: (context) => Settings(widget.group),
+        inactiveBuilder: widget.inactiveBuilder
+      )
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Visibility(
+        visible: false,
+        child: CircleAvatar()
+      ),
+      title: Text(widget.label),
+      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: _buildSettingsScaffold)
+      ),
+      enabled: widget.enabled,
+    );
+  }
+}
+
+class _SettingsMenuItemIndividualSwitchState<T> extends State<SettingsMenuItem<T>> {
+
+  Widget _buildSettingsScaffold(BuildContext context) {
+    return SettingsScaffold(
+      title: Text(widget.label),
+      body: MasterSwitchControl(
+        title: Text(widget.label),
+        initialValue: widget.defaultValue,
+        activeBuilder: widget.activeBuilder,
+        inactiveBuilder: widget.inactiveBuilder
+      )
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Visibility(
+        visible: false,
+        child: CircleAvatar()
+      ),
+      title: Text(widget.label),
+      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: _buildSettingsScaffold)
+      ),
+      enabled: widget.enabled,
+    );
+  }
+}
+
+class MasterSwitchControl extends StatefulWidget {
+  MasterSwitchControl({
+    Key key,
+    @required this.title,
+    this.initialValue = false,
+    @required this.activeBuilder,
+    @required this.inactiveBuilder,
+  }) : super(key: key);
+
+  final Widget title;
+  final bool initialValue;
+  final WidgetBuilder activeBuilder;
+  final WidgetBuilder inactiveBuilder;
+
+  @override
+  _MasterSwitchControlState createState() => _MasterSwitchControlState();
+}
+class _MasterSwitchControlState extends State<MasterSwitchControl> {
+  bool _isActive;
+
+  @override
+  initState() {
+    super.initState();
+    _isActive = widget.initialValue;
+  }
+
+  void _handleChanged(bool isActive) {
+    setState(() {
+      _isActive = isActive;
+    });
+  }
+
+  Widget _buildControl(BuildContext context) {
+    return Container(
+      child: SwitchListTile(
+        secondary: Visibility(
+          visible: false,
+          child: CircleAvatar()
+        ),
+        title: Theme(
+          data: ThemeData.dark(),
+          child: widget.title
+        ),
+        value: _isActive,
+        onChanged: _handleChanged,
+        activeColor: Colors.white,
+        inactiveThumbColor: Colors.white,
+      ),
+      decoration: BoxDecoration(
+        color: _isActive
+          ? Theme.of(context).primaryColor
+          : Theme.of(context).disabledColor
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return Expanded(
+      child: _isActive
+        ? widget.activeBuilder(context)
+        : widget.inactiveBuilder(context)
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        _buildControl(context),
+        _buildContent(context)
       ],
     );
   }
