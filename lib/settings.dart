@@ -45,6 +45,7 @@ abstract class SettingsMenuEntry<T> extends StatefulWidget {
     this.showBottomDivider,
     this.enabled,
     this.onChanged,
+    this.selected = false,
     @required this.type
   });
 
@@ -62,6 +63,7 @@ abstract class SettingsMenuEntry<T> extends StatefulWidget {
   final bool showBottomDivider;
   final bool enabled;
   final ValueChanged onChanged;
+  final bool selected;
   final SettingsMenuItemType type;
 }
 
@@ -88,7 +90,9 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
   SettingsMenuItem._(SettingsMenuItem item, {
     Key key,
     SettingsMenuItem previous,
+    List<SettingsMenuItem> group,
     bool enabled,
+    bool selected,
     bool showTopDivider,
     bool showBottomDivider
   }) : super(
@@ -98,7 +102,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     label: item.label,
     sectionTitle: item.sectionTitle,
     secondaryText: item.secondaryText,
-    group: item.group,
+    group: group ?? item.group,
     options: item.options,
     defaultValue: item.defaultValue,
     activeBuilder: item.activeBuilder,
@@ -107,6 +111,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     showBottomDivider: showBottomDivider ?? _needShowBottomDivider(item),
     enabled: enabled ?? item.enabled,
     onChanged: item.onChanged,
+    selected: selected ?? item.selected,
     type: item.type
   );
 
@@ -477,20 +482,14 @@ class _SettingsMenuItemToggleSwitchState<T> extends State<SettingsMenuItem<T>> {
     });
   }
 
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-      visible: false,
-      child: CircleAvatar()
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return SwitchListTile(
-      secondary: _buildLeading(context),
+      secondary: widget.leading ?? Icon(null),
       title: Text(widget.label),
       subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       value: _value,
+      selected: widget.selected,
       onChanged: widget.enabled ? _handleChanged : null
     );
   }
@@ -541,22 +540,16 @@ class _SettingsMenuItemSingleChoiceState<T> extends State<SettingsMenuItem<T>> {
     );
   }
 
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-        visible: false,
-        child: CircleAvatar()
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: _buildLeading(context),
+      leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
       subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: _buildSettingsScaffold)
       ),
+      selected: widget.selected,
       enabled: widget.enabled,
     );
   }
@@ -637,23 +630,17 @@ class _SettingsMenuItemMultipleChoiceState<T> extends State<SettingsMenuItem<T>>
     );
   }
 
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-      visible: false,
-      child: CircleAvatar()
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: _buildLeading(context),
+      leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
       subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       onTap: () => showDialog(
         context: context,
         builder: _buildAlertDialog
       ),
+      selected: widget.selected,
       enabled: widget.enabled,
     );
   }
@@ -731,19 +718,13 @@ class _SettingsMenuItemSliderState<T> extends State<SettingsMenuItem<T>> {
     });
   }
 
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-      visible: false,
-      child: CircleAvatar()
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return SliderListTile(
-      secondary: _buildLeading(context),
+      secondary: widget.leading ?? Icon(null),
       title: Text(widget.label),
       value: _value,
+      selected: widget.selected,
       onChanged: widget.enabled ? _handleChanged : null,
     );
   }
@@ -765,6 +746,7 @@ class SliderListTile extends StatelessWidget {
     this.trailing,
     this.dense,
     this.secondary,
+    this.selected
   }) : assert(value != null),
         assert(min != null),
         assert(max != null),
@@ -786,6 +768,7 @@ class SliderListTile extends StatelessWidget {
   final Widget trailing;
   final Widget secondary;
   final bool dense;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -798,6 +781,7 @@ class SliderListTile extends StatelessWidget {
           subtitle: Text(''),
           trailing: trailing,
           dense: dense,
+          selected: selected,
           enabled: enabled,
         ),
         Positioned(
@@ -850,20 +834,14 @@ class _SettingsMenuItemDateTimeState<T> extends State<SettingsMenuItem<T>> {
       _handleChanged(selectedDate);
   }
 
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-      visible: false,
-      child: CircleAvatar()
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: _buildLeading(context),
+      leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
       subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       onTap: _selectDate,
+      selected: widget.selected,
       enabled: widget.enabled,
     );
   }
@@ -880,20 +858,14 @@ class _SettingsMenuItemListSubscreenState<T> extends State<SettingsMenuItem<T>> 
     );
   }
 
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-        visible: false,
-        child: CircleAvatar()
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: _buildLeading(context),
+      leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
       subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: _buildSettingsScaffold)),
+      selected: widget.selected,
       enabled: widget.enabled,
     );
   }
@@ -912,13 +884,6 @@ class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
     setState(() {
       _value = newValue;
     });
-  }
-
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-      visible: false,
-      child: CircleAvatar()
-    );
   }
 
   Widget _buildDependentItem(SettingsMenuItem item) {
@@ -941,11 +906,12 @@ class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
     return Column(
       children: <Widget>[
         SwitchListTile(
-          secondary: _buildLeading(context),
+          secondary: widget.leading ?? Icon(null),
           title: Text(widget.label),
           subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
           value: _value,
           onChanged: widget.enabled ? _handleChanged : null,
+          selected: widget.selected,
         ),
         _buildDependent(context)
       ],
@@ -969,23 +935,17 @@ class _SettingsMenuItemMasterSwitchState<T> extends State<SettingsMenuItem<T>> {
     );
   }
 
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-      visible: false,
-      child: CircleAvatar()
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: _buildLeading(context),
+      leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
       subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: _buildSettingsScaffold)
       ),
+      selected: widget.selected,
       enabled: widget.enabled,
     );
   }
@@ -1007,23 +967,17 @@ class _SettingsMenuItemIndividualSwitchState<T> extends State<SettingsMenuItem<T
     );
   }
 
-  Widget _buildLeading(BuildContext context) {
-    return widget.leading ?? Visibility(
-      visible: false,
-      child: CircleAvatar()
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: _buildLeading(context),
+      leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
       subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: _buildSettingsScaffold)
       ),
+      selected: widget.selected,
       enabled: widget.enabled,
     );
   }
@@ -1107,12 +1061,12 @@ class _MasterSwitchControlState extends State<MasterSwitchControl> {
 class Suggestion {
   Suggestion({
     @required this.item,
-    this.parent,
+    this.screen,
     this.parentsTitles,
   });
 
-  final SettingsMenuItem parent;
   final SettingsMenuItem item;
+  final SettingsMenuItem screen;
   final List<String> parentsTitles;
 }
 
@@ -1131,6 +1085,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 
   List<Suggestion> _getSuggestions({
+    SettingsMenuItem screen,
     SettingsMenuItem parent,
     List<Suggestion> suggestions,
     List<String> parentsTitles
@@ -1145,7 +1100,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       if ((item.label ?? '').startsWith(query)) {
         suggestions.add(
           Suggestion(
-            parent: parent,
+            screen: screen,
             item: item,
             parentsTitles: parentsTitles
           )
@@ -1161,6 +1116,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
         _getSuggestions(
           parent: item,
+          screen: item.type == SettingsMenuItemType.listSubscreen ? item : null,
           suggestions: suggestions,
           parentsTitles: itemParentsTitles
         );
@@ -1185,6 +1141,42 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     );
   }
 
+  List<SettingsMenuItem> _getGroupWithSelected(
+    List<SettingsMenuItem> group,
+    SettingsMenuItem selectItem
+  ) {
+    return group.map((item) {
+      if (item == selectItem) {
+        print('Selected: ${item.label}');
+        return SettingsMenuItem._(
+          item,
+          selected: true,
+        );
+      } else if (item.group != null) {
+        return SettingsMenuItem._(
+          item,
+          group: _getGroupWithSelected(item.group, selectItem),
+        );
+      }
+
+      return item;
+    }).toList();
+  }
+
+  Widget _buildScreen(BuildContext context, Suggestion suggestion) {
+    bool hasScreen = suggestion.screen != null;
+    List<SettingsMenuItem> settings = hasScreen ? suggestion.screen.group : data;
+
+    settings = _getGroupWithSelected(settings, suggestion.item);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(hasScreen ? '${suggestion.screen.label}' : 'Settings'),
+      ),
+      body: Settings(settings),
+    );
+  }
+
   @override
   Widget buildSuggestions(BuildContext context) {
 
@@ -1199,12 +1191,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         query = suggestion.item.label;
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => Scaffold(
-              appBar: AppBar(
-                title: Text(suggestion.parent.label),
-              ),
-              body: Settings(suggestion.parent.group),
-            )
+            builder: (context) => _buildScreen(context, suggestion)
           )
         );
         //showResults(context);
