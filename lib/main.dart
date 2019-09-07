@@ -248,7 +248,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       home: SettingsScaffold(
         title: Text('Settings'),
-        body: Settings(settings),
+        settings: settings,
         helpBuilder: (context) => Text('Help Message'),
       ),
     );

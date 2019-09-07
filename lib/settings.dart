@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 const double _kListTileHeight = 56.0;
 const double _kSecondaryWidth = 50.0;
+const double _kDividerHeight = 1.0;
 
 enum SettingsMenuItemType {
   toggleSwitch,
@@ -367,13 +368,13 @@ class SettingsScaffold extends StatelessWidget {
   SettingsScaffold({
     Key key,
     @required this.title,
-    @required this.body,
+    @required this.settings,
     this.helpBuilder
   }) : super(key: key);
 
   final Widget title;
   final WidgetBuilder helpBuilder;
-  final Widget body;
+  final List<SettingsMenuItem> settings;
 
   @override
   Widget build(BuildContext context) {
@@ -385,7 +386,12 @@ class SettingsScaffold extends StatelessWidget {
             visible: true,
             child: IconButton(
               icon: Icon(Icons.search),
-              onPressed: () => null
+              onPressed: () => showSearch(
+                context: context,
+                delegate: _SettingsSearchDelegate(
+                  data: settings
+                )
+              )
             )
           ),
           Visibility(
@@ -400,7 +406,7 @@ class SettingsScaffold extends StatelessWidget {
           )
         ],
       ),
-      body: body,
+      body: Settings(settings),
     );
   }
 }
@@ -445,10 +451,10 @@ class _SettingsMenuItemSectionState<T> extends State<SettingsMenuItem<T>> {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        widget.showTopDivider ? Divider(height: 5) : Container(),
+        widget.showTopDivider ? Divider(height: _kDividerHeight) : Container(),
         _buildTitle(context),
         _buildContent(context),
-        widget.showBottomDivider ? Divider(height: 5) : Container(),
+        widget.showBottomDivider ? Divider(height: _kDividerHeight) : Container(),
       ],
     );
   }
@@ -523,8 +529,10 @@ class ConfirmationDialog extends StatelessWidget {
 
 class _SettingsMenuItemSingleChoiceState<T> extends State<SettingsMenuItem<T>> {
   Widget _buildSettingsScaffold(BuildContext context) {
-    return SettingsScaffold(
-      title: Text(widget.label),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.label),
+      ),
       body: SingleChoiceControl(
         options: widget.options,
         initialValue: widget.defaultValue,
@@ -864,8 +872,10 @@ class _SettingsMenuItemDateTimeState<T> extends State<SettingsMenuItem<T>> {
 class _SettingsMenuItemListSubscreenState<T> extends State<SettingsMenuItem<T>> {
 
   Widget _buildSettingsScaffold(BuildContext context) {
-    return SettingsScaffold(
-      title: Text(widget.label),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.label),
+      ),
       body: Settings(widget.group),
     );
   }
@@ -946,8 +956,10 @@ class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
 class _SettingsMenuItemMasterSwitchState<T> extends State<SettingsMenuItem<T>> {
 
   Widget _buildSettingsScaffold(BuildContext context) {
-    return SettingsScaffold(
-      title: Text(widget.label),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.label),
+      ),
       body: MasterSwitchControl(
         title: Text(widget.label),
         initialValue: widget.defaultValue,
@@ -982,8 +994,10 @@ class _SettingsMenuItemMasterSwitchState<T> extends State<SettingsMenuItem<T>> {
 class _SettingsMenuItemIndividualSwitchState<T> extends State<SettingsMenuItem<T>> {
 
   Widget _buildSettingsScaffold(BuildContext context) {
-    return SettingsScaffold(
-      title: Text(widget.label),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.label),
+      ),
       body: MasterSwitchControl(
         title: Text(widget.label),
         initialValue: widget.defaultValue,
@@ -1086,6 +1100,228 @@ class _MasterSwitchControlState extends State<MasterSwitchControl> {
         _buildControl(context),
         _buildContent(context)
       ],
+    );
+  }
+}
+
+class Suggestion {
+  Suggestion({
+    @required this.item,
+    this.parent,
+    this.parentsTitles,
+  });
+
+  final SettingsMenuItem parent;
+  final SettingsMenuItem item;
+  final List<String> parentsTitles;
+}
+
+class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
+  _SettingsSearchDelegate({
+    @required this.data
+  });
+
+  final List<SettingsMenuItem> data;
+  final Iterable<Suggestion> _history = [];
+
+  Iterable<SettingsMenuItem> _getResults() {
+    return data.where(
+      (item) => item.label != null && item.label.contains(query)
+    ).toList();
+  }
+
+  List<Suggestion> _getSuggestions({
+    SettingsMenuItem parent,
+    List<Suggestion> suggestions,
+    List<String> parentsTitles
+  }) {
+    List<SettingsMenuItem> data = parent != null ? parent.group : this.data;
+    parentsTitles = parentsTitles ?? [];
+    suggestions = suggestions ?? [];
+
+    data.forEach((item) {
+      List<String> itemParentsTitles;
+
+      if ((item.label ?? '').startsWith(query)) {
+        suggestions.add(
+          Suggestion(
+            parent: parent,
+            item: item,
+            parentsTitles: parentsTitles
+          )
+        );
+      }
+
+      if (item.group != null) {
+        if (item.type == SettingsMenuItemType.listSubscreen) {
+          itemParentsTitles = []
+            ..addAll(parentsTitles)
+            ..add(item.label);
+        }
+
+        _getSuggestions(
+          parent: item,
+          suggestions: suggestions,
+          parentsTitles: itemParentsTitles
+        );
+      }
+    });
+
+    return suggestions;
+  }
+
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      tooltip: 'Back',
+      icon: AnimatedIcon(
+        icon: AnimatedIcons.menu_arrow,
+        progress: transitionAnimation,
+      ),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+
+    final Iterable<Suggestion> suggestions = query.isEmpty
+        ? _history
+        : _getSuggestions();
+
+    return _SuggestionList(
+      query: query,
+      suggestions: suggestions,
+      onSelected: (Suggestion suggestion) {
+        query = suggestion.item.label;
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => Scaffold(
+              appBar: AppBar(
+                title: Text(suggestion.parent.label),
+              ),
+              body: Settings(suggestion.parent.group),
+            )
+          )
+        );
+        //showResults(context);
+      },
+    );
+  }
+
+  Widget _buildEmpty(BuildContext context) {
+    return Center(
+      child: Text(
+        '"$query"\n has no results',
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    Iterable<SettingsMenuItem> results = _getResults();
+
+    if (query == null || results.isEmpty) return _buildEmpty(context);
+
+    return ListView(
+      children: results.map((item) => _ResultCard(
+        item: item,
+        searchDelegate: this,
+      )).toList()
+    );
+  }
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return <Widget>[
+      query.isEmpty
+          ? Container()
+          : IconButton(
+        tooltip: 'Clear',
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+          showSuggestions(context);
+        },
+      ),
+      PopupMenuButton(
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 1,
+            child: ListTile(
+              title: Text('Clear history'),
+            ),
+          )
+        ],
+      )
+    ];
+  }
+}
+
+class _ResultCard extends StatelessWidget {
+  const _ResultCard({this.item, this.searchDelegate});
+
+  final SettingsMenuItem item;
+  final SearchDelegate<SettingsMenuItem> searchDelegate;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return GestureDetector(
+      onTap: () {
+        searchDelegate.close(context, item);
+      },
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            '${item.label}',
+            style: theme.textTheme.headline.copyWith(fontSize: 72.0),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SuggestionList extends StatelessWidget {
+  const _SuggestionList({this.suggestions, this.query, this.onSelected});
+
+  final Iterable<Suggestion> suggestions;
+  final String query;
+  final ValueChanged<Suggestion> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return ListView.builder(
+      itemCount: suggestions.length,
+      itemBuilder: (BuildContext context, int i) {
+        final Suggestion suggestion = suggestions.elementAt(i);
+        return ListTile(
+          leading: query.isEmpty ? const Icon(Icons.history) : const Icon(null),
+          title: RichText(
+            text: TextSpan(
+              text: suggestion.item.label.substring(0, query.length),
+              style: theme.textTheme.subhead.copyWith(fontWeight: FontWeight.bold),
+              children: <TextSpan>[
+                TextSpan(
+                  text: suggestion.item.label.substring(query.length),
+                  style: theme.textTheme.subhead,
+                ),
+              ],
+            ),
+          ),
+          subtitle: Text(suggestion.parentsTitles.join(' > ')),
+          onTap: () {
+            onSelected(suggestion);
+          },
+        );
+      },
     );
   }
 }
