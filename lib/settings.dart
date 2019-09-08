@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 const double _kListTileHeight = 56.0;
 const double _kSecondaryWidth = 50.0;
 const double _kDividerHeight = 1.0;
+const List<SettingsMenuItemType> _kScreenSettingsMenuItemTypes = [
+  SettingsMenuItemType.listSubscreen,
+  SettingsMenuItemType.masterSwitch,
+  SettingsMenuItemType.individualSwitch
+];
 
 enum SettingsMenuItemType {
   toggleSwitch,
@@ -1096,11 +1101,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
     data.forEach((item) {
       List<String> itemParentsTitles;
-      bool isScreen = [
-        SettingsMenuItemType.listSubscreen,
-        SettingsMenuItemType.masterSwitch,
-        SettingsMenuItemType.individualSwitch,
-      ].contains(item.type);
+      bool isScreen = _kScreenSettingsMenuItemTypes.contains(item.type);
 
       if ((item.label ?? '').startsWith(query)) {
         suggestions.add(
