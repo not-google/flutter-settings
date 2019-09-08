@@ -8,6 +8,8 @@ const List<SettingsMenuItemType> _kScreenSettingsMenuItemTypes = [
   SettingsMenuItemType.masterSwitch,
   SettingsMenuItemType.individualSwitch
 ];
+const String statusOnLabel = 'On';
+const String statusOffLabel = 'Off';
 
 enum SettingsMenuItemType {
   toggleSwitch,
@@ -23,8 +25,8 @@ enum SettingsMenuItemType {
   dependency
 }
 
-class SelectionOption<T> {
-  SelectionOption({
+class Choice<T> {
+  Choice({
     @required this.label,
     @required this.value
   });
@@ -39,13 +41,15 @@ abstract class SettingsMenuEntry<T> extends StatefulWidget {
     this.id,
     this.sectionTitle,
     this.leading,
+    this.masterSwitchTitle,
+    this.activeSecondaryTextBuilder,
+    this.inactiveSecondaryTextBuilder,
     this.label,
     this.secondaryText,
     this.group,
-    this.options,
+    this.choices,
     this.defaultValue,
-    this.activeBuilder,
-    this.inactiveBuilder,
+    this.inactiveTextBuilder,
     this.showTopDivider,
     this.showBottomDivider,
     this.enabled,
@@ -59,11 +63,13 @@ abstract class SettingsMenuEntry<T> extends StatefulWidget {
   final List<SettingsMenuItem> group;
   final Widget leading;
   final String label;
-  final String secondaryText;
-  final List<SelectionOption> options;
+  final Widget masterSwitchTitle;
+  final WidgetBuilder activeSecondaryTextBuilder;
+  final WidgetBuilder inactiveSecondaryTextBuilder;
+  final WidgetBuilder inactiveTextBuilder;
+  final Widget secondaryText;
+  final List<Choice> choices;
   final T defaultValue;
-  final WidgetBuilder activeBuilder;
-  final WidgetBuilder inactiveBuilder;
   final bool showTopDivider;
   final bool showBottomDivider;
   final bool enabled;
@@ -104,14 +110,16 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     key: key,
     id: item.id,
     leading: item.leading,
+    masterSwitchTitle: item.masterSwitchTitle,
+    activeSecondaryTextBuilder: item.activeSecondaryTextBuilder,
+    inactiveSecondaryTextBuilder: item.inactiveSecondaryTextBuilder,
     label: item.label,
     sectionTitle: item.sectionTitle,
     secondaryText: item.secondaryText,
     group: group ?? item.group,
-    options: item.options,
+    choices: item.choices,
     defaultValue: item.defaultValue,
-    activeBuilder: item.activeBuilder,
-    inactiveBuilder: item.inactiveBuilder,
+    inactiveTextBuilder: item.inactiveTextBuilder,
     showTopDivider: showTopDivider ?? _needShowTopDivider(item, previous),
     showBottomDivider: showBottomDivider ?? _needShowBottomDivider(item),
     enabled: enabled ?? item.enabled,
@@ -125,7 +133,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     @required String id,
     Widget leading,
     @required String label,
-    String secondaryText,
+    Widget secondaryText,
     @required bool defaultValue,
     bool enabled = true,
     ValueChanged onChanged
@@ -159,8 +167,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     @required String id,
     Widget leading,
     @required String label,
-    String secondaryText,
-    @required List<SelectionOption> options,
+    Widget secondaryText,
+    @required List<Choice> choices,
     @required T defaultValue,
     bool enabled = true,
     ValueChanged onChanged
@@ -170,7 +178,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     leading: leading,
     label: label,
     secondaryText: secondaryText,
-    options: options,
+    choices: choices,
     defaultValue: defaultValue,
     enabled: enabled,
     onChanged: onChanged,
@@ -182,8 +190,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     @required String id,
     Widget leading,
     @required String label,
-    String secondaryText,
-    @required List<SelectionOption> options,
+    Widget secondaryText,
+    @required List<Choice> choices,
     @required List<T> defaultValue,
     bool enabled = true,
     ValueChanged onChanged
@@ -194,7 +202,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     label: label,
     secondaryText: secondaryText,
     defaultValue: defaultValue,
-    options: options,
+    choices: choices,
     enabled: enabled,
     onChanged: onChanged,
     type: SettingsMenuItemType.multipleChoice
@@ -205,7 +213,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     @required String id,
     Widget leading,
     @required String label,
-    String secondaryText,
+    Widget secondaryText,
     @required double defaultValue,
     bool enabled = true,
     ValueChanged onChanged
@@ -226,7 +234,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     @required String id,
     Widget leading,
     @required String label,
-    String secondaryText,
+    Widget secondaryText,
     DateTime defaultValue,
     bool enabled = true,
     ValueChanged onChanged
@@ -246,7 +254,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     Key key,
     @required String label,
     Widget leading,
-    String secondaryText,
+    Widget secondaryText,
     @required List<SettingsMenuItem> group,
     bool enabled = true
   }) : super(
@@ -264,8 +272,10 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     @required String id,
     Widget leading,
     @required String label,
-    String secondaryText,
-    @required WidgetBuilder inactiveBuilder,
+    @required Widget masterSwitchTitle,
+    @required WidgetBuilder activeSecondaryTextBuilder,
+    @required WidgetBuilder inactiveSecondaryTextBuilder,
+    @required WidgetBuilder inactiveTextBuilder,
     List<SettingsMenuItem> group,
     @required bool defaultValue,
     bool enabled = true,
@@ -275,8 +285,10 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     id: id,
     leading: leading,
     label: label,
-    secondaryText: secondaryText,
-    inactiveBuilder: inactiveBuilder,
+    masterSwitchTitle: masterSwitchTitle,
+    activeSecondaryTextBuilder: activeSecondaryTextBuilder,
+    inactiveSecondaryTextBuilder: inactiveSecondaryTextBuilder,
+    inactiveTextBuilder: inactiveTextBuilder,
     group: group,
     defaultValue: defaultValue,
     enabled: enabled,
@@ -289,9 +301,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     @required String id,
     Widget leading,
     @required String label,
-    String secondaryText,
-    @required WidgetBuilder activeBuilder,
-    @required WidgetBuilder inactiveBuilder,
+    @required Widget secondaryText,
     @required bool defaultValue,
     bool enabled = true,
     ValueChanged onChanged
@@ -301,8 +311,6 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     leading: leading,
     label: label,
     secondaryText: secondaryText,
-    activeBuilder: activeBuilder,
-    inactiveBuilder: inactiveBuilder,
     defaultValue: defaultValue,
     enabled: enabled,
     onChanged: onChanged,
@@ -314,7 +322,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry {
     @required String id,
     Widget leading,
     @required String label,
-    String secondaryText,
+    Widget secondaryText,
     @required List<SettingsMenuItem> group,
     @required bool defaultValue,
     bool enabled = true,
@@ -492,7 +500,7 @@ class _SettingsMenuItemToggleSwitchState<T> extends State<SettingsMenuItem<T>> {
     return SwitchListTile(
       secondary: widget.leading ?? Icon(null),
       title: Text(widget.label),
-      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      subtitle: widget.secondaryText,
       value: _value,
       selected: widget.selected,
       onChanged: widget.enabled ? _handleChanged : null
@@ -538,7 +546,7 @@ class _SettingsMenuItemSingleChoiceState<T> extends State<SettingsMenuItem<T>> {
         title: Text(widget.label),
       ),
       body: SingleChoiceControl(
-        options: widget.options,
+        choices: widget.choices,
         initialValue: widget.defaultValue,
         onChanged: widget.onChanged,
       )
@@ -550,7 +558,7 @@ class _SettingsMenuItemSingleChoiceState<T> extends State<SettingsMenuItem<T>> {
     return ListTile(
       leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
-      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      subtitle: widget.secondaryText,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: _buildSettingsScaffold)
       ),
@@ -563,12 +571,12 @@ class _SettingsMenuItemSingleChoiceState<T> extends State<SettingsMenuItem<T>> {
 class SingleChoiceControl<T> extends StatefulWidget {
   SingleChoiceControl({
     Key key,
-    @required this.options,
+    @required this.choices,
     this.initialValue,
     this.onChanged
   }) : super(key: key);
 
-  final List<SelectionOption<T>> options;
+  final List<Choice<T>> choices;
   final T initialValue;
   final ValueChanged onChanged;
 
@@ -593,7 +601,7 @@ class _SingleChoiceControlState<T> extends State<SingleChoiceControl<T>> {
   }
 
   Widget _buildRadioListTile(BuildContext context, int index) {
-    SelectionOption option = widget.options[index];
+    Choice option = widget.choices[index];
     return RadioListTile(
       secondary: Visibility(
         visible: false,
@@ -611,7 +619,7 @@ class _SingleChoiceControlState<T> extends State<SingleChoiceControl<T>> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: widget.options.length,
+      itemCount: widget.choices.length,
       itemBuilder: _buildRadioListTile
     );
   }
@@ -624,9 +632,9 @@ class _SettingsMenuItemMultipleChoiceState<T> extends State<SettingsMenuItem<T>>
       title: Text(widget.label),
       contentPadding: const EdgeInsets.only(top: 16.0),
       content: SizedBox(
-        height: widget.options.length * _kListTileHeight,
+        height: widget.choices.length * _kListTileHeight,
         child: MultipleChoiceControl(
-          options: widget.options,
+          choices: widget.choices,
           initialValue: widget.defaultValue,
           onChanged: widget.onChanged
         ),
@@ -640,7 +648,7 @@ class _SettingsMenuItemMultipleChoiceState<T> extends State<SettingsMenuItem<T>>
     return ListTile(
       leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
-      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      subtitle: widget.secondaryText,
       onTap: () => showDialog(
         context: context,
         builder: _buildAlertDialog
@@ -654,12 +662,12 @@ class _SettingsMenuItemMultipleChoiceState<T> extends State<SettingsMenuItem<T>>
 class MultipleChoiceControl<T> extends StatefulWidget {
   MultipleChoiceControl({
     Key key,
-    @required this.options,
+    @required this.choices,
     @required this.initialValue,
     this.onChanged
   }) : super(key: key);
 
-  final List<SelectionOption> options;
+  final List<Choice> choices;
   final List<T> initialValue;
   final ValueChanged onChanged;
 
@@ -684,7 +692,7 @@ class _MultipleChoiceControlState<T> extends State<MultipleChoiceControl<T>> {
   }
 
   Widget _buildCheckboxListTile(BuildContext context, int index) {
-    SelectionOption option = widget.options[index];
+    Choice option = widget.choices[index];
     bool checked = _value.contains(option.value);
     return CheckboxListTile(
       title: Text(option.label),
@@ -700,7 +708,7 @@ class _MultipleChoiceControlState<T> extends State<MultipleChoiceControl<T>> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: widget.options.length,
+      itemCount: widget.choices.length,
       itemBuilder: _buildCheckboxListTile
     );
   }
@@ -844,7 +852,7 @@ class _SettingsMenuItemDateTimeState<T> extends State<SettingsMenuItem<T>> {
     return ListTile(
       leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
-      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      subtitle: widget.secondaryText,
       onTap: _selectDate,
       selected: widget.selected,
       enabled: widget.enabled,
@@ -868,7 +876,7 @@ class _SettingsMenuItemListSubscreenState<T> extends State<SettingsMenuItem<T>> 
     return ListTile(
       leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
-      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      subtitle: widget.secondaryText,
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: _buildSettingsScaffold)),
       selected: widget.selected,
       enabled: widget.enabled,
@@ -877,17 +885,17 @@ class _SettingsMenuItemListSubscreenState<T> extends State<SettingsMenuItem<T>> 
 }
 
 class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
-  bool _value;
+  bool _switchedOn;
 
   @override
   void initState() {
     super.initState();
-    _value = widget.defaultValue;
+    _switchedOn = widget.defaultValue;
   }
 
   void _handleChanged(bool newValue) {
     setState(() {
-      _value = newValue;
+      _switchedOn = newValue;
     });
   }
 
@@ -896,7 +904,7 @@ class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
     return SettingsMenuItem._(
       item,
       previous: index > 0 ? widget.group[index - 1] : null,
-      enabled: widget.enabled == false ? false : _value
+      enabled: widget.enabled == false ? false : _switchedOn
     );
   }
 
@@ -913,8 +921,8 @@ class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
         SwitchListTile(
           secondary: widget.leading ?? Icon(null),
           title: Text(widget.label),
-          subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
-          value: _value,
+          subtitle: widget.secondaryText,
+          value: _switchedOn,
           onChanged: widget.enabled ? _handleChanged : null,
           selected: widget.selected,
         ),
@@ -925,6 +933,37 @@ class _SettingsMenuItemDependencyState<T> extends State<SettingsMenuItem<T>> {
 }
 
 class _SettingsMenuItemMasterSwitchState<T> extends State<SettingsMenuItem<T>> {
+  bool _value;
+
+  @override
+  initState() {
+    super.initState();
+    _value = widget.defaultValue;
+  }
+
+  void _handleChanged(bool newValue) {
+    if (widget.onChanged != null) widget.onChanged(newValue);
+    setState(() {
+      _value = newValue;
+    });
+  }
+
+  Widget _buildActive(BuildContext context) {
+    return Settings(widget.group);
+  }
+
+  Widget _buildInactive(BuildContext context) {
+    return Container(
+      alignment: Alignment.topLeft,
+      padding: const EdgeInsets.only(
+        left: 72,
+        right: 16.0,
+        top: 16.0,
+        bottom: 16.0
+      ),
+      child: widget.inactiveTextBuilder(context),
+    );
+  }
 
   Widget _buildSettingsScaffold(BuildContext context) {
     return Scaffold(
@@ -932,12 +971,19 @@ class _SettingsMenuItemMasterSwitchState<T> extends State<SettingsMenuItem<T>> {
         title: Text(widget.label),
       ),
       body: MasterSwitchControl(
-        title: Text(widget.label),
-        initialValue: widget.defaultValue,
-        activeBuilder: (context) => Settings(widget.group),
-        inactiveBuilder: widget.inactiveBuilder
+        title: widget.masterSwitchTitle,
+        value: _value,
+        onChanged: _handleChanged,
+        activeBuilder: _buildActive,
+        inactiveBuilder: _buildInactive
       )
     );
+  }
+
+  Widget _buildSecondaryText(BuildContext context) {
+    return _value
+      ? widget.activeSecondaryTextBuilder(context)
+      : widget.inactiveSecondaryTextBuilder(context);
   }
 
   @override
@@ -945,42 +991,14 @@ class _SettingsMenuItemMasterSwitchState<T> extends State<SettingsMenuItem<T>> {
     return ListTile(
       leading: widget.leading ?? Icon(null),
       title: Text(widget.label),
-      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
+      subtitle: _buildSecondaryText(context),
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: _buildSettingsScaffold)
       ),
-      selected: widget.selected,
-      enabled: widget.enabled,
-    );
-  }
-}
-
-class _SettingsMenuItemIndividualSwitchState<T> extends State<SettingsMenuItem<T>> {
-
-  Widget _buildSettingsScaffold(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.label),
-      ),
-      body: MasterSwitchControl(
-        title: Text(widget.label),
-        initialValue: widget.defaultValue,
-        activeBuilder: widget.activeBuilder,
-        inactiveBuilder: widget.inactiveBuilder
-      )
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: widget.leading ?? Icon(null),
-      title: Text(widget.label),
-      subtitle: widget.secondaryText == null ? null : Text(widget.secondaryText),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: _buildSettingsScaffold)
+      trailing: Switch(
+        value: _value,
+        onChanged: _handleChanged,
       ),
       selected: widget.selected,
       enabled: widget.enabled,
@@ -992,33 +1010,169 @@ class MasterSwitchControl extends StatefulWidget {
   MasterSwitchControl({
     Key key,
     @required this.title,
-    this.initialValue = false,
+    @required this.value,
+    @required this.onChanged,
     @required this.activeBuilder,
-    @required this.inactiveBuilder,
+    @required this.inactiveBuilder
   }) : super(key: key);
 
   final Widget title;
-  final bool initialValue;
+  final bool value;
   final WidgetBuilder activeBuilder;
   final WidgetBuilder inactiveBuilder;
+  final ValueChanged<bool> onChanged;
 
   @override
   _MasterSwitchControlState createState() => _MasterSwitchControlState();
 }
 class _MasterSwitchControlState extends State<MasterSwitchControl> {
-  bool _isActive;
+  bool _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.value;
+  }
+
+  void _handleChanged(bool newValue) {
+    widget.onChanged(newValue);
+    setState(() {
+      _value = newValue;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentSwitchControl(
+      title: widget.title,
+      value: _value,
+      contentBuilder: _value ? widget.activeBuilder : widget.inactiveBuilder,
+      onChanged: _handleChanged,
+    );
+  }
+}
+
+class _SettingsMenuItemIndividualSwitchState<T> extends State<SettingsMenuItem<T>> {
+  bool _value;
+  String get _turnedLabel => _value ? statusOnLabel : statusOffLabel;
 
   @override
   initState() {
     super.initState();
-    _isActive = widget.initialValue;
+    _value = widget.defaultValue;
   }
 
-  void _handleChanged(bool isActive) {
+  void _handleChanged(bool newValue) {
+    if (widget.onChanged != null) widget.onChanged(newValue);
     setState(() {
-      _isActive = isActive;
+      _value = newValue;
     });
   }
+
+  Widget _buildSettingsScaffold(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.label),
+      ),
+      body: IndividualSwitchControl(
+        activeTitleBuilder: (context) => Text(statusOnLabel),
+        inactiveTitleBuilder: (context) => Text(statusOffLabel),
+        initialValue: _value,
+        secondaryText: widget.secondaryText,
+        onChanged: _handleChanged,
+      )
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: widget.leading ?? Icon(null),
+      title: Text(widget.label),
+      subtitle: Text(_turnedLabel),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: _buildSettingsScaffold)
+      ),
+      selected: widget.selected,
+      enabled: widget.enabled,
+    );
+  }
+}
+
+class IndividualSwitchControl extends StatefulWidget {
+  IndividualSwitchControl({
+    Key key,
+    @required this.activeTitleBuilder,
+    @required this.inactiveTitleBuilder,
+    @required this.initialValue,
+    @required this.onChanged,
+    @required this.secondaryText
+  }) : super(key: key);
+
+  final WidgetBuilder activeTitleBuilder;
+  final WidgetBuilder inactiveTitleBuilder;
+  final bool initialValue;
+  final Widget secondaryText;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  _IndividualSwitchControlState createState() => _IndividualSwitchControlState();
+}
+class _IndividualSwitchControlState extends State<IndividualSwitchControl> {
+  bool _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.initialValue;
+  }
+
+  void _handleChanged(bool newValue) {
+    setState(() {
+      _value = newValue;
+    });
+    widget.onChanged(newValue);
+  }
+
+  Widget _buildTitle(BuildContext context) {
+    return _value
+      ? widget.activeTitleBuilder(context)
+      : widget.inactiveTitleBuilder(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentSwitchControl(
+      title: _buildTitle(context),
+      value: _value,
+      contentBuilder: (context) => Container(
+        padding: const EdgeInsets.only(
+          left: 72,
+          right: 16.0,
+          top: 16.0,
+          bottom: 16.0
+        ),
+        child: widget.secondaryText,
+      ),
+      onChanged: _handleChanged,
+    );
+  }
+}
+
+class ContentSwitchControl extends StatelessWidget {
+  ContentSwitchControl({
+    Key key,
+    @required this.title,
+    @required this.value,
+    @required this.contentBuilder,
+    @required this.onChanged
+  }) : super(key: key);
+
+  final Widget title;
+  final bool value;
+  final WidgetBuilder contentBuilder;
+  final ValueChanged<bool> onChanged;
 
   Widget _buildControl(BuildContext context) {
     return Container(
@@ -1027,17 +1181,14 @@ class _MasterSwitchControlState extends State<MasterSwitchControl> {
           visible: false,
           child: CircleAvatar()
         ),
-        title: Theme(
-          data: ThemeData.dark(),
-          child: widget.title
-        ),
-        value: _isActive,
-        onChanged: _handleChanged,
+        title: title,
+        value: value,
+        onChanged: onChanged,
         activeColor: Colors.white,
         inactiveThumbColor: Colors.white,
       ),
       decoration: BoxDecoration(
-        color: _isActive
+        color: value
           ? Theme.of(context).primaryColor
           : Theme.of(context).disabledColor
       ),
@@ -1046,9 +1197,7 @@ class _MasterSwitchControlState extends State<MasterSwitchControl> {
 
   Widget _buildContent(BuildContext context) {
     return Expanded(
-      child: _isActive
-        ? widget.activeBuilder(context)
-        : widget.inactiveBuilder(context)
+      child: contentBuilder(context)
     );
   }
 
