@@ -1096,6 +1096,11 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
     data.forEach((item) {
       List<String> itemParentsTitles;
+      bool isScreen = [
+        SettingsMenuItemType.listSubscreen,
+        SettingsMenuItemType.masterSwitch,
+        SettingsMenuItemType.individualSwitch,
+      ].contains(item.type);
 
       if ((item.label ?? '').startsWith(query)) {
         suggestions.add(
@@ -1108,7 +1113,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       }
 
       if (item.group != null) {
-        if (item.type == SettingsMenuItemType.listSubscreen) {
+        if (isScreen) {
           itemParentsTitles = []
             ..addAll(parentsTitles)
             ..add(item.label);
@@ -1116,7 +1121,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
         _getSuggestions(
           parent: item,
-          screen: item.type == SettingsMenuItemType.listSubscreen ? item : null,
+          screen: isScreen ? item : screen,
           suggestions: suggestions,
           parentsTitles: itemParentsTitles
         );
@@ -1143,11 +1148,10 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
   List<SettingsMenuItem> _getGroupWithSelected(
     List<SettingsMenuItem> group,
-    SettingsMenuItem selectItem
+    SettingsMenuItem selectedItem
   ) {
     return group.map((item) {
-      if (item == selectItem) {
-        print('Selected: ${item.label}');
+      if (item == selectedItem) {
         return SettingsMenuItem._(
           item,
           selected: true,
@@ -1155,7 +1159,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       } else if (item.group != null) {
         return SettingsMenuItem._(
           item,
-          group: _getGroupWithSelected(item.group, selectItem),
+          group: _getGroupWithSelected(item.group, selectedItem),
         );
       }
 
@@ -1171,7 +1175,7 @@ class _SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(hasScreen ? '${suggestion.screen.label}' : 'Settings'),
+        title: Text(hasScreen ? suggestion.screen.label : 'Settings'),
       ),
       body: Settings(settings),
     );
