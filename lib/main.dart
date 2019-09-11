@@ -22,10 +22,11 @@ class App extends StatelessWidget {
         leading: Icon(Icons.settings),
         label: 'Master Switch',
         masterSwitchTitle: Text('Use Master Switch'),
-        statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
+        //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (_) => Text('Текст неактивного состояния'),
         initialValue: true,
-        onChanged: (value) => print('value: $value'),
+        duplicateSwitchInMenuItem: true,
+        onChanged: (bool value) => print('value: $value'),
         //enabled: true,
         group: <SettingsMenuItem>[
           SettingsMenuItem.toggleSwitch(
@@ -192,34 +193,38 @@ class App extends StatelessWidget {
         )
       ],
     ),
-    SettingsMenuItem.multipleChoice(
+    SettingsMenuItem<int>.multipleChoice(
       id: 'SETTING_8',
       leading: Icon(Icons.settings),
       label: 'Multiple Choice',
-      secondaryText: Text('Несколько из списка'),
-      choices: <Choice>[
+//      statusTextBuilder: (context, List<Choice<int>> choices) {
+//        if (choices.isEmpty) return Text('Not Chosen');
+//        String labels = choices.map((choice) => choice.label).join(', ');
+//        return Text('$labels');
+//      },
+      choices: <Choice<int>>[
         Choice(label: 'Опция 1', value: 1),
         Choice(label: 'Опция 2', value: 2),
         Choice(label: 'Опция 3', value: 3),
         Choice(label: 'Опция 4', value: 4),
       ],
       initialValue: [1, 3],
-      onChanged: (value) => print('value: $value'),
+      onChanged: (List<int> value) => print('value: $value'),
       //enabled: false
     ),
-    SettingsMenuItem.singleChoice(
+    SettingsMenuItem<int>.singleChoice(
       id: 'SETTING_9',
       leading: Icon(Icons.settings),
       label: 'Single Choice',
-      secondaryText: Text('Один из списка'),
-      choices: <Choice>[
+      //statusTextBuilder: (context, Choice<int> choice) => Text('${choice.label}'),
+      choices: <Choice<int>>[
         Choice(label: 'Опция 1', value: 1),
         Choice(label: 'Опция 2', value: 2),
         Choice(label: 'Опция 3', value: 3),
         Choice(label: 'Опция 4', value: 4),
       ],
       initialValue: 1,
-      onChanged: (value) => print('value: $value'),
+      onChanged: (int value) => print('value: $value'),
       //enabled: false
     ),
     SettingsMenuItem.dateTime(
@@ -227,7 +232,7 @@ class App extends StatelessWidget {
       leading: Icon(Icons.settings),
       label: 'DateTime',
       initialValue: DateTime(2020),
-      secondaryText: Text('Дата и время'),
+      //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),
     ),
     SettingsMenuItem.toggleSwitch(
