@@ -6,7 +6,7 @@ void main() => runApp(App());
 
 class App extends StatelessWidget {
 
-  List<SettingsMenuItem> _getSettings(BuildContext context) {
+  List<SettingsMenuItem> _itemBuilder(BuildContext context) {
     return [
     SettingsMenuItem.individualSwitch(
       id: 'SETTING_1',
@@ -16,19 +16,21 @@ class App extends StatelessWidget {
       initialValue: true,
       //enabled: true,
       onChanged: (value) => print('value: $value'),
+      subscreenBuilder: _buildSubscreen,
     ),
     SettingsMenuItem.masterSwitch(
         id: 'SETTING_2',
         leading: Icon(Icons.settings),
         label: 'Master Switch',
         masterSwitchTitle: Text('Use Master Switch'),
-        //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
+        statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (_) => Text('Текст неактивного состояния'),
         initialValue: true,
         duplicateSwitchInMenuItem: true,
         onChanged: (bool value) => print('value: $value'),
         //enabled: true,
-        group: <SettingsMenuItem>[
+        subscreenBuilder: _buildSubscreen,
+        itemBuilder: (context) => <SettingsMenuItem>[
           SettingsMenuItem.toggleSwitch(
             id: 'SETTING_2.1',
             leading: Icon(Icons.settings),
@@ -46,7 +48,7 @@ class App extends StatelessWidget {
           ),
           SettingsMenuItem.section(
             title: 'Section',
-            group: <SettingsMenuItem>[
+            itemBuilder: (context) =>  <SettingsMenuItem>[
               SettingsMenuItem.toggleSwitch(
                 id: 'SETTING_3.3.1',
                 leading: Icon(Icons.settings),
@@ -72,7 +74,7 @@ class App extends StatelessWidget {
       secondaryText: Text('Состояние зависимостей'),
       initialValue: true,
       onChanged: (value) => print('value: $value'),
-      group: <SettingsMenuItem>[
+      itemBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_3.1',
           leading: Icon(Icons.settings),
@@ -91,7 +93,7 @@ class App extends StatelessWidget {
         ),
         SettingsMenuItem.section(
           title: 'Section 1',
-          group: <SettingsMenuItem>[
+          itemBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_3.3.1',
               leading: Icon(Icons.settings),
@@ -119,7 +121,7 @@ class App extends StatelessWidget {
 //    ),
     SettingsMenuItem.section(
       title: 'Section 2',
-      group: <SettingsMenuItem>[
+      itemBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_4.1',
           leading: Icon(Icons.settings),
@@ -142,18 +144,22 @@ class App extends StatelessWidget {
       label: 'Slider',
       secondaryText: Text('Страница настроек'),
       initialValue: 0,
-      onChanged: (value) => print('value: $value'),
+      min: 0,
+      max: 100,
+      onChangeEnd: (double value) => print('value: $value'),
     ),
     SettingsMenuItem.listSubscreen(
       label: 'List Subscreen',
       leading: Icon(Icons.settings),
       secondaryText: Text('Страница настроек'),
-      group: [
+      subscreenBuilder: _buildSubscreen,
+      itemBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.listSubscreen(
           label: 'List Subscreen Item 1',
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
-          group: [
+          subscreenBuilder: _buildSubscreen,
+          itemBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_6.1',
               leading: Icon(Icons.settings),
@@ -174,7 +180,8 @@ class App extends StatelessWidget {
           label: 'List Subscreen Item 2',
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
-          group: [
+          subscreenBuilder: _buildSubscreen,
+          itemBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_7.1',
               leading: Icon(Icons.settings),
@@ -231,6 +238,8 @@ class App extends StatelessWidget {
       id: 'SETTINGS_10',
       leading: Icon(Icons.settings),
       label: 'DateTime',
+      min: DateTime(2019),
+      max: DateTime(2021),
       initialValue: DateTime(2020),
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),
@@ -246,14 +255,36 @@ class App extends StatelessWidget {
     ];
   }
 
+  Widget _buildSubscreen(
+    BuildContext context,
+    Widget body,
+    SettingsSearch showSearch
+  ) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Settings'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () => showSearch(context)
+          ),
+          IconButton(
+            icon: Icon(Icons.help),
+            onPressed: () => null
+          )
+        ],
+      ),
+      body: body
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData.light(),
-      home: SettingsScaffold(
-        title: Text('Settings'),
-        settings: _getSettings(context),
-        helpBuilder: (context) => Text('Help Message'),
+      home: SettingsPage(
+        itemBuilder: _itemBuilder,
+        subscreenBuilder: _buildSubscreen,
       ),
     );
   }
