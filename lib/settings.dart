@@ -12,12 +12,12 @@ const List<SettingsMenuItemType> _kScreenSettingsMenuItemTypes = [
 const String activeLabel = 'On';
 const String inactiveLabel = 'Off';
 
-typedef SettingsSubscreenBuilder<T> = Function(
+typedef SettingsPageBuilder<T> = Function(
   BuildContext context,
+  Widget title,
   Widget body,
-  SettingsSearch onSearch
+  VoidCallback onSearch
 );
-typedef SettingsSearch = void Function(BuildContext context, { String query });
 typedef SettingsMenuItemBuilder<T> = List<SettingsMenuItem<T>> Function(BuildContext context);
 typedef StatusBuilder<T> = Widget Function(BuildContext context, T status);
 typedef MenuItemBuilder = Widget Function(BuildContext context, {
@@ -25,7 +25,7 @@ typedef MenuItemBuilder = Widget Function(BuildContext context, {
   bool selected,
   bool showTopDivider,
   bool showBottomDivider,
-  SettingsSearch onSearch
+  VoidCallback showSettingsSearch
 });
 
 enum SettingsMenuItemType {
@@ -57,11 +57,13 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
     Key key,
     this.label,
     this.itemBuilder,
+    this.pageBuilder,
     @required this.builder,
     @required this.type
   });
 
   final String label;
+  final SettingsPageBuilder pageBuilder;
   final SettingsMenuItemBuilder itemBuilder;
   final MenuItemBuilder builder;
   final SettingsMenuItemType type;
@@ -99,7 +101,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     SettingsMenuItem previous,
     bool selected = false,
     bool enabled,
-    SettingsSearch showSearch
+    VoidCallback onSearch
   }) : super(
     key: key,
     builder: (BuildContext context, {
@@ -107,15 +109,18 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch,
     }) => item.builder(
       context,
       dependencyEnabled: enabled,
       selected: selected,
       showTopDivider: _needShowTopDivider(context, item, previous),
       showBottomDivider: _needShowBottomDivider(item),
-      onSearch: showSearch
+      showSettingsSearch: onSearch
     ),
+    label: item.label,
+    itemBuilder: item.itemBuilder,
+    pageBuilder: item.pageBuilder,
     type: item.type
   );
 
@@ -135,7 +140,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => ToggleSwitchMenuItem(
       id: id,
       leading: leading,
@@ -162,7 +167,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider = true,
       bool showBottomDivider = true,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => SectionMenuItem(
       title: title,
       itemBuilder: itemBuilder,
@@ -182,6 +187,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     StatusBuilder<Choice<T>> statusTextBuilder,
     @required List<Choice<T>> choices,
     @required T initialValue,
+    SettingsPageBuilder pageBuilder,
     bool enabled = true,
     ValueChanged<T> onChanged
   }) : super(
@@ -191,7 +197,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => SingleChoiceMenuItem<T>(
       id: id,
       leading: leading,
@@ -199,11 +205,14 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       statusTextBuilder: statusTextBuilder,
       choices: choices,
       initialValue: initialValue,
+      pageBuilder: pageBuilder,
       enabled: dependencyEnabled ?? enabled,
       selected: selected,
       onChanged: onChanged,
+      onSearch: showSettingsSearch,
     ),
     label: label,
+    pageBuilder: pageBuilder,
     type: SettingsMenuItemType.singleChoice,
   );
 
@@ -224,7 +233,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => MultipleChoiceMenuItem<T>(
       id: id,
       leading: leading,
@@ -261,7 +270,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => SliderMenuItem(
       id: id,
       leading: leading,
@@ -299,7 +308,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => DateTimeMenuItem(
       id: id,
       leading: leading,
@@ -322,7 +331,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Widget leading,
     Widget secondaryText,
     @required SettingsMenuItemBuilder itemBuilder,
-    SettingsSubscreenBuilder subscreenBuilder,
+    @required SettingsPageBuilder pageBuilder,
     bool enabled = true
   }) : super(
     key: key,
@@ -331,19 +340,20 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => ListSubscreenMenuItem(
       leading: leading,
       label: label,
       secondaryText: secondaryText,
       itemBuilder: itemBuilder,
-      subscreenBuilder: subscreenBuilder,
+      pageBuilder: pageBuilder,
       enabled: dependencyEnabled ?? enabled,
       selected: selected,
-      onSearch: onSearch
+      onSearch: showSettingsSearch
     ),
     label: label,
     itemBuilder: itemBuilder,
+    pageBuilder: pageBuilder,
     type: SettingsMenuItemType.listSubscreen
   );
 
@@ -356,11 +366,11 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     StatusBuilder<bool> statusTextBuilder,
     @required WidgetBuilder inactiveTextBuilder,
     bool duplicateSwitchInMenuItem = false,
-    SettingsMenuItemBuilder itemBuilder,
+    @required SettingsMenuItemBuilder itemBuilder,
     @required bool initialValue,
     bool enabled = true,
     ValueChanged<bool> onChanged,
-    SettingsSubscreenBuilder subscreenBuilder
+    @required SettingsPageBuilder pageBuilder
   }) : super(
     key: key,
     builder: (BuildContext context, {
@@ -368,7 +378,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => MasterSwitchMenuItem(
       id: id,
       leading: leading,
@@ -382,11 +392,12 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       enabled: dependencyEnabled ?? enabled,
       selected: selected,
       onChanged: onChanged,
-      subscreenBuilder: subscreenBuilder,
-      onSearch: onSearch
+      pageBuilder: pageBuilder,
+      onSearch: showSettingsSearch
     ),
     label: label,
     itemBuilder: itemBuilder,
+    pageBuilder: pageBuilder,
     type: SettingsMenuItemType.masterSwitch
   );
 
@@ -395,10 +406,10 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required String label,
-    @required Widget secondaryText,
+    @required Widget description,
     @required bool initialValue,
     bool enabled = true,
-    SettingsSubscreenBuilder subscreenBuilder,
+    @required SettingsPageBuilder pageBuilder,
     ValueChanged<bool> onChanged
   }) : super(
     key: key,
@@ -407,20 +418,21 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => IndividualSwitchMenuItem(
       id: id,
       leading: leading,
       label: label,
-      secondaryText: secondaryText,
+      description: description,
       initialValue: initialValue,
       enabled: dependencyEnabled ?? enabled,
       selected: selected,
       onChanged: onChanged,
-      subscreenBuilder: subscreenBuilder,
-      onSearch: onSearch,
+      pageBuilder: pageBuilder,
+      onSearch: showSettingsSearch,
     ),
     label: label,
+    pageBuilder: pageBuilder,
     type: SettingsMenuItemType.individualSwitch
   );
 
@@ -441,7 +453,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       bool selected = false,
       bool showTopDivider,
       bool showBottomDivider,
-      SettingsSearch onSearch
+      VoidCallback showSettingsSearch
     }) => DependencyMenuItem(
       id: id,
       leading: leading,
@@ -471,7 +483,7 @@ class SettingsMenu extends StatelessWidget {
   }) : super(key: key);
 
   final SettingsMenuItemBuilder itemBuilder;
-  final SettingsSearch onSearch;
+  final VoidCallback onSearch;
   final bool enabled;
 
   @override
@@ -485,7 +497,7 @@ class SettingsMenu extends StatelessWidget {
           item,
           previous: index > 1 ? group[index - 1] : null,
           enabled: enabled,
-          showSearch: onSearch,
+          onSearch: onSearch,
         );
       }
     );
@@ -495,35 +507,37 @@ class SettingsMenu extends StatelessWidget {
 class SettingsPage extends StatelessWidget {
   SettingsPage({
     Key key,
+    @required this.title,
     @required this.itemBuilder,
-    @required this.subscreenBuilder,
+    @required this.builder,
   }) : super(key: key);
 
-  final SettingsSubscreenBuilder subscreenBuilder;
+  final Widget title;
+  final SettingsPageBuilder builder;
   final SettingsMenuItemBuilder itemBuilder;
 
-  void _showSearch(context, {String query = ''}) {
+  void _showSettingsSearch(context) {
     showSearch(
       context: context,
       delegate: SettingsSearchDelegate(
         itemBuilder: itemBuilder
-      ),
-      query: query
+      )
     );
   }
 
   Widget _buildBody(BuildContext context) {
     return SettingsMenu(
       itemBuilder: itemBuilder,
-      onSearch: _showSearch,
+      onSearch: () => _showSettingsSearch(context),
     );
   }
 
   @override
-  Widget build(BuildContext context) => subscreenBuilder(
+  Widget build(BuildContext context) => builder(
     context,
+    title,
     _buildBody(context),
-    _showSearch
+    () => _showSettingsSearch(context)
   );
 }
 
@@ -683,22 +697,26 @@ class SingleChoiceMenuItem<T> extends StatefulWidget {
     this.leading,
     @required this.label,
     this.statusTextBuilder,
+    this.pageBuilder,
     @required this.choices,
     @required this.initialValue,
     this.enabled = true,
     this.selected = false,
-    this.onChanged
+    this.onChanged,
+    this.onSearch
   }) : super(key: key);
 
   final String id;
   final Widget leading;
   final String label;
   final StatusBuilder<Choice<T>> statusTextBuilder;
+  final SettingsPageBuilder pageBuilder;
   final List<Choice<T>> choices;
   final T initialValue;
   final bool enabled;
   final bool selected;
   final ValueChanged<T> onChanged;
+  final VoidCallback onSearch;
 
   @override
   _SingleChoiceMenuItemState<T> createState() => _SingleChoiceMenuItemState<T>();
@@ -720,16 +738,31 @@ class _SingleChoiceMenuItemState<T> extends State<SingleChoiceMenuItem<T>> {
     });
   }
 
+  Widget _buildTitle(BuildContext context) {
+    return Text(widget.label);
+  }
+
+  Widget _buildBody(BuildContext context) {
+    return SingleChoiceMenuItemControl<T>(
+      choices: widget.choices,
+      initialValue: _value,
+      onChanged: _handleChanged,
+    );
+  }
+
   Widget _buildPage(BuildContext context) {
+    if (widget.pageBuilder != null) return widget.pageBuilder(
+      context,
+      _buildTitle(context),
+      _buildBody(context),
+      widget.onSearch
+    );
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.label),
+        title: _buildTitle(context),
       ),
-      body: SingleChoiceMenuItemControl<T>(
-        choices: widget.choices,
-        initialValue: _value,
-        onChanged: _handleChanged,
-      )
+      body: _buildBody(context)
     );
   }
 
@@ -1195,7 +1228,7 @@ class ListSubscreenMenuItem extends StatelessWidget {
     this.leading,
     this.secondaryText,
     @required this.itemBuilder,
-    this.subscreenBuilder,
+    @required this.pageBuilder,
     this.enabled = true,
     this.selected = false,
     this.onSearch
@@ -1205,11 +1238,15 @@ class ListSubscreenMenuItem extends StatelessWidget {
   final Widget leading;
   final Widget secondaryText;
   final SettingsMenuItemBuilder itemBuilder;
-  final SettingsSubscreenBuilder subscreenBuilder;
+  final SettingsPageBuilder pageBuilder;
   final bool enabled;
   final bool selected;
-  final SettingsSearch onSearch;
+  final VoidCallback onSearch;
 
+  Widget _buildTitle(BuildContext context) {
+    return Text(label);
+  }
+  
   Widget _buildBody(BuildContext context) {
     return SettingsMenu(
       itemBuilder: itemBuilder,
@@ -1217,25 +1254,13 @@ class ListSubscreenMenuItem extends StatelessWidget {
     );
   }
 
-  Widget _buildSubscreen(context) {
-    if (subscreenBuilder != null) return subscreenBuilder(
+  Widget _buildPage(context) {
+    return pageBuilder(
       context,
+      _buildTitle(context),
       _buildBody(context),
       onSearch
     );
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(label),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: null//() => showSearch(context)
-          )
-        ],
-      ),
-      body: _buildBody(context)
-  );
   }
 
   @override
@@ -1246,7 +1271,7 @@ class ListSubscreenMenuItem extends StatelessWidget {
       subtitle: secondaryText,
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: _buildSubscreen)
+        MaterialPageRoute(builder: _buildPage)
       ),
       selected: selected,
       enabled: enabled,
@@ -1345,7 +1370,7 @@ class MasterSwitchMenuItem extends StatefulWidget {
     this.enabled = true,
     this.selected = false,
     this.onChanged,
-    this.subscreenBuilder,
+    @required this.pageBuilder,
     this.onSearch
   }) : super(key: key);
 
@@ -1361,8 +1386,8 @@ class MasterSwitchMenuItem extends StatefulWidget {
   final bool enabled;
   final bool selected;
   final ValueChanged<bool> onChanged;
-  final SettingsSubscreenBuilder subscreenBuilder;
-  final SettingsSearch onSearch;
+  final SettingsPageBuilder pageBuilder;
+  final VoidCallback onSearch;
 
   @override
   _MasterSwitchMenuItemState createState() => _MasterSwitchMenuItemState();
@@ -1384,51 +1409,6 @@ class _MasterSwitchMenuItemState extends State<MasterSwitchMenuItem> {
     });
   }
 
-  Widget _buildActive(BuildContext context) {
-    return SettingsMenu(
-      itemBuilder: widget.itemBuilder,
-      onSearch: widget.onSearch,
-    );
-  }
-
-  Widget _buildInactive(BuildContext context) {
-    return Container(
-      alignment: Alignment.topLeft,
-      padding: const EdgeInsets.only(
-        left: 72,
-        right: 16.0,
-        top: 16.0,
-        bottom: 16.0
-      ),
-      child: widget.inactiveTextBuilder(context),
-    );
-  }
-
-  Widget _buildSubscreenBody(BuildContext context) {
-    return MasterSwitchMenuItemControl(
-      title: widget.masterSwitchTitle,
-      value: _value,
-      onChanged: _handleChanged,
-      activeBuilder: _buildActive,
-      inactiveBuilder: _buildInactive
-    );
-  }
-
-  Widget _buildSubscreen(BuildContext context) {
-    if (widget.subscreenBuilder != null) return widget.subscreenBuilder(
-      context,
-      _buildSubscreenBody(context),
-      widget.onSearch
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.label),
-      ),
-      body: _buildSubscreenBody(context)
-    );
-  }
-
   Widget _buildStatusText(BuildContext context) {
     if (widget.statusTextBuilder != null)
       return widget.statusTextBuilder(context, _value);
@@ -1443,6 +1423,50 @@ class _MasterSwitchMenuItemState extends State<MasterSwitchMenuItem> {
     ) : null;
   }
 
+
+  Widget _buildActive(BuildContext context) {
+    return SettingsMenu(
+      itemBuilder: widget.itemBuilder,
+      onSearch: widget.onSearch,
+    );
+  }
+
+  Widget _buildInactive(BuildContext context) {
+    return Container(
+      alignment: Alignment.topLeft,
+      padding: const EdgeInsets.only(
+          left: 72,
+          right: 16.0,
+          top: 16.0,
+          bottom: 16.0
+      ),
+      child: widget.inactiveTextBuilder(context),
+    );
+  }
+
+  Widget _buildTitle(BuildContext context) {
+    return Text(widget.label);
+  }
+
+  Widget _buildBody(BuildContext context) {
+    return MasterSwitchMenuItemControl(
+        title: widget.masterSwitchTitle,
+        value: _value,
+        onChanged: widget.onChanged,
+        activeBuilder: _buildActive,
+        inactiveBuilder: _buildInactive
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
+    return widget.pageBuilder(
+      context,
+      _buildTitle(context),
+      _buildBody(context),
+      widget.onSearch
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -1451,7 +1475,7 @@ class _MasterSwitchMenuItemState extends State<MasterSwitchMenuItem> {
       subtitle: _buildStatusText(context),
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: _buildSubscreen)
+        MaterialPageRoute(builder: _buildPage)
       ),
       trailing: _buildDuplicateSwitch(context),
       selected: widget.selected,
@@ -1513,25 +1537,25 @@ class IndividualSwitchMenuItem extends StatefulWidget {
     @required this.id,
     this.leading,
     @required this.label,
-    @required this.secondaryText,
+    @required this.description,
     @required this.initialValue,
     this.enabled = true,
     this.selected = false,
     this.onChanged,
-    this.subscreenBuilder,
+    @required this.pageBuilder,
     this.onSearch
   }) : super(key: key);
 
   final String id;
   final Widget leading;
   final String label;
-  final Widget secondaryText;
+  final Widget description;
   final bool initialValue;
   final bool enabled;
   final bool selected;
   final ValueChanged<bool> onChanged;
-  final SettingsSubscreenBuilder subscreenBuilder;
-  final SettingsSearch onSearch;
+  final SettingsPageBuilder pageBuilder;
+  final VoidCallback onSearch;
 
   @override
   _IndividualSwitchMenuItemState createState() => _IndividualSwitchMenuItemState();
@@ -1554,28 +1578,26 @@ class _IndividualSwitchMenuItemState extends State<IndividualSwitchMenuItem> {
     });
   }
 
-  Widget _buildSubscreenBody(BuildContext context) {
+  Widget _buildTitle(BuildContext context) {
+    return Text(widget.label);
+  }
+
+  Widget _buildBody(BuildContext context) {
     return IndividualSwitchMenuItemControl(
       activeTitleBuilder: (context) => Text(activeLabel),
       inactiveTitleBuilder: (context) => Text(inactiveLabel),
       initialValue: _value,
-      secondaryText: widget.secondaryText,
+      description: widget.description,
       onChanged: _handleChanged,
     );
   }
 
-  Widget _buildSubscreen(BuildContext context) {
-    if (widget.subscreenBuilder != null) return widget.subscreenBuilder(
+  Widget _buildPage(BuildContext context) {
+    return widget.pageBuilder(
       context,
-      _buildSubscreenBody(context),
+      _buildTitle(context),
+      _buildBody(context),
       widget.onSearch
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.label),
-      ),
-      body: _buildSubscreenBody(context)
     );
   }
 
@@ -1587,7 +1609,7 @@ class _IndividualSwitchMenuItemState extends State<IndividualSwitchMenuItem> {
       subtitle: Text(_statusLabel),
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: _buildSubscreen)
+        MaterialPageRoute(builder: _buildPage)
       ),
       selected: widget.selected,
       enabled: widget.enabled,
@@ -1602,13 +1624,13 @@ class IndividualSwitchMenuItemControl extends StatefulWidget {
     @required this.inactiveTitleBuilder,
     @required this.initialValue,
     @required this.onChanged,
-    @required this.secondaryText
+    @required this.description
   }) : super(key: key);
 
   final WidgetBuilder activeTitleBuilder;
   final WidgetBuilder inactiveTitleBuilder;
   final bool initialValue;
-  final Widget secondaryText;
+  final Widget description;
   final ValueChanged<bool> onChanged;
 
   @override
@@ -1648,7 +1670,7 @@ class _IndividualSwitchMenuItemControlState extends State<IndividualSwitchMenuIt
           top: 16.0,
           bottom: 16.0
         ),
-        child: widget.secondaryText,
+        child: widget.description,
       ),
       onChanged: _handleChanged,
     );
@@ -1710,12 +1732,12 @@ class ContentSwitchControl extends StatelessWidget {
 class Suggestion {
   Suggestion({
     @required this.item,
-    this.screen,
+    this.page,
     this.parentsTitles,
   });
 
   final SettingsMenuItem item;
-  final SettingsMenuItem screen;
+  final SettingsMenuItem page;
   final List<String> parentsTitles;
 }
 
@@ -1734,7 +1756,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 
   List<Suggestion> _getSuggestions(BuildContext context, {
-    SettingsMenuItem screen,
+    SettingsMenuItem page,
     SettingsMenuItem parent,
     List<Suggestion> suggestions,
     List<String> parentsTitles
@@ -1745,12 +1767,12 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
     data.forEach((item) {
       List<String> itemParentsTitles;
-      bool isScreen = _kScreenSettingsMenuItemTypes.contains(item.type);
+      bool isPage = _kScreenSettingsMenuItemTypes.contains(item.type);
 
       if ((item.label ?? '').startsWith(query)) {
         suggestions.add(
           Suggestion(
-            screen: screen,
+            page: page,
             item: item,
             parentsTitles: parentsTitles
           )
@@ -1758,7 +1780,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       }
 
       if (item.itemBuilder != null) {
-        if (isScreen) {
+        if (isPage) {
           itemParentsTitles = []
             ..addAll(parentsTitles)
             ..add(item.label);
@@ -1767,7 +1789,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         _getSuggestions(
           context,
           parent: item,
-          screen: isScreen ? item : screen,
+          page: isPage ? item : page,
           suggestions: suggestions,
           parentsTitles: itemParentsTitles
         );
@@ -1817,19 +1839,17 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 //    }).toList();
 //  }
 
-  Widget _buildSubscreen(BuildContext context, Suggestion suggestion) {
-    bool hasScreen = suggestion.screen != null;
+  Widget _buildPage(BuildContext context, Suggestion suggestion) {
+    bool hasPage = suggestion.page != null;
     //List<SettingsMenuItem> settings = hasScreen ? suggestion.screen.itemBuilder(context) : itemBuilder(context);
 
     //settings = _getGroupWithSelected(context, settings, suggestion.item);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(hasScreen ? suggestion.screen.label : 'Settings'),
+        title: Text(hasPage ? suggestion.page.label : 'Settings'),
       ),
-      body: SettingsMenu(
-        itemBuilder: hasScreen ? suggestion.screen.itemBuilder : itemBuilder,
-      ),
+      body: suggestion.item.builder(context),
     );
   }
 
@@ -1847,7 +1867,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         query = suggestion.item.label;
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => _buildSubscreen(context, suggestion)
+            builder: (context) => _buildPage(context, suggestion)
           )
         );
         //showResults(context);

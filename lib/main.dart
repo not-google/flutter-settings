@@ -6,30 +6,29 @@ void main() => runApp(App());
 
 class App extends StatelessWidget {
 
-  List<SettingsMenuItem> _itemBuilder(BuildContext context) {
-    return [
+  List<SettingsMenuItem> _itemBuilder(BuildContext context) => [
     SettingsMenuItem.individualSwitch(
       id: 'SETTING_1',
       leading: Icon(Icons.settings),
       label: 'Individual Switch',
-      secondaryText: Text('Очень длинное описание, которое разьясняет назначение данной настройки'),
+      description: Text('Очень длинное описание, которое разьясняет назначение данной настройки'),
       initialValue: true,
       //enabled: true,
       onChanged: (value) => print('value: $value'),
-      subscreenBuilder: _buildSubscreen,
+      pageBuilder: _buildPage,
     ),
     SettingsMenuItem.masterSwitch(
         id: 'SETTING_2',
         leading: Icon(Icons.settings),
         label: 'Master Switch',
         masterSwitchTitle: Text('Use Master Switch'),
-        statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
+        //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (_) => Text('Текст неактивного состояния'),
         initialValue: true,
         duplicateSwitchInMenuItem: true,
         onChanged: (bool value) => print('value: $value'),
         //enabled: true,
-        subscreenBuilder: _buildSubscreen,
+        pageBuilder: _buildPage,
         itemBuilder: (context) => <SettingsMenuItem>[
           SettingsMenuItem.toggleSwitch(
             id: 'SETTING_2.1',
@@ -152,13 +151,13 @@ class App extends StatelessWidget {
       label: 'List Subscreen',
       leading: Icon(Icons.settings),
       secondaryText: Text('Страница настроек'),
-      subscreenBuilder: _buildSubscreen,
+      pageBuilder: _buildPage,
       itemBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.listSubscreen(
           label: 'List Subscreen Item 1',
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
-          subscreenBuilder: _buildSubscreen,
+          pageBuilder: _buildPage,
           itemBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_6.1',
@@ -180,7 +179,7 @@ class App extends StatelessWidget {
           label: 'List Subscreen Item 2',
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
-          subscreenBuilder: _buildSubscreen,
+          pageBuilder: _buildPage,
           itemBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_7.1',
@@ -224,6 +223,7 @@ class App extends StatelessWidget {
       leading: Icon(Icons.settings),
       label: 'Single Choice',
       //statusTextBuilder: (context, Choice<int> choice) => Text('${choice.label}'),
+      pageBuilder: _buildPage,
       choices: <Choice<int>>[
         Choice(label: 'Опция 1', value: 1),
         Choice(label: 'Опция 2', value: 2),
@@ -252,21 +252,21 @@ class App extends StatelessWidget {
       secondaryText: Text('Описание настройки'),
       onChanged: (value) => print('value: $value'),
     )
-    ];
-  }
+  ];
 
-  Widget _buildSubscreen(
+  Widget _buildPage(
     BuildContext context,
+    Widget title,
     Widget body,
-    SettingsSearch showSearch
+    VoidCallback onSearch
   ) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: title,
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: () => showSearch(context)
+            onPressed: onSearch
           ),
           IconButton(
             icon: Icon(Icons.help),
@@ -283,8 +283,9 @@ class App extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData.light(),
       home: SettingsPage(
+        title: Text('Settings'),
         itemBuilder: _itemBuilder,
-        subscreenBuilder: _buildSubscreen,
+        builder: _buildPage,
       ),
     );
   }
