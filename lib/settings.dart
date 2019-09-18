@@ -42,7 +42,7 @@ class Choice<T> {
     @required this.value
   });
 
-  final String label;
+  final Text label;
   final T value;
 }
 
@@ -61,7 +61,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
   });
 
   final String id;
-  final String label;
+  final Text label;
   final StateBuilder<SettingsMenuItemState> builder;
   final StateBuilder<SettingsMenuItemState> controlBuilder;
   final StateBuilder<SettingsMenuItemState> pageContentBuilder;
@@ -128,7 +128,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Key key,
     @required String id,
     Widget leading,
-    @required String label,
+    @required Text label,
     Widget secondaryText,
     @required bool initialValue,
     bool enabled = true,
@@ -139,7 +139,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     builder: (context, state) => state.controlBuilder(context),
     controlBuilder: (context, state) => SwitchListTile(
         secondary: leading ?? Icon(null),
-        title: Text(label),
+        title: label,
         subtitle: secondaryText,
         value: state.value ?? initialValue,
         selected: state.selected ?? selected,
@@ -173,7 +173,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Key key,
     @required String id,
     Widget leading,
-    @required String label,
+    @required Text label,
     StatusBuilder<Choice<T>> statusTextBuilder,
     @required List<Choice<T>> choices,
     @required T initialValue,
@@ -188,10 +188,10 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       Choice<T> selectedChoice = choices.firstWhere((choice) => choice.value == value);
       Widget statusText = (statusTextBuilder != null)
           ? statusTextBuilder(context, selectedChoice)
-          : Text(selectedChoice.label);
+          : selectedChoice.label;
       return ListTile(
         leading: leading ?? Icon(null),
-        title: Text(label),
+        title: label,
         subtitle: statusText,
         onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: state.pageBuilder)
@@ -217,7 +217,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Key key,
     @required String id,
     Widget leading,
-    @required String label,
+    @required Text label,
     StatusBuilder<List<Choice<T>>> statusTextBuilder,
     @required List<Choice<T>> choices,
     @required List<T> initialValue,
@@ -249,7 +249,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Key key,
     @required String id,
     Widget leading,
-    @required String label,
+    @required Text label,
     Widget secondaryText,
     @required double initialValue,
     double min = 0.0,
@@ -265,7 +265,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     builder: (context, state) => state.controlBuilder(context),
     controlBuilder: (context, state) => SliderListTile(
       secondary: leading ?? Icon(null),
-      title: Text(label),
+      title: label,
       value: state.value ?? initialValue,
       selected: state.selected ?? selected,
       min: min,
@@ -284,7 +284,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Key key,
     @required String id,
     Widget leading,
-    @required String label,
+    @required Text label,
     StatusBuilder<DateTime> statusTextBuilder,
     @required DateTime initialValue,
     @required DateTime firstDate,
@@ -314,7 +314,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
 
   SettingsMenuItem.listSubpage({
     Key key,
-    @required String label,
+    @required Text label,
     Widget leading,
     Widget secondaryText,
     @required SettingsItemBuilder itemBuilder,
@@ -325,7 +325,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     key: key,
     builder: (context, state) => ListTile(
       leading: leading ?? Icon(null),
-      title: Text(label),
+      title: label,
       subtitle: secondaryText,
       onTap: () => Navigator.push(
         context,
@@ -348,7 +348,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Key key,
     @required String id,
     Widget leading,
-    @required String label,
+    @required Text label,
     @required Widget masterSwitchTitle,
     StatusBuilder<bool> statusTextBuilder,
     @required WidgetBuilder inactiveTextBuilder,
@@ -368,7 +368,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         : Text(value ? activeLabel : inactiveLabel);
       return ListTile(
         leading: leading ?? Icon(null),
-        title: Text(label),
+        title: label,
         subtitle: statusText,
         onTap: () => Navigator.push(
             context,
@@ -414,7 +414,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Key key,
     @required String id,
     Widget leading,
-    @required String label,
+    @required Text label,
     @required Widget description,
     @required bool initialValue,
     bool enabled = true,
@@ -428,7 +428,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       String statusText = value ? activeLabel : inactiveLabel;
       return ListTile(
         leading: leading ?? Icon(null),
-        title: Text(label),
+        title: label,
         subtitle: Text(statusText),
         onTap: () => Navigator.push(
             context,
@@ -457,7 +457,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Key key,
     @required String id,
     Widget leading,
-    @required String label,
+    @required Text label,
     Widget secondaryText,
     @required SettingsItemBuilder itemBuilder,
     @required bool initialValue,
@@ -469,7 +469,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     builder: (context, state) => state.controlBuilder(context),
     controlBuilder: (context, state) => DependencyControl(
       leading: leading,
-      title: Text(label),
+      title: label,
       secondaryText: secondaryText,
       itemBuilder: itemBuilder,
       dependencyEnabled: state.value ?? initialValue,
@@ -505,7 +505,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     state = state.copyWith(
       controlBuilder: (context) => buildControl(context, state)
     );
-    Widget title = Text(label);
+    Widget title = label;
     Widget body = this.pageContentBuilder(context, state);
 
     return (this.pageBuilder ?? SettingsPage.pageBuilder)(
@@ -671,7 +671,7 @@ class MultipleChoiceMenuItem<T> extends StatelessWidget {
   }) : super(key: key);
   
   final Widget leading;
-  final String label;
+  final Text label;
   final StatusBuilder<List<Choice<T>>> statusTextBuilder;
   final WidgetBuilder controlBuilder;
   final List<Choice<T>> choices;
@@ -681,7 +681,7 @@ class MultipleChoiceMenuItem<T> extends StatelessWidget {
   
   Widget _buildDialog(BuildContext context) {
     return ConfirmationDialog(
-      title: Text(label),
+      title: label,
       contentPadding: const EdgeInsets.only(top: 16.0),
       content: SizedBox(
         height: choices.length * _kListTileHeight,
@@ -700,7 +700,7 @@ class MultipleChoiceMenuItem<T> extends StatelessWidget {
       return statusTextBuilder(context, checkedChoices);
     } else {
       String statusText = checkedChoices.map(
-        (choice) => choice.label
+        (choice) => choice.label.data
       ).join(', ');
       return Text(statusText);
     }
@@ -710,7 +710,7 @@ class MultipleChoiceMenuItem<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: leading ?? Icon(null),
-      title: Text(label),
+      title: label,
       subtitle: _buildStatusText(context),
       onTap: () => showDialog(
         context: context,
@@ -882,7 +882,7 @@ class SingleChoiceControl<T> extends StatelessWidget {
         visible: false,
         child: CircleAvatar()
       ),
-      title: Text(option.label),
+      title: option.label,
       value: option.value,
       groupValue: value,
       selected: value == option.value,
@@ -916,7 +916,7 @@ class MultipleChoiceControl<T> extends StatelessWidget {
     Choice option = choices[index];
     bool checked = value.contains(option.value);
     return CheckboxListTile(
-      title: Text(option.label),
+      title: option.label,
       value: checked,
       selected: checked,
       onChanged: (bool isChecked) {
@@ -1028,7 +1028,7 @@ class DatePickerListTile extends StatelessWidget {
 
   final String id;
   final Widget leading;
-  final String label;
+  final Text label;
   final StatusBuilder<DateTime> statusTextBuilder;
   final DateTime value;
   final DateTime firstDate;
@@ -1061,7 +1061,7 @@ class DatePickerListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: leading ?? Icon(null),
-      title: Text(label),
+      title: label,
       subtitle: _buildStatusText(context),
       onTap: () => _showDatePicker(context),
       selected: selected,
@@ -1205,7 +1205,7 @@ class ContentSwitchControl extends StatelessWidget {
     @required this.onChanged
   }) : super(key: key);
 
-  final Widget title;
+  final Text title;
   final bool value;
   final WidgetBuilder pageContentBuilder;
   final ValueChanged<bool> onChanged;
@@ -1225,7 +1225,7 @@ class ContentSwitchControl extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: value
-          ? Theme.of(context).primaryColor
+          ? Theme.of(context).indicatorColor
           : Theme.of(context).disabledColor
       ),
     );
@@ -1262,12 +1262,12 @@ class ContentSwitchControl extends StatelessWidget {
 class Suggestion {
   Suggestion({
     @required this.item,
-    this.page,
+    this.pageBuilder,
     this.parentsTitles,
   });
 
   final SettingsMenuItem item;
-  final SettingsMenuItem page;
+  final WidgetBuilder pageBuilder;
   final List<String> parentsTitles;
 }
 
@@ -1281,12 +1281,12 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
   Iterable<SettingsMenuItem> _getResults(BuildContext context) {
     return itemBuilder(context).where(
-      (item) => item.label != null && item.label.contains(query)
+      (item) => item.label != null && item.label.data.contains(query)
     ).toList();
   }
 
   List<Suggestion> _getSuggestions(BuildContext context, {
-    SettingsMenuItem page,
+    WidgetBuilder pageBuilder,
     SettingsMenuItem parent,
     List<Suggestion> suggestions,
     List<String> parentsTitles
@@ -1297,12 +1297,12 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
     data.forEach((item) {
       List<String> itemParentsTitles;
-      bool isPage = _kPageSettingsMenuItemTypes.contains(item.type);
+      bool isPage = item.pageContentBuilder != null;
 
-      if ((item.label ?? '').startsWith(query)) {
+      if ((item.label?.data ?? '').startsWith(query)) {
         suggestions.add(
           Suggestion(
-            page: page,
+            pageBuilder: pageBuilder,
             item: item,
             parentsTitles: parentsTitles
           )
@@ -1313,13 +1313,13 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         if (isPage) {
           itemParentsTitles = []
             ..addAll(parentsTitles)
-            ..add(item.label);
+            ..add(item.label.data);
         }
 
         _getSuggestions(
           context,
           parent: item,
-          page: isPage ? item : page,
+          pageBuilder: isPage ? item.buildPage : pageBuilder,
           suggestions: suggestions,
           parentsTitles: itemParentsTitles
         );
@@ -1370,30 +1370,18 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 //  }
 
   Widget _buildPage(BuildContext context, Suggestion suggestion) {
+    if (suggestion.pageBuilder != null)
+      return suggestion.pageBuilder(context);
 
-//    if (suggestion.item.pageBuilder != null) {
-//      return suggestion.item.pageBuilder(
-//        context,
-//        _showSearch
-//      );
-//    } else if (suggestion.page.pageBuilder != null) {
-//      return suggestion.page.pageBuilder(
-//        context,
-//        _showSearch
-//      );
-//    }
-
-    if (suggestion.item.pageContentBuilder != null) {
-      return suggestion.item.buildPage(context);
-    } else if (suggestion?.page?.pageContentBuilder != null) {
-      return suggestion.page.buildPage(context);
-    }
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Settings'),
+    return SettingsPage.pageBuilder(
+      context,
+      Text('Settings'),
+      ListView(
+        children: <Widget>[
+          suggestion.item
+        ],
       ),
-      body: suggestion.item,
+      () => null
     );
   }
 
@@ -1408,7 +1396,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       query: query,
       suggestions: suggestions,
       onSelected: (Suggestion suggestion) {
-        query = suggestion.item.label;
+        query = suggestion.item.label.data;
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => _buildPage(context, suggestion)
@@ -1513,11 +1501,11 @@ class _SuggestionList extends StatelessWidget {
           leading: query.isEmpty ? const Icon(Icons.history) : const Icon(null),
           title: RichText(
             text: TextSpan(
-              text: suggestion.item.label.substring(0, query.length),
+              text: suggestion.item.label.data.substring(0, query.length),
               style: theme.textTheme.subhead.copyWith(fontWeight: FontWeight.bold),
               children: <TextSpan>[
                 TextSpan(
-                  text: suggestion.item.label.substring(query.length),
+                  text: suggestion.item.label.data.substring(query.length),
                   style: theme.textTheme.subhead,
                 ),
               ],

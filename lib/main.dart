@@ -10,7 +10,7 @@ class App extends StatelessWidget {
     SettingsMenuItem.individualSwitch(
       id: 'SETTING_1',
       leading: Icon(Icons.settings),
-      label: 'Individual Switch',
+      label: Text('Individual Switch'),
       description: Text('Очень длинное описание, которое разьясняет назначение данной настройки'),
       initialValue: true,
       enabled: true,
@@ -20,7 +20,7 @@ class App extends StatelessWidget {
     SettingsMenuItem.masterSwitch(
         id: 'SETTING_2',
         leading: Icon(Icons.settings),
-        label: 'Master Switch',
+        label: Text('Master Switch'),
         masterSwitchTitle: Text('Use Master Switch'),
         //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (context) => Text('Текст неактивного состояния'),
@@ -33,7 +33,7 @@ class App extends StatelessWidget {
           SettingsMenuItem.toggleSwitch(
             id: 'SETTING_2.1',
             leading: Icon(Icons.settings),
-            label: 'Toggle Switch 1',
+            label: Text('Toggle Switch 1'),
             initialValue: true,
             secondaryText: Text('Описание настройки'),
             onChanged: (value) => print(value),
@@ -41,7 +41,7 @@ class App extends StatelessWidget {
           SettingsMenuItem.toggleSwitch(
             id: 'SETTING_2.2',
             leading: Icon(Icons.settings),
-            label: 'Toggle Switch 2',
+            label: Text('Toggle Switch 2'),
             initialValue: false,
             secondaryText: Text('Описание настройки'),
           ),
@@ -51,14 +51,14 @@ class App extends StatelessWidget {
               SettingsMenuItem.toggleSwitch(
                 id: 'SETTING_3.3.1',
                 leading: Icon(Icons.settings),
-                label: 'Toggle Switch 3',
+                label: Text('Toggle Switch 3'),
                 initialValue: true,
                 secondaryText: Text('Описание настройки'),
               ),
               SettingsMenuItem.toggleSwitch(
                 id: 'SETTING_3.3.2',
                 leading: Icon(Icons.settings),
-                label: 'Toggle Switch 4',
+                label: Text('Toggle Switch 4'),
                 initialValue: false,
                 secondaryText: Text('Описание настройки'),
               ),
@@ -69,7 +69,7 @@ class App extends StatelessWidget {
     SettingsMenuItem.dependency(
       id: 'SETTING_3',
       leading: Icon(Icons.settings),
-      label: 'Dependency',
+      label: Text('Dependency'),
       secondaryText: Text('Состояние зависимостей'),
       initialValue: true,
       onChanged: (value) => print('value: $value'),
@@ -77,7 +77,7 @@ class App extends StatelessWidget {
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_3.1',
           leading: Icon(Icons.settings),
-          label: 'Toggle Switch 5',
+          label: Text('Toggle Switch 5'),
           initialValue: true,
           secondaryText: Text('Описание настройки'),
           onChanged: (value) => print('value: $value'),
@@ -85,7 +85,7 @@ class App extends StatelessWidget {
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_3.2',
           leading: Icon(Icons.settings),
-          label: 'Toggle Switch 6',
+          label: Text('Toggle Switch 6'),
           initialValue: true,
           secondaryText: Text('Описание настройки'),
           onChanged: (value) => print('value: $value'),
@@ -96,14 +96,14 @@ class App extends StatelessWidget {
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_3.3.1',
               leading: Icon(Icons.settings),
-              label: 'Toggle Switch 7',
+              label: Text('Toggle Switch 7'),
               initialValue: true,
               secondaryText: Text('Описание настройки'),
             ),
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_3.3.2',
               leading: Icon(Icons.settings),
-              label: 'Toggle Switch 8',
+              label: Text('Toggle Switch 8'),
               initialValue: false,
               secondaryText: Text('Описание настройки'),
             ),
@@ -114,7 +114,7 @@ class App extends StatelessWidget {
 //    SettingsMenuItem.toggleSwitch(
 //      id: 'SETTING_3.3.1',
 //      leading: Icon(Icons.settings),
-//      label: 'Toggle Switch 9',
+//      label: Text('Toggle Switch 9'),
 //      initialValue: true,
 //      secondaryText: Text('Описание настройки'),
 //    ),
@@ -124,14 +124,14 @@ class App extends StatelessWidget {
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_4.1',
           leading: Icon(Icons.settings),
-          label: 'Toggle Switch 10',
+          label: Text('Toggle Switch 10'),
           initialValue: true,
           secondaryText: Text('Описание настройки'),
         ),
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_4.2',
           leading: Icon(Icons.settings),
-          label: 'Toggle Switch 11',
+          label: Text('Toggle Switch 11'),
           initialValue: false,
           secondaryText: Text('Описание настройки'),
         ),
@@ -140,7 +140,7 @@ class App extends StatelessWidget {
     SettingsMenuItem.slider(
       id: 'SETTING_5',
       leading: Icon(Icons.settings),
-      label: 'Slider',
+      label: Text('Slider'),
       secondaryText: Text('Страница настроек'),
       initialValue: 0,
       min: 0,
@@ -148,13 +148,13 @@ class App extends StatelessWidget {
       onChangeEnd: (double value) => print('value: $value'),
     ),
     SettingsMenuItem.listSubpage(
-      label: 'List Subpage',
+      label: Text('List Subpage'),
       leading: Icon(Icons.settings),
       secondaryText: Text('Страница настроек'),
       pageBuilder: _buildPage,
       itemBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.listSubpage(
-          label: 'List Subpage Item 1',
+          label: Text('List Subpage Item 1'),
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
           pageBuilder: _buildPage,
@@ -162,21 +162,21 @@ class App extends StatelessWidget {
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_6.1',
               leading: Icon(Icons.settings),
-              label: 'Toggle Switch 12',
+              label: Text('Toggle Switch 12'),
               initialValue: true,
               secondaryText: Text('Описание настройки'),
             ),
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_6.2',
               leading: Icon(Icons.settings),
-              label: 'Toggle Switch 13',
+              label: Text('Toggle Switch 13'),
               initialValue: false,
               secondaryText: Text('Описание настройки'),
             ),
           ],
         ),
         SettingsMenuItem.listSubpage(
-          label: 'List Subpage Item 2',
+          label: Text('List Subpage Item 2'),
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
           pageBuilder: _buildPage,
@@ -184,14 +184,14 @@ class App extends StatelessWidget {
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_7.1',
               leading: Icon(Icons.settings),
-              label: 'Toggle Switch 14',
+              label: Text('Toggle Switch 14'),
               initialValue: true,
               secondaryText: Text('Описание настройки'),
             ),
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_7.2',
               leading: Icon(Icons.settings),
-              label: 'Toggle Switch 15',
+              label: Text('Toggle Switch 15'),
               initialValue: false,
               secondaryText: Text('Описание настройки'),
             ),
@@ -202,17 +202,17 @@ class App extends StatelessWidget {
     SettingsMenuItem<int>.multipleChoice(
       id: 'SETTING_8',
       leading: Icon(Icons.settings),
-      label: 'Multiple Choice',
+      label: Text('Multiple Choice'),
 //      statusTextBuilder: (context, List<Choice<int>> choices) {
 //        if (choices.isEmpty) return Text('Not Chosen');
 //        String labels = choices.map((choice) => choice.label).join(', ');
 //        return Text('$labels');
 //      },
       choices: <Choice<int>>[
-        Choice(label: 'Опция 1', value: 1),
-        Choice(label: 'Опция 2', value: 2),
-        Choice(label: 'Опция 3', value: 3),
-        Choice(label: 'Опция 4', value: 4),
+        Choice(label: Text('Опция 1'), value: 1),
+        Choice(label: Text('Опция 2'), value: 2),
+        Choice(label: Text('Опция 3'), value: 3),
+        Choice(label: Text('Опция 4'), value: 4),
       ],
       initialValue: <int>[1, 3],
       onChanged: (List<int> value) => print('value: $value'),
@@ -221,14 +221,14 @@ class App extends StatelessWidget {
     SettingsMenuItem<int>.singleChoice(
       id: 'SETTING_9',
       leading: Icon(Icons.settings),
-      label: 'Single Choice',
+      label: Text('Single Choice'),
       //statusTextBuilder: (context, Choice<int> choice) => Text('${choice.label}'),
       pageBuilder: _buildPage,
       choices: <Choice<int>>[
-        Choice(label: 'Опция 1', value: 1),
-        Choice(label: 'Опция 2', value: 2),
-        Choice(label: 'Опция 3', value: 3),
-        Choice(label: 'Опция 4', value: 4),
+        Choice(label: Text('Опция 1'), value: 1),
+        Choice(label: Text('Опция 2'), value: 2),
+        Choice(label: Text('Опция 3'), value: 3),
+        Choice(label: Text('Опция 4'), value: 4),
       ],
       initialValue: 1,
       onChanged: (int value) => print('value: $value'),
@@ -237,7 +237,7 @@ class App extends StatelessWidget {
     SettingsMenuItem.dateTime(
       id: 'SETTINGS_10',
       leading: Icon(Icons.settings),
-      label: 'DateTime',
+      label: Text('DateTime'),
       firstDate: DateTime(2019),
       lastDate: DateTime(2021),
       initialValue: DateTime(2020),
@@ -247,7 +247,7 @@ class App extends StatelessWidget {
     SettingsMenuItem.toggleSwitch(
       id: 'SETTING_11',
       leading: Icon(Icons.settings),
-      label: 'Toggle Switch 16',
+      label: Text('Toggle Switch 16'),
       initialValue: true,
       secondaryText: Text('Описание настройки'),
       onChanged: (value) => print('value: $value'),
