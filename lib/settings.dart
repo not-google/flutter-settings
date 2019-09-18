@@ -6,8 +6,8 @@ const String inactiveLabel = 'Off';
 const double _kListTileHeight = 56.0;
 const double _kSecondaryWidth = 50.0;
 const double _kDividerHeight = 1.0;
-const List<SettingsMenuItemType> _kScreenSettingsMenuItemTypes = [
-  SettingsMenuItemType.listSubscreen,
+const List<SettingsMenuItemType> _kPageSettingsMenuItemTypes = [
+  SettingsMenuItemType.listSubpage,
   SettingsMenuItemType.masterSwitch,
   SettingsMenuItemType.individualSwitch
 ];
@@ -20,9 +20,7 @@ typedef SettingsPageBuilder<T> = Widget Function(
 );
 typedef SettingsItemBuilder<T> = List<SettingsMenuItem<T>> Function(BuildContext context);
 typedef StatusBuilder<T> = Widget Function(BuildContext context, T status);
-typedef SettingsMenuItemBuilder = Widget Function(
-  BuildContext context, [SettingsMenuItemState state]
-);
+typedef StateBuilder<T> = Widget Function(BuildContext context, T state);
 
 enum SettingsMenuItemType {
   toggleSwitch,
@@ -32,7 +30,7 @@ enum SettingsMenuItemType {
   multipleChoice,
   slider,
   dateTime,
-  listSubscreen,
+  listSubpage,
   masterSwitch,
   individualSwitch,
   dependency
@@ -64,10 +62,10 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
 
   final String id;
   final String label;
-  final SettingsMenuItemBuilder builder;
-  final SettingsMenuItemBuilder controlBuilder;
+  final StateBuilder<SettingsMenuItemState> builder;
+  final StateBuilder<SettingsMenuItemState> controlBuilder;
+  final StateBuilder<SettingsMenuItemState> pageContentBuilder;
   final SettingsPageBuilder pageBuilder;
-  final SettingsMenuItemBuilder pageContentBuilder;
   final SettingsItemBuilder itemBuilder;
   final bool needUpdateOnChanged;
   final SettingsMenuItemType type;
@@ -75,8 +73,8 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
 
 class SettingsMenuItemState<T> {
   SettingsMenuItemState({
-    @required this.selected,
-    @required this.enabled,
+    this.selected,
+    this.enabled,
     this.showTopDivider,
     this.showBottomDivider,
     this.value,
@@ -138,8 +136,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ValueChanged<bool> onChanged,
   }) : super(
     key: key,
-    builder: (context, [state]) => state.controlBuilder(context),
-    controlBuilder: (context, [state]) => SwitchListTile(
+    builder: (context, state) => state.controlBuilder(context),
+    controlBuilder: (context, state) => SwitchListTile(
         secondary: leading ?? Icon(null),
         title: Text(label),
         subtitle: secondaryText,
@@ -160,7 +158,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     bool enabled = true,
   }) : super(
     key: key,
-    builder: (context, [state]) => Section(
+    builder: (context, state) => Section(
       title: title,
       itemBuilder: itemBuilder,
       enabled: state.enabled ?? enabled,
@@ -185,7 +183,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ValueChanged<T> onChanged
   }) : super(
     key: key,
-    builder: (context, [state]) {
+    builder: (context, state) {
       T value = state.value ?? initialValue;
       Choice<T> selectedChoice = choices.firstWhere((choice) => choice.value == value);
       Widget statusText = (statusTextBuilder != null)
@@ -202,12 +200,12 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         enabled: state.enabled ?? enabled,
       );
     },
-    controlBuilder: (context, [state]) => SingleChoiceControl<T>(
+    controlBuilder: (context, state) => SingleChoiceControl<T>(
       choices: choices,
       value: state.value ?? initialValue,
       onChanged: state.onChanged ?? onChanged,
     ),
-    pageContentBuilder: (context, [state]) => state.controlBuilder(context),
+    pageContentBuilder: (context, state) => state.controlBuilder(context),
     pageBuilder: pageBuilder,
     id: id,
     label: label,
@@ -227,7 +225,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ValueChanged<List<T>> onChanged
   }) : super(
     key: key,
-    builder: (context, [state]) => MultipleChoiceMenuItem<T>(
+    builder: (context, state) => MultipleChoiceMenuItem<T>(
       leading: leading,
       label: label,
       statusTextBuilder: statusTextBuilder,
@@ -236,7 +234,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       value: state.value ?? initialValue,
       enabled: state.enabled ?? enabled,
     ),
-    controlBuilder: (context, [state]) =>  MultipleChoiceControl<T>(
+    controlBuilder: (context, state) =>  MultipleChoiceControl<T>(
       choices: choices,
       value: state.value ?? initialValue,
       onChanged: state.onChanged ?? onChanged
@@ -264,8 +262,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     bool selected = false,
   }) : super(
     key: key,
-    builder: (context, [state]) => state.controlBuilder(context),
-    controlBuilder: (context, [state]) => SliderListTile(
+    builder: (context, state) => state.controlBuilder(context),
+    controlBuilder: (context, state) => SliderListTile(
       secondary: leading ?? Icon(null),
       title: Text(label),
       value: state.value ?? initialValue,
@@ -296,8 +294,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ValueChanged<DateTime> onChanged
   }) : super(
     key: key,
-    builder: (context, [state]) => state.controlBuilder(context),
-    controlBuilder: (context, [state]) => DatePickerListTile(
+    builder: (context, state) => state.controlBuilder(context),
+    controlBuilder: (context, state) => DatePickerListTile(
       id: id,
       leading: leading,
       label: label,
@@ -314,7 +312,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     type: SettingsMenuItemType.dateTime
   );
 
-  SettingsMenuItem.listSubscreen({
+  SettingsMenuItem.listSubpage({
     Key key,
     @required String label,
     Widget leading,
@@ -325,7 +323,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     bool selected = false
   }) : super(
     key: key,
-    builder: (context, [state]) => ListTile(
+    builder: (context, state) => ListTile(
       leading: leading ?? Icon(null),
       title: Text(label),
       subtitle: secondaryText,
@@ -336,14 +334,14 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       selected: state.selected ?? selected,
       enabled: state.enabled ?? enabled,
     ),
-    pageContentBuilder: (context, [state]) => SettingsMenu(
+    pageContentBuilder: (context, state) => SettingsMenu(
       itemBuilder: itemBuilder,
       onSearch: state.onSearch,
     ),
     pageBuilder: pageBuilder,
     label: label,
     itemBuilder: itemBuilder,
-    type: SettingsMenuItemType.listSubscreen
+    type: SettingsMenuItemType.listSubpage
   );
 
   SettingsMenuItem.masterSwitch({
@@ -363,7 +361,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required SettingsPageBuilder pageBuilder
   }) : super(
     key: key,
-    builder: (context, [state]) {
+    builder: (context, state) {
       bool value = state.value ?? initialValue;
       Widget statusText = statusTextBuilder != null
         ? statusTextBuilder(context, value)
@@ -384,7 +382,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         enabled: state.enabled ?? enabled,
       );
     },
-    controlBuilder: (context, [state]) => MasterSwitchControl(
+    controlBuilder: (context, state) => MasterSwitchControl(
       title: masterSwitchTitle,
       value: state.value ?? initialValue,
       onChanged: state.onChanged ?? onChanged,
@@ -403,7 +401,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         child: inactiveTextBuilder(context),
       )
     ),
-    pageContentBuilder: (context, [state]) => state.controlBuilder(context),
+    pageContentBuilder: (context, state) => state.controlBuilder(context),
     pageBuilder: pageBuilder,
     id: id,
     label: label,
@@ -425,7 +423,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ValueChanged<bool> onChanged
   }) : super(
     key: key,
-    builder: (context, [state]) {
+    builder: (context, state) {
       bool value = state.value ?? initialValue;
       String statusText = value ? activeLabel : inactiveLabel;
       return ListTile(
@@ -440,14 +438,14 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         enabled: state.enabled ?? enabled,
       );
     },
-    controlBuilder: (context, [state]) => IndividualSwitchControl(
+    controlBuilder: (context, state) => IndividualSwitchControl(
       statusTextBuilder: (context, checked) =>
         Text(checked ? activeLabel : inactiveLabel),
       value: state.value ?? initialValue,
       description: description,
       onChanged: state.onChanged ?? onChanged,
     ),
-    pageContentBuilder: (context, [state]) => state.controlBuilder(context),
+    pageContentBuilder: (context, state) => state.controlBuilder(context),
     pageBuilder: pageBuilder,
     id: id,
     label: label,
@@ -468,8 +466,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     bool selected = false,
   }) : super(
     key: key,
-    builder: (context, [state]) => state.controlBuilder(context),
-    controlBuilder: (context, [state]) => DependencyControl(
+    builder: (context, state) => state.controlBuilder(context),
+    controlBuilder: (context, state) => DependencyControl(
       leading: leading,
       title: Text(label),
       secondaryText: secondaryText,
@@ -485,39 +483,11 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     type: SettingsMenuItemType.dependency
   );
 
-  Widget _buildPage(BuildContext context, SettingsMenuItemState state) {
-    SettingsMenuItemState buildParams = state.copyWith(
-      controlBuilder: (context) => _buildControl(context, state)
-    );
-    Widget title = Text('$label');
-
-    if (this.pageBuilder != null) {
-      return this.pageBuilder(
-        context,
-        title,
-        pageContentBuilder(context, buildParams),
-        state.onSearch
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: title,
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: state.onSearch,
-          )
-        ],
-      ),
-      body: pageContentBuilder(context, buildParams),
-    );
-  }
-
   final ValueNotifier _valueNotifier = ValueNotifier(null);
   void _handleChanged(newValue) => _valueNotifier.value = newValue;
 
-  Widget _buildControl(BuildContext context, SettingsMenuItemState state) {
+  Widget buildControl(BuildContext context, [SettingsMenuItemState state]) {
+    state = (state ?? SettingsMenuItemState());
     return ValueListenableBuilder(
       valueListenable: _valueNotifier,
       builder: (context, value, _) => this.controlBuilder(
@@ -530,11 +500,27 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     );
   }
 
+  Widget buildPage(BuildContext context, [SettingsMenuItemState state]) {
+    state = (state ?? SettingsMenuItemState());
+    state = state.copyWith(
+      controlBuilder: (context) => buildControl(context, state)
+    );
+    Widget title = Text('$label');
+    Widget body = this.pageContentBuilder(context, state);
+
+    return (this.pageBuilder ?? SettingsPage.buildDefault)(
+      context,
+      title,
+      body,
+      state.onSearch
+    );
+  }
+
   Widget _buildState(BuildContext context, [SettingsMenuItemState state]) {
     state = state ?? SettingsMenuItemState();
     state = state.copyWith(
-      pageBuilder: (context) => _buildPage(context, state),
-      controlBuilder: (context) => _buildControl(context, state)
+      pageBuilder: (context) => buildPage(context, state),
+      controlBuilder: (context) => buildControl(context, state),
     );
 
     if (needUpdateOnChanged) return ValueListenableBuilder(
@@ -551,7 +537,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     return this.builder(context, state);
   }
 
-  Widget buildWith(BuildContext context, {
+  @override
+  Widget build(BuildContext context, {
     bool selected,
     bool enabled,
     bool showTopDivider,
@@ -568,11 +555,6 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         onSearch: onSearch
       )
     );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _buildState(context);
   }
 }
 
@@ -595,7 +577,7 @@ class SettingsMenu extends StatelessWidget {
       itemCount: group.length,
       itemBuilder: (context, index) {
         SettingsMenuItem item = group[index];
-          return item.buildWith(
+          return item.build(
             context,
             enabled: enabled,
             onSearch: onSearch,
@@ -622,9 +604,10 @@ class SettingsPage extends StatelessWidget {
     Key key,
     @required this.title,
     @required this.itemBuilder,
-    @required this.builder,
+    this.builder,
   }) : super(key: key);
 
+  static String routeName = '/settings';
   final Widget title;
   final SettingsPageBuilder builder;
   final SettingsItemBuilder itemBuilder;
@@ -645,8 +628,28 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+  static Widget buildDefault(
+    BuildContext context,
+    Widget title,
+    Widget body,
+    VoidCallback onSearch
+  ) {
+    return Scaffold(
+      appBar: AppBar(
+        title: title,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: onSearch
+          ),
+        ],
+      ),
+      body: body
+    );
+  }
+
   @override
-  Widget build(BuildContext context) => builder(
+  Widget build(BuildContext context) => (builder ?? buildDefault)(
     context,
     title,
     _buildBody(context),
@@ -752,7 +755,7 @@ class Section extends StatelessWidget {
     List<SettingsMenuItem> group = itemBuilder(context);
     return Column(
       children: group.map((item) {
-        return item.buildWith(
+        return item.build(
           context,
           enabled: enabled,
           showTopDivider: Section.needShowTopDivider(
@@ -791,8 +794,8 @@ class Section extends StatelessWidget {
     bool isNotSection = item.type != SettingsMenuItemType.section;
     if (isNotSection) return false;
 
-    bool isFirst = hideWhenFirst && item == group.first;
-    if (isFirst) return false;
+    bool isFirst = item == group.first;
+    if (hideWhenFirst && isFirst) return false;
 
     int itemIndex = group.indexOf(item);
     SettingsMenuItem previous = itemIndex > 0 ? group[itemIndex - 1] : null;
@@ -822,8 +825,8 @@ class Section extends StatelessWidget {
     bool isNotSection = item.type != SettingsMenuItemType.section;
     if (isNotSection) return false;
 
-    bool isLastOnPage = hideWhenLast && item == group.last;
-    if (isLastOnPage) return false;
+    bool isLast = item == group.last;
+    if (hideWhenLast && isLast) return false;
 
     return true;
   }
@@ -1093,7 +1096,7 @@ class DependencyControl extends StatelessWidget {
     List<SettingsMenuItem> group = itemBuilder(context);
     return Column(
       children: group.map(
-        (item) => item.buildWith(
+        (item) => item.build(
           context,
           enabled: dependencyEnabled,
             showTopDivider: Section.needShowTopDivider(
@@ -1294,7 +1297,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
     data.forEach((item) {
       List<String> itemParentsTitles;
-      bool isPage = _kScreenSettingsMenuItemTypes.contains(item.type);
+      bool isPage = _kPageSettingsMenuItemTypes.contains(item.type);
 
       if ((item.label ?? '').startsWith(query)) {
         suggestions.add(
@@ -1367,10 +1370,6 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 //  }
 
   Widget _buildPage(BuildContext context, Suggestion suggestion) {
-    void _showSearch() => showSearch(
-        context: context,
-        delegate: this
-    );
 
 //    if (suggestion.item.pageBuilder != null) {
 //      return suggestion.item.pageBuilder(
@@ -1384,11 +1383,17 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 //      );
 //    }
 
+    if (suggestion.item.pageContentBuilder != null) {
+      return suggestion.item.buildPage(context);
+    } else if (suggestion?.page?.pageContentBuilder != null) {
+      return suggestion.page.buildPage(context);
+    }
+    
     return Scaffold(
       appBar: AppBar(
         title: Text('Settings'),
       ),
-      body: suggestion.item.builder(context),
+      body: suggestion.item,
     );
   }
 

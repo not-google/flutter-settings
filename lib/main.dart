@@ -15,7 +15,7 @@ class App extends StatelessWidget {
       initialValue: true,
       enabled: true,
       onChanged: (value) => print('value: $value'),
-      pageBuilder: _buildPage,
+      //pageBuilder: _buildPage,
     ),
     SettingsMenuItem.masterSwitch(
         id: 'SETTING_2',
@@ -147,13 +147,13 @@ class App extends StatelessWidget {
       max: 100,
       onChangeEnd: (double value) => print('value: $value'),
     ),
-    SettingsMenuItem.listSubscreen(
+    SettingsMenuItem.listSubpage(
       label: 'List Subpage',
       leading: Icon(Icons.settings),
       secondaryText: Text('Страница настроек'),
       pageBuilder: _buildPage,
       itemBuilder: (context) => <SettingsMenuItem>[
-        SettingsMenuItem.listSubscreen(
+        SettingsMenuItem.listSubpage(
           label: 'List Subpage Item 1',
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
@@ -175,7 +175,7 @@ class App extends StatelessWidget {
             ),
           ],
         ),
-        SettingsMenuItem.listSubscreen(
+        SettingsMenuItem.listSubpage(
           label: 'List Subpage Item 2',
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
@@ -281,11 +281,31 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      routes: {
+        Home.routeName: (context) => Home(),
+        SettingsPage.routeName: (context) => SettingsPage(
+          title: Text('Settings'),
+          itemBuilder: _itemBuilder,
+          //builder: _buildPage,
+        )
+      },
+      initialRoute: SettingsPage.routeName,
       theme: ThemeData.light(),
-      home: SettingsPage(
-        title: Text('Settings'),
-        itemBuilder: _itemBuilder,
-        builder: _buildPage,
+    );
+  }
+}
+
+class Home extends StatelessWidget {
+  static String routeName = '/';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: FlatButton(
+          child: Text('SHOW SETTINGS'),
+          onPressed: () => Navigator.pushNamed(context, SettingsPage.routeName),
+        ),
       ),
     );
   }
