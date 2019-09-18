@@ -57,7 +57,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
     this.pageContentBuilder,
     @required this.label,
     this.itemBuilder,
-    this.updateOnChanged = false,
+    this.needUpdateOnChanged = false,
     @required this.type,
   });
 
@@ -68,7 +68,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
   final SettingsPageBuilder pageBuilder;
   final SettingsMenuItemBuilder pageContentBuilder;
   final SettingsItemBuilder itemBuilder;
-  final bool updateOnChanged;
+  final bool needUpdateOnChanged;
   final SettingsMenuItemType type;
 }
 
@@ -206,7 +206,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     pageBuilder: pageBuilder,
     id: id,
     label: label,
-    updateOnChanged: true,
+    needUpdateOnChanged: true,
     type: SettingsMenuItemType.singleChoice
   );
 
@@ -238,7 +238,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ),
     id: id,
     label: label,
-    updateOnChanged: true,
+    needUpdateOnChanged: true,
     type: SettingsMenuItemType.multipleChoice
   );
 
@@ -400,7 +400,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     id: id,
     label: label,
     itemBuilder: itemBuilder,
-    updateOnChanged: true,
+    needUpdateOnChanged: true,
     type: SettingsMenuItemType.masterSwitch
   );
 
@@ -443,7 +443,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     pageBuilder: pageBuilder,
     id: id,
     label: label,
-    updateOnChanged: true,
+    needUpdateOnChanged: true,
     type: SettingsMenuItemType.individualSwitch
   );
 
@@ -522,11 +522,14 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       controlBuilder: (context) => _buildControl(context, state)
     );
 
-    if (updateOnChanged) return ValueListenableBuilder(
+    if (needUpdateOnChanged) return ValueListenableBuilder(
       valueListenable: _valueNotifier,
       builder: (context, value, _) => this.builder(
         context,
-        state.copyWith(value: value)
+        state.copyWith(
+          value: value,
+          onChanged: _handleChanged
+        )
       )
     );
 
