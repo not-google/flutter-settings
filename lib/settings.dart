@@ -505,10 +505,10 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     state = state.copyWith(
       controlBuilder: (context) => buildControl(context, state)
     );
-    Widget title = Text('$label');
+    Widget title = Text(label);
     Widget body = this.pageContentBuilder(context, state);
 
-    return (this.pageBuilder ?? SettingsPage.buildDefault)(
+    return (this.pageBuilder ?? SettingsPage.pageBuilder)(
       context,
       title,
       body,
@@ -602,7 +602,7 @@ class SettingsMenu extends StatelessWidget {
 class SettingsPage extends StatelessWidget {
   SettingsPage({
     Key key,
-    @required this.title,
+    this.title,
     @required this.itemBuilder,
     this.builder,
   }) : super(key: key);
@@ -628,7 +628,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  static Widget buildDefault(
+  static Widget pageBuilder(
     BuildContext context,
     Widget title,
     Widget body,
@@ -649,9 +649,9 @@ class SettingsPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => (builder ?? buildDefault)(
+  Widget build(BuildContext context) => (builder ?? pageBuilder)(
     context,
-    title,
+    title ?? Text('Settings'),
     _buildBody(context),
     () => _showSearch(context)
   );
