@@ -13,7 +13,7 @@ class App extends StatelessWidget {
       label: 'Individual Switch',
       description: Text('Очень длинное описание, которое разьясняет назначение данной настройки'),
       initialValue: true,
-      //enabled: true,
+      enabled: true,
       onChanged: (value) => print('value: $value'),
       pageBuilder: _buildPage,
     ),
@@ -23,7 +23,7 @@ class App extends StatelessWidget {
         label: 'Master Switch',
         masterSwitchTitle: Text('Use Master Switch'),
         //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
-        inactiveTextBuilder: (_) => Text('Текст неактивного состояния'),
+        inactiveTextBuilder: (context) => Text('Текст неактивного состояния'),
         initialValue: true,
         duplicateSwitchInMenuItem: true,
         onChanged: (bool value) => print('value: $value'),
@@ -46,7 +46,7 @@ class App extends StatelessWidget {
             secondaryText: Text('Описание настройки'),
           ),
           SettingsMenuItem.section(
-            title: 'Section',
+            title: Text('Section'),
             itemBuilder: (context) =>  <SettingsMenuItem>[
               SettingsMenuItem.toggleSwitch(
                 id: 'SETTING_3.3.1',
@@ -91,7 +91,7 @@ class App extends StatelessWidget {
           onChanged: (value) => print('value: $value'),
         ),
         SettingsMenuItem.section(
-          title: 'Section 1',
+          title: Text('Section 1'),
           itemBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_3.3.1',
@@ -119,7 +119,7 @@ class App extends StatelessWidget {
 //      secondaryText: Text('Описание настройки'),
 //    ),
     SettingsMenuItem.section(
-      title: 'Section 2',
+      title: Text('Section 2'),
       itemBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_4.1',
@@ -148,13 +148,13 @@ class App extends StatelessWidget {
       onChangeEnd: (double value) => print('value: $value'),
     ),
     SettingsMenuItem.listSubscreen(
-      label: 'List Subscreen',
+      label: 'List Subpage',
       leading: Icon(Icons.settings),
       secondaryText: Text('Страница настроек'),
       pageBuilder: _buildPage,
       itemBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.listSubscreen(
-          label: 'List Subscreen Item 1',
+          label: 'List Subpage Item 1',
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
           pageBuilder: _buildPage,
@@ -176,7 +176,7 @@ class App extends StatelessWidget {
           ],
         ),
         SettingsMenuItem.listSubscreen(
-          label: 'List Subscreen Item 2',
+          label: 'List Subpage Item 2',
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
           pageBuilder: _buildPage,
@@ -214,7 +214,7 @@ class App extends StatelessWidget {
         Choice(label: 'Опция 3', value: 3),
         Choice(label: 'Опция 4', value: 4),
       ],
-      initialValue: [1, 3],
+      initialValue: <int>[1, 3],
       onChanged: (List<int> value) => print('value: $value'),
       //enabled: false
     ),
@@ -238,8 +238,8 @@ class App extends StatelessWidget {
       id: 'SETTINGS_10',
       leading: Icon(Icons.settings),
       label: 'DateTime',
-      min: DateTime(2019),
-      max: DateTime(2021),
+      firstDate: DateTime(2019),
+      lastDate: DateTime(2021),
       initialValue: DateTime(2020),
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),
@@ -251,14 +251,13 @@ class App extends StatelessWidget {
       initialValue: true,
       secondaryText: Text('Описание настройки'),
       onChanged: (value) => print('value: $value'),
-    )
+    ),
   ];
 
   Widget _buildPage(
     BuildContext context,
     Widget title,
     Widget body,
-    VoidCallback onSearch
   ) {
     return Scaffold(
       appBar: AppBar(
@@ -266,7 +265,7 @@ class App extends StatelessWidget {
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: onSearch
+            onPressed: () => null
           ),
           IconButton(
             icon: Icon(Icons.help),

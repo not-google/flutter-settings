@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
+const String activeLabel = 'On';
+const String inactiveLabel = 'Off';
 const double _kListTileHeight = 56.0;
 const double _kSecondaryWidth = 50.0;
 const double _kDividerHeight = 1.0;
@@ -9,24 +11,17 @@ const List<SettingsMenuItemType> _kScreenSettingsMenuItemTypes = [
   SettingsMenuItemType.masterSwitch,
   SettingsMenuItemType.individualSwitch
 ];
-const String activeLabel = 'On';
-const String inactiveLabel = 'Off';
 
-typedef SettingsPageBuilder<T> = Function(
+typedef SettingsPageBuilder<T> = Widget Function(
   BuildContext context,
   Widget title,
-  Widget body,
-  VoidCallback onSearch
+  Widget body
 );
-typedef SettingsMenuItemBuilder<T> = List<SettingsMenuItem<T>> Function(BuildContext context);
+typedef SettingsItemBuilder<T> = List<SettingsMenuItem<T>> Function(BuildContext context);
 typedef StatusBuilder<T> = Widget Function(BuildContext context, T status);
-typedef MenuItemBuilder = Widget Function(BuildContext context, {
-  bool dependencyEnabled,
-  bool selected,
-  bool showTopDivider,
-  bool showBottomDivider,
-  VoidCallback showSettingsSearch
-});
+typedef SettingsMenuItemBuilder = Widget Function(
+  BuildContext context, [SettingsMenuItemState state]
+);
 
 enum SettingsMenuItemType {
   toggleSwitch,
@@ -55,75 +50,77 @@ class Choice<T> {
 abstract class SettingsMenuEntry<T> extends StatelessWidget {
   SettingsMenuEntry({
     Key key,
-    this.label,
-    this.itemBuilder,
-    this.pageBuilder,
+    this.id,
     @required this.builder,
-    @required this.type
+    this.controlBuilder,
+    this.pageBuilder,
+    this.pageContentBuilder,
+    @required this.label,
+    this.itemBuilder,
+    this.updateOnChanged = false,
+    @required this.type,
   });
 
+  final String id;
   final String label;
+  final SettingsMenuItemBuilder builder;
+  final SettingsMenuItemBuilder controlBuilder;
   final SettingsPageBuilder pageBuilder;
-  final SettingsMenuItemBuilder itemBuilder;
-  final MenuItemBuilder builder;
+  final SettingsMenuItemBuilder pageContentBuilder;
+  final SettingsItemBuilder itemBuilder;
+  final bool updateOnChanged;
   final SettingsMenuItemType type;
 }
 
-class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
+class SettingsMenuItemState<T> {
+  SettingsMenuItemState({
+    @required this.selected,
+    @required this.enabled,
+    this.showTopDivider,
+    this.showBottomDivider,
+    this.value,
+    this.onChanged,
+    this.pageBuilder,
+    this.controlBuilder,
+    this.pageContentBuilder
+  });
 
-  static bool _needShowTopDivider(
-      BuildContext context,
-      SettingsMenuItem item,
-      SettingsMenuItem previous
-  ) {
-    bool isSection = item.type == SettingsMenuItemType.section;
-    bool isNotEmptyPrevious = previous?.itemBuilder != null;
-    if (isSection && isNotEmptyPrevious) {
-      List<SettingsMenuItem> previousGroup = previous.itemBuilder(context);
-      bool isNotDependencyWithLastSectionPrevious =
-          previous.type != SettingsMenuItemType.dependency ||
-          previousGroup?.last?.type != SettingsMenuItemType.section;
-      bool isNotSectionPrevious = previous.type != SettingsMenuItemType.section;
+  final bool selected;
+  final bool enabled;
+  final bool showTopDivider;
+  final bool showBottomDivider;
+  final T value;
+  final ValueChanged<T> onChanged;
+  final WidgetBuilder pageBuilder;
+  final WidgetBuilder controlBuilder;
+  final WidgetBuilder pageContentBuilder;
 
-      return isNotDependencyWithLastSectionPrevious && isNotSectionPrevious;
-    }
-
-    return false;
-  }
-
-  static bool _needShowBottomDivider(SettingsMenuItem item) {
-    return item.type == SettingsMenuItemType.section;
-  }
-
-  SettingsMenuItem._(
-    SettingsMenuItem item, {
-    Key key,
-    SettingsMenuItem previous,
-    bool selected = false,
+  SettingsMenuItemState<T> copyWith({
+    bool selected,
     bool enabled,
-    VoidCallback onSearch
-  }) : super(
-    key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch,
-    }) => item.builder(
-      context,
-      dependencyEnabled: enabled,
-      selected: selected,
-      showTopDivider: _needShowTopDivider(context, item, previous),
-      showBottomDivider: _needShowBottomDivider(item),
-      showSettingsSearch: onSearch
-    ),
-    label: item.label,
-    itemBuilder: item.itemBuilder,
-    pageBuilder: item.pageBuilder,
-    type: item.type
-  );
+    bool showTopDivider,
+    bool showBottomDivider,
+    ValueChanged<T> onChanged,
+    T value,
+    WidgetBuilder pageBuilder,
+    WidgetBuilder controlBuilder,
+    WidgetBuilder pageContentBuilder,
+  }) {
+    return SettingsMenuItemState(
+      selected: selected ?? this.selected,
+      enabled: enabled ?? this.enabled,
+      showTopDivider: showTopDivider ?? this.showTopDivider,
+      showBottomDivider: showBottomDivider ?? this.showBottomDivider,
+      onChanged: onChanged ?? this.onChanged,
+      value: value ?? this.value,
+      pageBuilder: pageBuilder ?? this.pageBuilder,
+      controlBuilder: controlBuilder ?? this.controlBuilder,
+      pageContentBuilder: pageBuilder ?? this.pageContentBuilder,
+    );
+  }
+}
 
+class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   SettingsMenuItem.toggleSwitch({
     Key key,
     @required String id,
@@ -132,51 +129,41 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Widget secondaryText,
     @required bool initialValue,
     bool enabled = true,
-    ValueChanged<bool> onChanged
+    bool selected = false,
+    ValueChanged<bool> onChanged,
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => ToggleSwitchMenuItem(
-      id: id,
-      leading: leading,
-      label: label,
-      secondaryText: secondaryText,
-      initialValue: initialValue,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
-      onChanged: onChanged,
+    builder: (context, [state]) => state.controlBuilder(context),
+    controlBuilder: (context, [state]) => SwitchListTile(
+        secondary: leading ?? Icon(null),
+        title: Text(label),
+        subtitle: secondaryText,
+        value: state.value ?? initialValue,
+        selected: state.selected ?? selected,
+        onChanged: (state.enabled ?? enabled)
+          ? (state.onChanged ?? onChanged ?? (value) => null) : null
     ),
+    id: id,
     label: label,
-    type: SettingsMenuItemType.toggleSwitch,
+    type: SettingsMenuItemType.toggleSwitch
   );
 
   SettingsMenuItem.section({
     Key key,
-    String title,
-    @required SettingsMenuItemBuilder itemBuilder,
+    Widget title,
+    @required SettingsItemBuilder itemBuilder,
     bool enabled = true,
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider = true,
-      bool showBottomDivider = true,
-      VoidCallback showSettingsSearch
-    }) => SectionMenuItem(
+    builder: (context, [state]) => Section(
       title: title,
       itemBuilder: itemBuilder,
-      enabled: dependencyEnabled ?? enabled,
-      showTopDivider: showTopDivider,
-      showBottomDivider: showBottomDivider
+      enabled: state.enabled ?? enabled,
+      showTopDivider: state.showTopDivider ?? true,
+      showBottomDivider: state.showBottomDivider ?? true
     ),
     itemBuilder: itemBuilder,
-    type: SettingsMenuItemType.section,
+    type: SettingsMenuItemType.section
   );
 
   SettingsMenuItem.singleChoice({
@@ -189,31 +176,38 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required T initialValue,
     SettingsPageBuilder pageBuilder,
     bool enabled = true,
+    bool selected = false,
     ValueChanged<T> onChanged
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => SingleChoiceMenuItem<T>(
-      id: id,
-      leading: leading,
-      label: label,
-      statusTextBuilder: statusTextBuilder,
+    builder: (context, [state]) {
+      T value = state.value ?? initialValue;
+      Choice<T> selectedChoice = choices.firstWhere((choice) => choice.value == value);
+      Widget statusText = (statusTextBuilder != null)
+          ? statusTextBuilder(context, selectedChoice)
+          : Text(selectedChoice.label);
+      return ListTile(
+        leading: leading ?? Icon(null),
+        title: Text(label),
+        subtitle: statusText,
+        onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: state.pageBuilder)
+        ),
+        selected: state.selected ?? selected,
+        enabled: state.enabled ?? enabled,
+      );
+    },
+    controlBuilder: (context, [state]) => SingleChoiceControl<T>(
       choices: choices,
-      initialValue: initialValue,
-      pageBuilder: pageBuilder,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
-      onChanged: onChanged,
-      onSearch: showSettingsSearch,
+      value: state.value ?? initialValue,
+      onChanged: state.onChanged ?? onChanged,
     ),
-    label: label,
+    pageContentBuilder: (context, [state]) => state.controlBuilder(context),
     pageBuilder: pageBuilder,
-    type: SettingsMenuItemType.singleChoice,
+    id: id,
+    label: label,
+    updateOnChanged: true,
+    type: SettingsMenuItemType.singleChoice
   );
 
   SettingsMenuItem.multipleChoice({
@@ -228,24 +222,23 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ValueChanged<List<T>> onChanged
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => MultipleChoiceMenuItem<T>(
-      id: id,
+    builder: (context, [state]) => MultipleChoiceMenuItem<T>(
       leading: leading,
       label: label,
       statusTextBuilder: statusTextBuilder,
-      initialValue: initialValue,
+      controlBuilder: state.controlBuilder,
       choices: choices,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
-      onChanged: onChanged,
+      value: state.value ?? initialValue,
+      enabled: state.enabled ?? enabled,
     ),
+    controlBuilder: (context, [state]) =>  MultipleChoiceControl<T>(
+      choices: choices,
+      value: state.value ?? initialValue,
+      onChanged: state.onChanged ?? onChanged
+    ),
+    id: id,
     label: label,
+    updateOnChanged: true,
     type: SettingsMenuItemType.multipleChoice
   );
 
@@ -256,36 +249,30 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String label,
     Widget secondaryText,
     @required double initialValue,
-    bool enabled = true,
     double min = 0.0,
     double max = 1.0,
     int divisions,
     ValueChanged<double> onChanged,
     ValueChanged<double> onChangeStart,
     ValueChanged<double> onChangeEnd,
+    bool enabled = true,
+    bool selected = false,
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => SliderMenuItem(
-      id: id,
-      leading: leading,
-      label: label,
-      secondaryText: secondaryText,
-      initialValue: initialValue,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
+    builder: (context, [state]) => state.controlBuilder(context),
+    controlBuilder: (context, [state]) => SliderListTile(
+      secondary: leading ?? Icon(null),
+      title: Text(label),
+      value: state.value ?? initialValue,
+      selected: state.selected ?? selected,
       min: min,
       max: max,
       divisions: divisions,
-      onChanged: onChanged,
-      onChangeStart: onChangeStart,
-      onChangeEnd: onChangeEnd,
+      onChanged: (state.enabled ?? enabled) ? (state.onChanged ?? onChanged) : null,
+      onChangeStart: (state.enabled ?? enabled) ? onChangeStart : null,
+      onChangeEnd: (state.enabled ?? enabled) ? onChangeEnd : null,
     ),
+    id: id,
     label: label,
     type: SettingsMenuItemType.slider
   );
@@ -297,30 +284,27 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String label,
     StatusBuilder<DateTime> statusTextBuilder,
     @required DateTime initialValue,
-    @required DateTime min,
-    @required DateTime max,
+    @required DateTime firstDate,
+    @required DateTime lastDate,
     bool enabled = true,
+    bool selected = false,
     ValueChanged<DateTime> onChanged
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => DateTimeMenuItem(
+    builder: (context, [state]) => state.controlBuilder(context),
+    controlBuilder: (context, [state]) => DatePickerListTile(
       id: id,
       leading: leading,
       label: label,
       statusTextBuilder: statusTextBuilder,
-      initialValue: initialValue,
-      min: min,
-      max: max,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
-      onChanged: onChanged,
+      value: state.value ?? initialValue,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      enabled: state.enabled ?? enabled,
+      selected: state.selected ?? selected,
+      onChanged: state.onChanged ?? onChanged,
     ),
+    id: id,
     label: label,
     type: SettingsMenuItemType.dateTime
   );
@@ -330,30 +314,29 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String label,
     Widget leading,
     Widget secondaryText,
-    @required SettingsMenuItemBuilder itemBuilder,
+    @required SettingsItemBuilder itemBuilder,
     @required SettingsPageBuilder pageBuilder,
-    bool enabled = true
+    bool enabled = true,
+    bool selected = false
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => ListSubscreenMenuItem(
-      leading: leading,
-      label: label,
-      secondaryText: secondaryText,
-      itemBuilder: itemBuilder,
-      pageBuilder: pageBuilder,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
-      onSearch: showSettingsSearch
+    builder: (context, [state]) => ListTile(
+      leading: leading ?? Icon(null),
+      title: Text(label),
+      subtitle: secondaryText,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: state.pageBuilder)
+      ),
+      selected: state.selected ?? selected,
+      enabled: state.enabled ?? enabled,
     ),
+    pageContentBuilder: (context, [state]) => SettingsMenu(
+      itemBuilder: itemBuilder,
+    ),
+    pageBuilder: pageBuilder,
     label: label,
     itemBuilder: itemBuilder,
-    pageBuilder: pageBuilder,
     type: SettingsMenuItemType.listSubscreen
   );
 
@@ -366,38 +349,58 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     StatusBuilder<bool> statusTextBuilder,
     @required WidgetBuilder inactiveTextBuilder,
     bool duplicateSwitchInMenuItem = false,
-    @required SettingsMenuItemBuilder itemBuilder,
+    @required SettingsItemBuilder itemBuilder,
     @required bool initialValue,
     bool enabled = true,
+    bool selected = false,
     ValueChanged<bool> onChanged,
     @required SettingsPageBuilder pageBuilder
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => MasterSwitchMenuItem(
-      id: id,
-      leading: leading,
-      label: label,
-      masterSwitchTitle: masterSwitchTitle,
-      statusTextBuilder: statusTextBuilder,
-      inactiveTextBuilder: inactiveTextBuilder,
-      itemBuilder: itemBuilder,
-      initialValue: initialValue,
-      duplicateSwitchInMenuItem: duplicateSwitchInMenuItem,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
-      onChanged: onChanged,
-      pageBuilder: pageBuilder,
-      onSearch: showSettingsSearch
+    builder: (context, [state]) {
+      bool value = state.value ?? initialValue;
+      Widget statusText = statusTextBuilder != null
+        ? statusTextBuilder(context, value)
+        : Text(value ? activeLabel : inactiveLabel);
+      return ListTile(
+        leading: leading ?? Icon(null),
+        title: Text(label),
+        subtitle: statusText,
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: state.pageBuilder)
+        ),
+        trailing: duplicateSwitchInMenuItem ? Switch(
+          value: value,
+          onChanged: state.onChanged ?? onChanged,
+        ) : null,
+        selected: state.selected ?? selected,
+        enabled: state.enabled ?? enabled,
+      );
+    },
+    controlBuilder: (context, [state]) => MasterSwitchControl(
+      title: masterSwitchTitle,
+      value: state.value ?? initialValue,
+      onChanged: state.onChanged ?? onChanged,
+      activeContentBuilder: (context) => SettingsMenu(
+        itemBuilder: itemBuilder,
+      ),
+      inactiveContentBuilder: (context) => Container(
+        alignment: Alignment.topLeft,
+        padding: const EdgeInsets.only(
+          left: 72,
+          right: 16.0,
+          top: 16.0,
+          bottom: 16.0
+        ),
+        child: inactiveTextBuilder(context),
+      )
     ),
+    pageContentBuilder: (context, [state]) => state.controlBuilder(context),
+    id: id,
     label: label,
     itemBuilder: itemBuilder,
-    pageBuilder: pageBuilder,
+    updateOnChanged: true,
     type: SettingsMenuItemType.masterSwitch
   );
 
@@ -409,30 +412,38 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required Widget description,
     @required bool initialValue,
     bool enabled = true,
+    bool selected = false,
     @required SettingsPageBuilder pageBuilder,
     ValueChanged<bool> onChanged
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => IndividualSwitchMenuItem(
-      id: id,
-      leading: leading,
-      label: label,
+    builder: (context, [state]) {
+      bool value = state.value ?? initialValue;
+      String statusText = value ? activeLabel : inactiveLabel;
+      return ListTile(
+        leading: leading ?? Icon(null),
+        title: Text(label),
+        subtitle: Text(statusText),
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: state.pageBuilder)
+        ),
+        selected: state.selected ?? selected,
+        enabled: state.enabled ?? enabled,
+      );
+    },
+    controlBuilder: (context, [state]) => IndividualSwitchControl(
+      statusTextBuilder: (context, checked) =>
+        Text(checked ? activeLabel : inactiveLabel),
+      value: state.value ?? initialValue,
       description: description,
-      initialValue: initialValue,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
-      onChanged: onChanged,
-      pageBuilder: pageBuilder,
-      onSearch: showSettingsSearch,
+      onChanged: state.onChanged ?? onChanged,
     ),
-    label: label,
+    pageContentBuilder: (context, [state]) => state.controlBuilder(context),
     pageBuilder: pageBuilder,
+    id: id,
+    label: label,
+    updateOnChanged: true,
     type: SettingsMenuItemType.individualSwitch
   );
 
@@ -442,48 +453,117 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Widget leading,
     @required String label,
     Widget secondaryText,
-    @required SettingsMenuItemBuilder itemBuilder,
+    @required SettingsItemBuilder itemBuilder,
     @required bool initialValue,
+    ValueChanged<bool> onChanged,
     bool enabled = true,
-    ValueChanged<bool> onChanged
+    bool selected = false,
   }) : super(
     key: key,
-    builder: (BuildContext context, {
-      bool dependencyEnabled,
-      bool selected = false,
-      bool showTopDivider,
-      bool showBottomDivider,
-      VoidCallback showSettingsSearch
-    }) => DependencyMenuItem(
-      id: id,
+    builder: (context, [state]) => state.controlBuilder(context),
+    controlBuilder: (context, [state]) => DependencyControl(
       leading: leading,
-      label: label,
+      title: Text(label),
       secondaryText: secondaryText,
       itemBuilder: itemBuilder,
-      initialValue: initialValue,
-      enabled: dependencyEnabled ?? enabled,
-      selected: selected,
-      onChanged: onChanged,
+      dependencyEnabled: state.value ?? initialValue,
+      enabled: state.enabled ?? enabled,
+      selected: state.selected ?? selected,
+      onChanged: state.onChanged ?? onChanged,
     ),
+    id: id,
     label: label,
     itemBuilder: itemBuilder,
     type: SettingsMenuItemType.dependency
   );
 
+  Widget _buildPage(BuildContext context, SettingsMenuItemState state) {
+    SettingsMenuItemState buildParams = state.copyWith(
+      controlBuilder: (context) => _buildControl(context, state)
+    );
+    Widget title = Text('$label');
+
+    if (this.pageBuilder != null) {
+      return this.pageBuilder(
+        context,
+        title,
+        pageContentBuilder(context, buildParams)
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: title,
+      ),
+      body: pageContentBuilder(context, buildParams),
+    );
+  }
+
+  final ValueNotifier _valueNotifier = ValueNotifier(null);
+  void _handleChanged(newValue) => _valueNotifier.value = newValue;
+
+  Widget _buildControl(BuildContext context, SettingsMenuItemState state) {
+    return ValueListenableBuilder(
+      valueListenable: _valueNotifier,
+      builder: (context, value, _) => this.controlBuilder(
+        context,
+        state.copyWith(
+          value: value,
+          onChanged: _handleChanged
+        )
+      ),
+    );
+  }
+
+  Widget _buildState(BuildContext context, [SettingsMenuItemState state]) {
+    state = state ?? SettingsMenuItemState();
+    state = state.copyWith(
+      pageBuilder: (context) => _buildPage(context, state),
+      controlBuilder: (context) => _buildControl(context, state)
+    );
+
+    if (updateOnChanged) return ValueListenableBuilder(
+      valueListenable: _valueNotifier,
+      builder: (context, value, _) => this.builder(
+        context,
+        state.copyWith(value: value)
+      )
+    );
+
+    return this.builder(context, state);
+  }
+
+  Widget buildWith(BuildContext context, {
+    bool selected,
+    bool enabled,
+    bool showTopDivider,
+    bool showBottomDivider
+  }) {
+    return _buildState(
+      context,
+      SettingsMenuItemState(
+        enabled: enabled,
+        selected: selected,
+        showTopDivider: showTopDivider,
+        showBottomDivider: showBottomDivider
+      )
+    );
+  }
+
   @override
-  Widget build(BuildContext context) => builder(context);
+  Widget build(BuildContext context) {
+    return _buildState(context);
+  }
 }
 
 class SettingsMenu extends StatelessWidget {
   SettingsMenu({
     Key key,
     @required this.itemBuilder,
-    this.onSearch,
-    this.enabled
+    this.enabled = true
   }) : super(key: key);
 
-  final SettingsMenuItemBuilder itemBuilder;
-  final VoidCallback onSearch;
+  final SettingsItemBuilder itemBuilder;
   final bool enabled;
 
   @override
@@ -493,12 +573,22 @@ class SettingsMenu extends StatelessWidget {
       itemCount: group.length,
       itemBuilder: (context, index) {
         SettingsMenuItem item = group[index];
-        return SettingsMenuItem._(
-          item,
-          previous: index > 1 ? group[index - 1] : null,
-          enabled: enabled,
-          onSearch: onSearch,
-        );
+          return item.buildWith(
+            context,
+            enabled: enabled,
+            showTopDivider: Section.needShowTopDivider(
+              context: context,
+              item: item,
+              group: group,
+              hideWhenFirst: true
+            ),
+            showBottomDivider: Section.needShowBottomDivider(
+              context: context,
+              item: item,
+              group: group,
+              hideWhenLast: true
+            )
+          );
       }
     );
   }
@@ -514,7 +604,7 @@ class SettingsPage extends StatelessWidget {
 
   final Widget title;
   final SettingsPageBuilder builder;
-  final SettingsMenuItemBuilder itemBuilder;
+  final SettingsItemBuilder itemBuilder;
 
   void _showSettingsSearch(context) {
     showSearch(
@@ -528,7 +618,7 @@ class SettingsPage extends StatelessWidget {
   Widget _buildBody(BuildContext context) {
     return SettingsMenu(
       itemBuilder: itemBuilder,
-      onSearch: () => _showSettingsSearch(context),
+      //onSearch: () => _showSettingsSearch(context),
     );
   }
 
@@ -537,12 +627,77 @@ class SettingsPage extends StatelessWidget {
     context,
     title,
     _buildBody(context),
-    () => _showSettingsSearch(context)
+    //onSearch: () => _showSettingsSearch(context)
   );
 }
 
-class SectionMenuItem extends StatelessWidget {
-  SectionMenuItem({
+class MultipleChoiceMenuItem<T> extends StatelessWidget {
+  MultipleChoiceMenuItem({
+    Key key,
+    this.leading,
+    @required this.label,
+    this.statusTextBuilder,
+    @required this.controlBuilder,
+    @required this.choices,
+    @required this.value,
+    this.enabled = true,
+    this.selected = false,
+  }) : super(key: key);
+  
+  final Widget leading;
+  final String label;
+  final StatusBuilder<List<Choice<T>>> statusTextBuilder;
+  final WidgetBuilder controlBuilder;
+  final List<Choice<T>> choices;
+  final List<T> value;
+  final bool enabled;
+  final bool selected;
+  
+  Widget _buildDialog(BuildContext context) {
+    return ConfirmationDialog(
+      title: Text(label),
+      contentPadding: const EdgeInsets.only(top: 16.0),
+      content: SizedBox(
+        height: choices.length * _kListTileHeight,
+        child: controlBuilder(context),
+      ),
+      onConfirm: () => Navigator.of(context).pop(),
+    );
+  }
+
+  Widget _buildStatusText(BuildContext context) {
+    List<Choice<T>> checkedChoices = choices.where(
+      (choice) => value.contains(choice.value)
+    ).toList();
+
+    if (statusTextBuilder != null) {
+      return statusTextBuilder(context, checkedChoices);
+    } else {
+      String statusText = checkedChoices.map(
+        (choice) => choice.label
+      ).join(', ');
+      return Text(statusText);
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: leading ?? Icon(null),
+      title: Text(label),
+      subtitle: _buildStatusText(context),
+      onTap: () => showDialog(
+        context: context,
+        builder: _buildDialog
+      ),
+      selected: selected,
+      enabled: enabled,
+    );
+  }
+}
+
+class Section extends StatelessWidget {
+  Section({
     Key key,
     this.title,
     @required this.itemBuilder,
@@ -551,8 +706,8 @@ class SectionMenuItem extends StatelessWidget {
     this.showBottomDivider = true,
   }) : super(key: key);
 
-  final String title;
-  final SettingsMenuItemBuilder itemBuilder;
+  final Widget title;
+  final SettingsItemBuilder itemBuilder;
   final bool enabled;
   final bool showTopDivider;
   final bool showBottomDivider;
@@ -560,12 +715,7 @@ class SectionMenuItem extends StatelessWidget {
   Widget _buildTitle(BuildContext context) {
     return title == null ? Container() : Container(
       alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style:  Theme.of(context).textTheme.body2.copyWith(
-          color: Theme.of(context).primaryColor
-        )
-      ),
+      child: title,
       padding: const EdgeInsets.only(
         left: 72.0,
         right: 16.0,
@@ -578,16 +728,22 @@ class SectionMenuItem extends StatelessWidget {
   Widget _buildContent(BuildContext context) {
     List<SettingsMenuItem> group = itemBuilder(context);
     return Column(
-      children: group.map(
-        (item) {
-          int index = group.indexOf(item);
-          return SettingsMenuItem._(
-            item,
-            previous: index > 1 ? group[index - 1] : null,
-            enabled: enabled
-          );
-        }
-      ).toList(),
+      children: group.map((item) {
+        return item.buildWith(
+          context,
+          enabled: enabled,
+          showTopDivider: Section.needShowTopDivider(
+            context: context,
+            item: item,
+            group: group
+          ),
+          showBottomDivider: Section.needShowBottomDivider(
+            context: context,
+            item: item,
+            group: group
+          )
+        );
+      }).toList(),
     );
   }
 
@@ -602,60 +758,51 @@ class SectionMenuItem extends StatelessWidget {
       ],
     );
   }
-}
 
-class ToggleSwitchMenuItem extends StatefulWidget {
-  ToggleSwitchMenuItem({
-    Key key,
-    @required this.id,
-    this.leading,
-    @required this.label,
-    this.secondaryText,
-    @required this.initialValue,
-    this.enabled = true,
-    this.selected = false,
-    this.onChanged
-  }) : super(key: key);
+  static bool needShowTopDivider({
+    @required BuildContext context,
+    @required SettingsMenuItem item,
+    @required List<SettingsMenuItem> group,
+    bool hideWhenFirst = false
+  }) {
+    bool isNotSection = item.type != SettingsMenuItemType.section;
+    if (isNotSection) return false;
 
-  final String id;
-  final Widget leading;
-  final String label;
-  final Widget secondaryText;
-  final bool initialValue;
-  final bool enabled;
-  final bool selected;
-  final ValueChanged<bool> onChanged;
+    bool isFirst = hideWhenFirst && item == group.first;
+    if (isFirst) return false;
 
-  @override
-  _ToggleSwitchMenuItemState createState() => _ToggleSwitchMenuItemState();
-}
-class _ToggleSwitchMenuItemState extends State<ToggleSwitchMenuItem> {
-  bool _value;
+    int itemIndex = group.indexOf(item);
+    SettingsMenuItem previous = itemIndex > 0 ? group[itemIndex - 1] : null;
 
-  @override
-  void initState() {
-    super.initState();
-    _value = widget.initialValue;
+    bool isSectionPrevious = previous?.type == SettingsMenuItemType.section;
+    if (isSectionPrevious) return false;
+
+    bool isPageLinkPrevious = previous?.pageBuilder != null;
+    if (isPageLinkPrevious) return true;
+
+    bool isNotEmptyPrevious = previous?.itemBuilder != null;
+    if (isNotEmptyPrevious) {
+      List<SettingsMenuItem> previousGroup = previous.itemBuilder(context);
+      bool isSectionLastPreviousItem = previousGroup?.last?.type == SettingsMenuItemType.section;
+      if (isSectionLastPreviousItem) return false;
+    }
+
+    return true;
   }
 
-  void _handleChanged(bool newValue) {
-    if (widget.onChanged != null) widget.onChanged(newValue);
+  static bool needShowBottomDivider({
+    @required BuildContext context,
+    @required SettingsMenuItem item,
+    @required List<SettingsMenuItem> group,
+    bool hideWhenLast = false
+  }) {
+    bool isNotSection = item.type != SettingsMenuItemType.section;
+    if (isNotSection) return false;
 
-    setState(() {
-      _value = newValue;
-    });
-  }
+    bool isLastOnPage = hideWhenLast && item == group.last;
+    if (isLastOnPage) return false;
 
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-      secondary: widget.leading ?? Icon(null),
-      title: Text(widget.label),
-      subtitle: widget.secondaryText,
-      value: _value,
-      selected: widget.selected,
-      onChanged: widget.enabled ? _handleChanged : null
-    );
+    return true;
   }
 }
 
@@ -690,146 +837,20 @@ class ConfirmationDialog extends StatelessWidget {
   }
 }
 
-class SingleChoiceMenuItem<T> extends StatefulWidget {
-  SingleChoiceMenuItem({
-    Key key,
-    @required this.id,
-    this.leading,
-    @required this.label,
-    this.statusTextBuilder,
-    this.pageBuilder,
-    @required this.choices,
-    @required this.initialValue,
-    this.enabled = true,
-    this.selected = false,
-    this.onChanged,
-    this.onSearch
-  }) : super(key: key);
-
-  final String id;
-  final Widget leading;
-  final String label;
-  final StatusBuilder<Choice<T>> statusTextBuilder;
-  final SettingsPageBuilder pageBuilder;
-  final List<Choice<T>> choices;
-  final T initialValue;
-  final bool enabled;
-  final bool selected;
-  final ValueChanged<T> onChanged;
-  final VoidCallback onSearch;
-
-  @override
-  _SingleChoiceMenuItemState<T> createState() => _SingleChoiceMenuItemState<T>();
-}
-class _SingleChoiceMenuItemState<T> extends State<SingleChoiceMenuItem<T>> {
-  T _value;
-
-  @override
-  initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(T newValue) {
-    if (widget.onChanged != null) widget.onChanged(newValue);
-
-    setState(() {
-      _value = newValue;
-    });
-  }
-
-  Widget _buildTitle(BuildContext context) {
-    return Text(widget.label);
-  }
-
-  Widget _buildBody(BuildContext context) {
-    return SingleChoiceMenuItemControl<T>(
-      choices: widget.choices,
-      initialValue: _value,
-      onChanged: _handleChanged,
-    );
-  }
-
-  Widget _buildPage(BuildContext context) {
-    if (widget.pageBuilder != null) return widget.pageBuilder(
-      context,
-      _buildTitle(context),
-      _buildBody(context),
-      widget.onSearch
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        title: _buildTitle(context),
-      ),
-      body: _buildBody(context)
-    );
-  }
-
-  Widget _buildDefaultStatusText(context, Choice<T> choice) {
-    return Text('${choice.label}');
-  }
-
-  Widget _buildStatusText(BuildContext context) {
-    Choice<T> choice = widget.choices.firstWhere(
-      (Choice<T> choice) => choice.value == _value
-    );
-
-    if (widget.statusTextBuilder != null)
-      return widget.statusTextBuilder(context, choice);
-
-    return _buildDefaultStatusText(context, choice);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: widget.leading ?? Icon(null),
-      title: Text(widget.label),
-      subtitle: _buildStatusText(context),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: _buildPage)
-      ),
-      selected: widget.selected,
-      enabled: widget.enabled,
-    );
-  }
-}
-
-class SingleChoiceMenuItemControl<T> extends StatefulWidget {
-  SingleChoiceMenuItemControl({
+class SingleChoiceControl<T> extends StatelessWidget {
+  SingleChoiceControl({
     Key key,
     @required this.choices,
-    this.initialValue,
-    this.onChanged
+    @required this.value,
+    @required this.onChanged
   }) : super(key: key);
 
   final List<Choice<T>> choices;
-  final T initialValue;
+  final T value;
   final ValueChanged<T> onChanged;
-
-  @override
-  _SingleChoiceMenuItemControlState<T> createState() => _SingleChoiceMenuItemControlState<T>();
-}
-class _SingleChoiceMenuItemControlState<T> extends State<SingleChoiceMenuItemControl<T>> {
-  T _value;
-
-  @override
-  initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(T newValue) {
-    if (widget.onChanged != null) widget.onChanged(newValue);
-
-    setState(() {
-      _value = newValue;
-    });
-  }
 
   Widget _buildRadioListTile(BuildContext context, int index) {
-    Choice option = widget.choices[index];
+    Choice option = choices[index];
     return RadioListTile<T>(
       secondary: Visibility(
         visible: false,
@@ -837,9 +858,9 @@ class _SingleChoiceMenuItemControlState<T> extends State<SingleChoiceMenuItemCon
       ),
       title: Text(option.label),
       value: option.value,
-      groupValue: _value,
-      selected: _value == option.value,
-      onChanged: _handleChanged,
+      groupValue: value,
+      selected: value == option.value,
+      onChanged: onChanged,
       controlAffinity: ListTileControlAffinity.trailing
     );
   }
@@ -847,147 +868,35 @@ class _SingleChoiceMenuItemControlState<T> extends State<SingleChoiceMenuItemCon
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: widget.choices.length,
+      itemCount: choices.length,
       itemBuilder: _buildRadioListTile
     );
   }
 }
 
-class MultipleChoiceMenuItem<T> extends StatefulWidget {
-  MultipleChoiceMenuItem({
-    Key key,
-    @required this.id,
-    this.leading,
-    @required this.label,
-    this.statusTextBuilder,
-    @required this.choices,
-    @required this.initialValue,
-    this.enabled = true,
-    this.selected = false,
-    this.onChanged
-  }) : super(key: key);
-
-  final String id;
-  final Widget leading;
-  final String label;
-  final StatusBuilder<List<Choice<T>>> statusTextBuilder;
-  final List<Choice<T>> choices;
-  final List<T> initialValue;
-  final bool enabled;
-  final bool selected;
-  final ValueChanged<List<T>> onChanged;
-
-  @override
-  _MultipleChoiceMenuItemState<T> createState() => _MultipleChoiceMenuItemState<T>();
-}
-class _MultipleChoiceMenuItemState<T> extends State<MultipleChoiceMenuItem<T>> {
-  List<T> _value;
-
-  @override
-  initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(List<T> newValue) {
-    if (widget.onChanged != null) widget.onChanged(newValue);
-
-    setState(() {
-      _value = newValue;
-    });
-  }
-
-  Widget _buildAlertDialog(BuildContext context) {
-    return ConfirmationDialog(
-      title: Text(widget.label),
-      contentPadding: const EdgeInsets.only(top: 16.0),
-      content: SizedBox(
-        height: widget.choices.length * _kListTileHeight,
-        child: MultipleChoiceMenuItemControl(
-          choices: widget.choices,
-          initialValue: widget.initialValue,
-          onChanged: _handleChanged
-        ),
-      ),
-      onConfirm: () => Navigator.of(context).pop(),
-    );
-  }
-
-  Widget _buildDefaultStatusText(BuildContext context, List<Choice<T>> choices) {
-    if (choices.isEmpty) return Text('Not Chosen');
-    String labels = choices.map((choice) => choice.label).join(', ');
-    return Text('$labels');
-  }
-
-  Widget _buildStatusText(BuildContext context) {
-    List<Choice<T>> choices = widget.choices.where(
-      (choice) => _value.contains(choice.value)
-    ).toList();
-
-    if (widget.statusTextBuilder != null)
-      return widget.statusTextBuilder(context, choices);
-
-    return _buildDefaultStatusText(context, choices);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: widget.leading ?? Icon(null),
-      title: Text(widget.label),
-      subtitle: _buildStatusText(context),
-      onTap: () => showDialog(
-        context: context,
-        builder: _buildAlertDialog
-      ),
-      selected: widget.selected,
-      enabled: widget.enabled,
-    );
-  }
-}
-
-class MultipleChoiceMenuItemControl<T> extends StatefulWidget {
-  MultipleChoiceMenuItemControl({
+class MultipleChoiceControl<T> extends StatelessWidget {
+  MultipleChoiceControl({
     Key key,
     @required this.choices,
-    @required this.initialValue,
-    this.onChanged
+    @required this.value,
+    @required this.onChanged
   }) : super(key: key);
 
   final List<Choice<T>> choices;
-  final List<T> initialValue;
+  final List<T> value;
   final ValueChanged<List<T>> onChanged;
-
-  @override
-  _MultipleChoiceMenuItemControlState<T> createState() => _MultipleChoiceMenuItemControlState();
-}
-class _MultipleChoiceMenuItemControlState<T> extends State<MultipleChoiceMenuItemControl<T>> {
-  List<T> _value;
-
-  @override
-  initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(List<T> newValue) {
-    if (widget.onChanged != null) widget.onChanged(newValue);
-
-    setState(() {
-      _value = newValue;
-    });
-  }
 
   Widget _buildCheckboxListTile(BuildContext context, int index) {
-    Choice option = widget.choices[index];
-    bool checked = _value.contains(option.value);
+    Choice option = choices[index];
+    bool checked = value.contains(option.value);
     return CheckboxListTile(
       title: Text(option.label),
       value: checked,
       selected: checked,
       onChanged: (bool isChecked) {
+        List<T> _value = []..addAll(value);
         isChecked ? _value.add(option.value) : _value.remove(option.value);
-        _handleChanged(_value);
+        onChanged(_value);
       }
     );
   }
@@ -995,77 +904,8 @@ class _MultipleChoiceMenuItemControlState<T> extends State<MultipleChoiceMenuIte
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: widget.choices.length,
+      itemCount: choices.length,
       itemBuilder: _buildCheckboxListTile
-    );
-  }
-}
-
-class SliderMenuItem extends StatefulWidget {
-  SliderMenuItem({
-    Key key,
-    @required this.id,
-    this.leading,
-    @required this.label,
-    this.secondaryText,
-    @required this.initialValue,
-    this.enabled = true,
-    this.selected = false,
-    this.onChanged,
-    this.onChangeStart,
-    this.onChangeEnd,
-    this.min = 0.0,
-    this.max = 1.0,
-    this.divisions,
-  }) : super(key: key);
-
-  final String id;
-  final Widget leading;
-  final String label;
-  final Widget secondaryText;
-  final double initialValue;
-  final bool enabled;
-  final bool selected;
-  final double min;
-  final double max;
-  final int divisions;
-  final ValueChanged<double> onChanged;
-  final ValueChanged<double> onChangeStart;
-  final ValueChanged<double> onChangeEnd;
-
-  @override
-  _SliderState createState() => _SliderState();
-}
-class _SliderState extends State<SliderMenuItem> {
-  double _value;
-
-  @override
-  void initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(double newValue) {
-    if (widget.onChanged != null) widget.onChanged(newValue);
-
-    setState(() {
-      _value = newValue;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SliderListTile(
-      secondary: widget.leading ?? Icon(null),
-      title: Text(widget.label),
-      value: _value,
-      selected: widget.selected,
-      min: widget.min,
-      max: widget.max,
-      divisions: widget.divisions,
-      onChanged: widget.enabled ? _handleChanged : null,
-      onChangeStart: widget.enabled ? widget.onChangeStart : null,
-      onChangeEnd: widget.enabled ? widget.onChangeEnd : null,
     );
   }
 }
@@ -1145,16 +985,16 @@ class SliderListTile extends StatelessWidget {
   }
 }
 
-class DateTimeMenuItem extends StatefulWidget {
-  DateTimeMenuItem({
+class DatePickerListTile extends StatelessWidget {
+  DatePickerListTile({
     Key key,
     @required this.id,
     this.leading,
     @required this.label,
     this.statusTextBuilder,
-    @required this.initialValue,
-    @required this.min,
-    @required this.max,
+    @required this.value,
+    @required this.firstDate,
+    @required this.lastDate,
     this.enabled = true,
     this.selected = false,
     this.onChanged
@@ -1164,103 +1004,31 @@ class DateTimeMenuItem extends StatefulWidget {
   final Widget leading;
   final String label;
   final StatusBuilder<DateTime> statusTextBuilder;
-  final DateTime initialValue;
-  final DateTime min;
-  final DateTime max;
+  final DateTime value;
+  final DateTime firstDate;
+  final DateTime lastDate;
   final bool enabled;
   final bool selected;
   final ValueChanged<DateTime> onChanged;
 
-  @override
-  _DateTimeMenuItemState createState() => _DateTimeMenuItemState();
-}
-class _DateTimeMenuItemState extends State<DateTimeMenuItem> {
-  DateTime _value;
-
-  @override
-  void initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  Future<Null> _showDatePicker() async {
+  Future<void> _showDatePicker(BuildContext context) async {
     final DateTime newValue = await showDatePicker(
       context: context,
-      initialDate: widget.initialValue,
-      firstDate: widget.min,
-      lastDate: widget.max,
+      initialDate: value,
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
 
-    if (newValue != null && newValue != _value && widget.onChanged != null) {
-      _value = newValue;
-      widget.onChanged(newValue);
+    if (newValue != null && newValue != value && onChanged != null) {
+      onChanged(newValue);
     }
   }
 
-  Widget _buildDefaultStatusText(BuildContext context) {
-    return Text(_value.toIso8601String());
-  }
-
   Widget _buildStatusText(BuildContext context) {
-    if (widget.statusTextBuilder != null)
-      return widget.statusTextBuilder(context, _value);
+    if (statusTextBuilder != null)
+      return statusTextBuilder(context, value);
 
-    return _buildDefaultStatusText(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: widget.leading ?? Icon(null),
-      title: Text(widget.label),
-      subtitle: _buildStatusText(context),
-      onTap: _showDatePicker,
-      selected: widget.selected,
-      enabled: widget.enabled,
-    );
-  }
-}
-
-class ListSubscreenMenuItem extends StatelessWidget {
-  ListSubscreenMenuItem({
-    Key key,
-    @required this.label,
-    this.leading,
-    this.secondaryText,
-    @required this.itemBuilder,
-    @required this.pageBuilder,
-    this.enabled = true,
-    this.selected = false,
-    this.onSearch
-  }) : super(key: key);
-
-  final String label;
-  final Widget leading;
-  final Widget secondaryText;
-  final SettingsMenuItemBuilder itemBuilder;
-  final SettingsPageBuilder pageBuilder;
-  final bool enabled;
-  final bool selected;
-  final VoidCallback onSearch;
-
-  Widget _buildTitle(BuildContext context) {
-    return Text(label);
-  }
-  
-  Widget _buildBody(BuildContext context) {
-    return SettingsMenu(
-      itemBuilder: itemBuilder,
-      onSearch: onSearch,
-    );
-  }
-
-  Widget _buildPage(context) {
-    return pageBuilder(
-      context,
-      _buildTitle(context),
-      _buildBody(context),
-      onSearch
-    );
+    return Text(value.toIso8601String());
   }
 
   @override
@@ -1268,71 +1036,54 @@ class ListSubscreenMenuItem extends StatelessWidget {
     return ListTile(
       leading: leading ?? Icon(null),
       title: Text(label),
-      subtitle: secondaryText,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: _buildPage)
-      ),
+      subtitle: _buildStatusText(context),
+      onTap: () => _showDatePicker(context),
       selected: selected,
       enabled: enabled,
     );
   }
 }
 
-class DependencyMenuItem extends StatefulWidget {
-  DependencyMenuItem({
+class DependencyControl extends StatelessWidget {
+  DependencyControl({
     Key key,
-    @required this.id,
     this.leading,
-    @required this.label,
+    @required this.title,
     this.secondaryText,
     @required this.itemBuilder,
-    @required this.initialValue,
+    @required this.dependencyEnabled,
     this.enabled = true,
     this.selected = false,
-    this.onChanged
+    @required this.onChanged
   }) : super(key: key);
 
-  final String id;
   final Widget leading;
-  final String label;
+  final Widget title;
   final Widget secondaryText;
-  final SettingsMenuItemBuilder itemBuilder;
-  final bool initialValue;
+  final SettingsItemBuilder itemBuilder;
+  final bool dependencyEnabled;
   final bool enabled;
   final bool selected;
   final ValueChanged<bool> onChanged;
 
-  @override
-  _DependencyMenuItemState createState() => _DependencyMenuItemState();
-}
-class _DependencyMenuItemState extends State<DependencyMenuItem> {
-  bool _value;
-
-  @override
-  void initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(bool newValue) {
-    setState(() {
-      _value = newValue;
-    });
-  }
-
   Widget _buildDependent(BuildContext context) {
-    List<SettingsMenuItem> group = widget.itemBuilder(context);
+    List<SettingsMenuItem> group = itemBuilder(context);
     return Column(
       children: group.map(
-        (item) {
-          int index = group.indexOf(item);
-          return SettingsMenuItem._(
-            item,
-            previous: index > 1 ? group[index - 1] : null,
-            enabled: _value
-          );
-        }
+        (item) => item.buildWith(
+          context,
+          enabled: dependencyEnabled,
+            showTopDivider: Section.needShowTopDivider(
+              context: context,
+              item: item,
+              group: group
+            ),
+            showBottomDivider: Section.needShowBottomDivider(
+              context: context,
+              item: item,
+              group: group
+            )
+        )
       ).toList(),
     );
   }
@@ -1342,12 +1093,12 @@ class _DependencyMenuItemState extends State<DependencyMenuItem> {
     return Column(
       children: <Widget>[
         SwitchListTile(
-          secondary: widget.leading ?? Icon(null),
-          title: Text(widget.label),
-          subtitle: widget.secondaryText,
-          value: _value,
-          onChanged: widget.enabled ? _handleChanged : null,
-          selected: widget.selected,
+          secondary: leading ?? Icon(null),
+          title: title,
+          subtitle: secondaryText,
+          value: dependencyEnabled,
+          onChanged: enabled ? onChanged : null,
+          selected: selected,
         ),
         _buildDependent(context)
       ],
@@ -1355,324 +1106,66 @@ class _DependencyMenuItemState extends State<DependencyMenuItem> {
   }
 }
 
-class MasterSwitchMenuItem extends StatefulWidget {
-  MasterSwitchMenuItem({
-    Key key,
-    @required this.id,
-    this.leading,
-    @required this.label,
-    @required this.masterSwitchTitle,
-    @required this.statusTextBuilder,
-    @required this.inactiveTextBuilder,
-    @required this.itemBuilder,
-    @required this.initialValue,
-    this.duplicateSwitchInMenuItem = false,
-    this.enabled = true,
-    this.selected = false,
-    this.onChanged,
-    @required this.pageBuilder,
-    this.onSearch
-  }) : super(key: key);
-
-  final String id;
-  final Widget leading;
-  final String label;
-  final Widget masterSwitchTitle;
-  final StatusBuilder<bool> statusTextBuilder;
-  final WidgetBuilder inactiveTextBuilder;
-  final SettingsMenuItemBuilder itemBuilder;
-  final bool initialValue;
-  final bool duplicateSwitchInMenuItem;
-  final bool enabled;
-  final bool selected;
-  final ValueChanged<bool> onChanged;
-  final SettingsPageBuilder pageBuilder;
-  final VoidCallback onSearch;
-
-  @override
-  _MasterSwitchMenuItemState createState() => _MasterSwitchMenuItemState();
-}
-class _MasterSwitchMenuItemState extends State<MasterSwitchMenuItem> {
-  bool _value;
-
-  @override
-  initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(bool newValue) {
-    if (widget.onChanged != null) widget.onChanged(newValue);
-
-    setState(() {
-      _value = newValue;
-    });
-  }
-
-  Widget _buildStatusText(BuildContext context) {
-    if (widget.statusTextBuilder != null)
-      return widget.statusTextBuilder(context, _value);
-
-    return _value ? Text(activeLabel) : Text(inactiveLabel);
-  }
-
-  Widget _buildDuplicateSwitch(BuildContext context) {
-    return widget.duplicateSwitchInMenuItem ? Switch(
-      value: _value,
-      onChanged: _handleChanged,
-    ) : null;
-  }
-
-
-  Widget _buildActive(BuildContext context) {
-    return SettingsMenu(
-      itemBuilder: widget.itemBuilder,
-      onSearch: widget.onSearch,
-    );
-  }
-
-  Widget _buildInactive(BuildContext context) {
-    return Container(
-      alignment: Alignment.topLeft,
-      padding: const EdgeInsets.only(
-          left: 72,
-          right: 16.0,
-          top: 16.0,
-          bottom: 16.0
-      ),
-      child: widget.inactiveTextBuilder(context),
-    );
-  }
-
-  Widget _buildTitle(BuildContext context) {
-    return Text(widget.label);
-  }
-
-  Widget _buildBody(BuildContext context) {
-    return MasterSwitchMenuItemControl(
-        title: widget.masterSwitchTitle,
-        value: _value,
-        onChanged: widget.onChanged,
-        activeBuilder: _buildActive,
-        inactiveBuilder: _buildInactive
-    );
-  }
-
-  Widget _buildPage(BuildContext context) {
-    return widget.pageBuilder(
-      context,
-      _buildTitle(context),
-      _buildBody(context),
-      widget.onSearch
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: widget.leading ?? Icon(null),
-      title: Text(widget.label),
-      subtitle: _buildStatusText(context),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: _buildPage)
-      ),
-      trailing: _buildDuplicateSwitch(context),
-      selected: widget.selected,
-      enabled: widget.enabled,
-    );
-  }
-}
-
-class MasterSwitchMenuItemControl extends StatefulWidget {
-  MasterSwitchMenuItemControl({
+class MasterSwitchControl extends StatelessWidget {
+  MasterSwitchControl({
     Key key,
     @required this.title,
     @required this.value,
-    @required this.onChanged,
-    @required this.activeBuilder,
-    @required this.inactiveBuilder
+    @required this.activeContentBuilder,
+    @required this.inactiveContentBuilder,
+    @required this.onChanged
   }) : super(key: key);
 
   final Widget title;
   final bool value;
-  final WidgetBuilder activeBuilder;
-  final WidgetBuilder inactiveBuilder;
+  final WidgetBuilder activeContentBuilder;
+  final WidgetBuilder inactiveContentBuilder;
   final ValueChanged<bool> onChanged;
-
-  @override
-  _MasterSwitchMenuItemControlState createState() => _MasterSwitchMenuItemControlState();
-}
-class _MasterSwitchMenuItemControlState extends State<MasterSwitchMenuItemControl> {
-  bool _value;
-
-  @override
-  void initState() {
-    super.initState();
-    _value = widget.value;
-  }
-
-  void _handleChanged(bool newValue) {
-    widget.onChanged(newValue);
-
-    setState(() {
-      _value = newValue;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return ContentSwitchControl(
-      title: widget.title,
-      value: _value,
-      contentBuilder: _value ? widget.activeBuilder : widget.inactiveBuilder,
-      onChanged: _handleChanged,
+      title: title,
+      value: value,
+      pageContentBuilder: value ? activeContentBuilder : inactiveContentBuilder,
+      onChanged: onChanged,
     );
   }
 }
 
-class IndividualSwitchMenuItem extends StatefulWidget {
-  IndividualSwitchMenuItem({
+class IndividualSwitchControl extends StatelessWidget {
+  IndividualSwitchControl({
     Key key,
-    @required this.id,
-    this.leading,
-    @required this.label,
-    @required this.description,
-    @required this.initialValue,
-    this.enabled = true,
-    this.selected = false,
-    this.onChanged,
-    @required this.pageBuilder,
-    this.onSearch
-  }) : super(key: key);
-
-  final String id;
-  final Widget leading;
-  final String label;
-  final Widget description;
-  final bool initialValue;
-  final bool enabled;
-  final bool selected;
-  final ValueChanged<bool> onChanged;
-  final SettingsPageBuilder pageBuilder;
-  final VoidCallback onSearch;
-
-  @override
-  _IndividualSwitchMenuItemState createState() => _IndividualSwitchMenuItemState();
-}
-class _IndividualSwitchMenuItemState extends State<IndividualSwitchMenuItem> {
-  bool _value;
-  String get _statusLabel => _value ? activeLabel : inactiveLabel;
-
-  @override
-  initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(bool newValue) {
-    if (widget.onChanged != null) widget.onChanged(newValue);
-
-    setState(() {
-      _value = newValue;
-    });
-  }
-
-  Widget _buildTitle(BuildContext context) {
-    return Text(widget.label);
-  }
-
-  Widget _buildBody(BuildContext context) {
-    return IndividualSwitchMenuItemControl(
-      activeTitleBuilder: (context) => Text(activeLabel),
-      inactiveTitleBuilder: (context) => Text(inactiveLabel),
-      initialValue: _value,
-      description: widget.description,
-      onChanged: _handleChanged,
-    );
-  }
-
-  Widget _buildPage(BuildContext context) {
-    return widget.pageBuilder(
-      context,
-      _buildTitle(context),
-      _buildBody(context),
-      widget.onSearch
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: widget.leading ?? Icon(null),
-      title: Text(widget.label),
-      subtitle: Text(_statusLabel),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: _buildPage)
-      ),
-      selected: widget.selected,
-      enabled: widget.enabled,
-    );
-  }
-}
-
-class IndividualSwitchMenuItemControl extends StatefulWidget {
-  IndividualSwitchMenuItemControl({
-    Key key,
-    @required this.activeTitleBuilder,
-    @required this.inactiveTitleBuilder,
-    @required this.initialValue,
+    @required this.statusTextBuilder,
+    @required this.value,
     @required this.onChanged,
     @required this.description
   }) : super(key: key);
 
-  final WidgetBuilder activeTitleBuilder;
-  final WidgetBuilder inactiveTitleBuilder;
-  final bool initialValue;
+  final StatusBuilder statusTextBuilder;
+  final bool value;
   final Widget description;
   final ValueChanged<bool> onChanged;
 
-  @override
-  _IndividualSwitchMenuItemControlState createState() => _IndividualSwitchMenuItemControlState();
-}
-class _IndividualSwitchMenuItemControlState extends State<IndividualSwitchMenuItemControl> {
-  bool _value;
-
-  @override
-  void initState() {
-    super.initState();
-    _value = widget.initialValue;
-  }
-
-  void _handleChanged(bool newValue) {
-    widget.onChanged(newValue);
-    setState(() {
-      _value = newValue;
-    });
-  }
-
   Widget _buildTitle(BuildContext context) {
-    return _value
-      ? widget.activeTitleBuilder(context)
-      : widget.inactiveTitleBuilder(context);
+    return statusTextBuilder(context, value);
   }
 
   @override
   Widget build(BuildContext context) {
     return ContentSwitchControl(
       title: _buildTitle(context),
-      value: _value,
-      contentBuilder: (context) => Container(
+      value: value,
+      pageContentBuilder: (context) => Container(
         padding: const EdgeInsets.only(
           left: 72,
           right: 16.0,
           top: 16.0,
           bottom: 16.0
         ),
-        child: widget.description,
+        child: description,
       ),
-      onChanged: _handleChanged,
+      onChanged: onChanged,
     );
   }
 }
@@ -1682,13 +1175,13 @@ class ContentSwitchControl extends StatelessWidget {
     Key key,
     @required this.title,
     @required this.value,
-    @required this.contentBuilder,
+    @required this.pageContentBuilder,
     @required this.onChanged
   }) : super(key: key);
 
   final Widget title;
   final bool value;
-  final WidgetBuilder contentBuilder;
+  final WidgetBuilder pageContentBuilder;
   final ValueChanged<bool> onChanged;
 
   Widget _buildControl(BuildContext context) {
@@ -1714,7 +1207,7 @@ class ContentSwitchControl extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return Expanded(
-      child: contentBuilder(context)
+      child: pageContentBuilder(context)
     );
   }
 
@@ -1728,6 +1221,17 @@ class ContentSwitchControl extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 class Suggestion {
   Suggestion({
@@ -1746,7 +1250,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     @required this.itemBuilder
   });
 
-  final SettingsMenuItemBuilder itemBuilder;
+  final SettingsItemBuilder itemBuilder;
   final Iterable<Suggestion> _history = [];
 
   Iterable<SettingsMenuItem> _getResults(BuildContext context) {
@@ -1816,7 +1320,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
 //  List<SettingsMenuItem> _getGroupWithSelected(
 //    BuildContext context,
-//    SettingsMenuItemBuilder itemBuilder,
+//    SettingsItemBuilder itemBuilder,
 //    SettingsMenuItem selectedItem
 //  ) {
 //    return itemBuilder(context).map((item) {
@@ -1840,14 +1344,26 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 //  }
 
   Widget _buildPage(BuildContext context, Suggestion suggestion) {
-    bool hasPage = suggestion.page != null;
-    //List<SettingsMenuItem> settings = hasScreen ? suggestion.screen.itemBuilder(context) : itemBuilder(context);
+    void _showSearch() => showSearch(
+        context: context,
+        delegate: this
+    );
 
-    //settings = _getGroupWithSelected(context, settings, suggestion.item);
+//    if (suggestion.item.pageBuilder != null) {
+//      return suggestion.item.pageBuilder(
+//        context,
+//        _showSearch
+//      );
+//    } else if (suggestion.page.pageBuilder != null) {
+//      return suggestion.page.pageBuilder(
+//        context,
+//        _showSearch
+//      );
+//    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(hasPage ? suggestion.page.label : 'Settings'),
+        title: Text('Settings'),
       ),
       body: suggestion.item.builder(context),
     );
