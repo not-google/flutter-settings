@@ -28,7 +28,7 @@ class App extends StatelessWidget {
         duplicateSwitchInMenuItem: true,
         onChanged: (bool value) => print('value: $value'),
         //enabled: true,
-        pageBuilder: _buildPage,
+        //pageBuilder: _buildPage,
         itemBuilder: (context) => <SettingsMenuItem>[
           SettingsMenuItem.toggleSwitch(
             id: 'SETTING_2.1',
@@ -258,6 +258,7 @@ class App extends StatelessWidget {
     BuildContext context,
     Widget title,
     Widget body,
+    VoidCallback onSearch
   ) {
     return Scaffold(
       appBar: AppBar(
@@ -265,7 +266,7 @@ class App extends StatelessWidget {
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: () => null
+            onPressed: onSearch
           ),
           IconButton(
             icon: Icon(Icons.help),

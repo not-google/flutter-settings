@@ -15,7 +15,8 @@ const List<SettingsMenuItemType> _kScreenSettingsMenuItemTypes = [
 typedef SettingsPageBuilder<T> = Widget Function(
   BuildContext context,
   Widget title,
-  Widget body
+  Widget body,
+  VoidCallback onSearch,
 );
 typedef SettingsItemBuilder<T> = List<SettingsMenuItem<T>> Function(BuildContext context);
 typedef StatusBuilder<T> = Widget Function(BuildContext context, T status);
@@ -82,7 +83,8 @@ class SettingsMenuItemState<T> {
     this.onChanged,
     this.pageBuilder,
     this.controlBuilder,
-    this.pageContentBuilder
+    this.pageContentBuilder,
+    this.onSearch
   });
 
   final bool selected;
@@ -91,6 +93,7 @@ class SettingsMenuItemState<T> {
   final bool showBottomDivider;
   final T value;
   final ValueChanged<T> onChanged;
+  final VoidCallback onSearch;
   final WidgetBuilder pageBuilder;
   final WidgetBuilder controlBuilder;
   final WidgetBuilder pageContentBuilder;
@@ -101,6 +104,7 @@ class SettingsMenuItemState<T> {
     bool showTopDivider,
     bool showBottomDivider,
     ValueChanged<T> onChanged,
+    VoidCallback onSearch,
     T value,
     WidgetBuilder pageBuilder,
     WidgetBuilder controlBuilder,
@@ -112,6 +116,7 @@ class SettingsMenuItemState<T> {
       showTopDivider: showTopDivider ?? this.showTopDivider,
       showBottomDivider: showBottomDivider ?? this.showBottomDivider,
       onChanged: onChanged ?? this.onChanged,
+      onSearch: onSearch ?? this.onSearch,
       value: value ?? this.value,
       pageBuilder: pageBuilder ?? this.pageBuilder,
       controlBuilder: controlBuilder ?? this.controlBuilder,
@@ -333,6 +338,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ),
     pageContentBuilder: (context, [state]) => SettingsMenu(
       itemBuilder: itemBuilder,
+      onSearch: state.onSearch,
     ),
     pageBuilder: pageBuilder,
     label: label,
@@ -384,6 +390,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       onChanged: state.onChanged ?? onChanged,
       activeContentBuilder: (context) => SettingsMenu(
         itemBuilder: itemBuilder,
+        onSearch: state.onSearch,
       ),
       inactiveContentBuilder: (context) => Container(
         alignment: Alignment.topLeft,
@@ -397,6 +404,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       )
     ),
     pageContentBuilder: (context, [state]) => state.controlBuilder(context),
+    pageBuilder: pageBuilder,
     id: id,
     label: label,
     itemBuilder: itemBuilder,
@@ -487,13 +495,20 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       return this.pageBuilder(
         context,
         title,
-        pageContentBuilder(context, buildParams)
+        pageContentBuilder(context, buildParams),
+        state.onSearch
       );
     }
 
     return Scaffold(
       appBar: AppBar(
         title: title,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: state.onSearch,
+          )
+        ],
       ),
       body: pageContentBuilder(context, buildParams),
     );
@@ -540,7 +555,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     bool selected,
     bool enabled,
     bool showTopDivider,
-    bool showBottomDivider
+    bool showBottomDivider,
+    VoidCallback onSearch
   }) {
     return _buildState(
       context,
@@ -548,7 +564,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         enabled: enabled,
         selected: selected,
         showTopDivider: showTopDivider,
-        showBottomDivider: showBottomDivider
+        showBottomDivider: showBottomDivider,
+        onSearch: onSearch
       )
     );
   }
@@ -563,11 +580,13 @@ class SettingsMenu extends StatelessWidget {
   SettingsMenu({
     Key key,
     @required this.itemBuilder,
-    this.enabled = true
+    this.enabled = true,
+    this.onSearch
   }) : super(key: key);
 
   final SettingsItemBuilder itemBuilder;
   final bool enabled;
+  final VoidCallback onSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -579,6 +598,7 @@ class SettingsMenu extends StatelessWidget {
           return item.buildWith(
             context,
             enabled: enabled,
+            onSearch: onSearch,
             showTopDivider: Section.needShowTopDivider(
               context: context,
               item: item,
@@ -609,7 +629,7 @@ class SettingsPage extends StatelessWidget {
   final SettingsPageBuilder builder;
   final SettingsItemBuilder itemBuilder;
 
-  void _showSettingsSearch(context) {
+  void _showSearch(context) {
     showSearch(
       context: context,
       delegate: SettingsSearchDelegate(
@@ -621,7 +641,7 @@ class SettingsPage extends StatelessWidget {
   Widget _buildBody(BuildContext context) {
     return SettingsMenu(
       itemBuilder: itemBuilder,
-      //onSearch: () => _showSettingsSearch(context),
+      onSearch: () => _showSearch(context),
     );
   }
 
@@ -630,7 +650,7 @@ class SettingsPage extends StatelessWidget {
     context,
     title,
     _buildBody(context),
-    //onSearch: () => _showSettingsSearch(context)
+    () => _showSearch(context)
   );
 }
 
