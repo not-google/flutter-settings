@@ -21,7 +21,7 @@ class App extends StatelessWidget {
         id: 'SETTING_2',
         leading: Icon(Icons.settings),
         label: Text('Master Switch'),
-        masterSwitchTitle: Text('Use Master Switch'),
+        //masterSwitchTitle: Text('Use Master Switch'),
         //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (context) => Text('Текст неактивного состояния'),
         initialValue: true,
@@ -70,7 +70,9 @@ class App extends StatelessWidget {
       id: 'SETTING_3',
       leading: Icon(Icons.settings),
       label: Text('Dependency'),
-      secondaryText: Text('Состояние зависимостей'),
+      secondaryTextBuilder: (context, enabled) => enabled
+          ? Text('Зависимости доступны')
+          : Text('Зависимости не доступны'),
       initialValue: true,
       onChanged: (value) => print('value: $value'),
       itemBuilder: (context) => <SettingsMenuItem>[
@@ -148,12 +150,14 @@ class App extends StatelessWidget {
       onChangeEnd: (double value) => print('value: $value'),
     ),
     SettingsMenuItem.listSubpage(
+      id: 'ListSubpage',
       label: Text('List Subpage'),
       leading: Icon(Icons.settings),
       secondaryText: Text('Страница настроек'),
       pageBuilder: _buildPage,
       itemBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.listSubpage(
+          id: 'ListSubpageItem1',
           label: Text('List Subpage Item 1'),
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
@@ -176,6 +180,7 @@ class App extends StatelessWidget {
           ],
         ),
         SettingsMenuItem.listSubpage(
+          id: 'ListSubpageItem2',
           label: Text('List Subpage Item 2'),
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
@@ -209,7 +214,7 @@ class App extends StatelessWidget {
 //        return Text('$labels');
 //      },
       choices: <Choice<int>>[
-        Choice(label: Text('Опция 1'), value: 1),
+        Choice(label: Text('Опция 1'), secondaryText: Text('Описание опции'), value: 1),
         Choice(label: Text('Опция 2'), value: 2),
         Choice(label: Text('Опция 3'), value: 3),
         Choice(label: Text('Опция 4'), value: 4),
@@ -226,7 +231,7 @@ class App extends StatelessWidget {
       pageBuilder: _buildPage,
       choices: <Choice<int>>[
         Choice(label: Text('Опция 1'), value: 1),
-        Choice(label: Text('Опция 2'), value: 2),
+        Choice(label: Text('Опция 2'), secondaryText: Text('Описание опции'), value: 2),
         Choice(label: Text('Опция 3'), value: 3),
         Choice(label: Text('Опция 4'), value: 4),
       ],
