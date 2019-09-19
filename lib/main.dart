@@ -25,7 +25,7 @@ class App extends StatelessWidget {
         //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (context) => Text('Текст неактивного состояния'),
         initialValue: true,
-        duplicateSwitchInMenuItem: true,
+        showDuplicateSwitch: true,
         onChanged: (bool value) => print('value: $value'),
         //enabled: true,
         //pageBuilder: _buildPage,

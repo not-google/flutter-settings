@@ -6,11 +6,6 @@ const String inactiveLabel = 'Off';
 const double _kListTileHeight = 56.0;
 const double _kSecondaryWidth = 50.0;
 const double _kDividerHeight = 1.0;
-const List<SettingsMenuItemType> _kPageSettingsMenuItemTypes = [
-  SettingsMenuItemType.listSubpage,
-  SettingsMenuItemType.masterSwitch,
-  SettingsMenuItemType.individualSwitch
-];
 
 typedef SettingsPageBuilder<T> = Widget Function(
   BuildContext context,
@@ -174,7 +169,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    StatusBuilder<Choice<T>> statusTextBuilder,
+    StatusBuilder<Choice<T>> secondaryTextBuilder,
     @required List<Choice<T>> choices,
     @required T initialValue,
     SettingsPageBuilder pageBuilder,
@@ -186,8 +181,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     builder: (context, state) {
       T value = state.value ?? initialValue;
       Choice<T> selectedChoice = choices.firstWhere((choice) => choice.value == value);
-      Widget statusText = (statusTextBuilder != null)
-          ? statusTextBuilder(context, selectedChoice)
+      Widget statusText = (secondaryTextBuilder != null)
+          ? secondaryTextBuilder(context, selectedChoice)
           : selectedChoice.label;
       return ListTile(
         leading: leading ?? Icon(null),
@@ -218,7 +213,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    StatusBuilder<List<Choice<T>>> statusTextBuilder,
+    StatusBuilder<List<Choice<T>>> secondaryTextBuilder,
     @required List<Choice<T>> choices,
     @required List<T> initialValue,
     bool enabled = true,
@@ -228,7 +223,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     builder: (context, state) => MultipleChoiceMenuItem<T>(
       leading: leading,
       label: label,
-      statusTextBuilder: statusTextBuilder,
+      secondaryTextBuilder: secondaryTextBuilder,
       controlBuilder: state.controlBuilder,
       choices: choices,
       value: state.value ?? initialValue,
@@ -285,7 +280,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    StatusBuilder<DateTime> statusTextBuilder,
+    StatusBuilder<DateTime> secondaryTextBuilder,
     @required DateTime initialValue,
     @required DateTime firstDate,
     @required DateTime lastDate,
@@ -299,7 +294,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       id: id,
       leading: leading,
       label: label,
-      statusTextBuilder: statusTextBuilder,
+      secondaryTextBuilder: secondaryTextBuilder,
       value: state.value ?? initialValue,
       firstDate: firstDate,
       lastDate: lastDate,
@@ -350,9 +345,9 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Widget leading,
     @required Text label,
     @required Widget masterSwitchTitle,
-    StatusBuilder<bool> statusTextBuilder,
+    StatusBuilder<bool> secondaryTextBuilder,
     @required WidgetBuilder inactiveTextBuilder,
-    bool duplicateSwitchInMenuItem = false,
+    bool showDuplicateSwitch = false,
     @required SettingsItemBuilder itemBuilder,
     @required bool initialValue,
     bool enabled = true,
@@ -363,23 +358,21 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     key: key,
     builder: (context, state) {
       bool value = state.value ?? initialValue;
-      Widget statusText = statusTextBuilder != null
-        ? statusTextBuilder(context, value)
-        : Text(value ? activeLabel : inactiveLabel);
-      return ListTile(
-        leading: leading ?? Icon(null),
+      Widget secondaryText = secondaryTextBuilder != null
+          ? secondaryTextBuilder(context, value)
+          : Text(value ? activeLabel : inactiveLabel);
+      return MasterSwitchListTile(
+        leading: leading,
         title: label,
-        subtitle: statusText,
-        onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: state.pageBuilder)
-        ),
-        trailing: duplicateSwitchInMenuItem ? Switch(
-          value: value,
-          onChanged: state.onChanged ?? onChanged,
-        ) : null,
-        selected: state.selected ?? selected,
+        subtitle: secondaryText,
+        showSwitch: showDuplicateSwitch,
+        value: value,
         enabled: state.enabled ?? enabled,
+        selected: state.selected ?? selected,
+        onChanged: state.onChanged ?? onChanged,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: state.pageBuilder)
+        ),
       );
     },
     controlBuilder: (context, state) => MasterSwitchControl(
@@ -392,12 +385,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       ),
       inactiveContentBuilder: (context) => Container(
         alignment: Alignment.topLeft,
-        padding: const EdgeInsets.only(
-          left: 72,
-          right: 16.0,
-          top: 16.0,
-          bottom: 16.0
-        ),
+        padding: const EdgeInsets.all(16.0).copyWith(left: 72.0),
         child: inactiveTextBuilder(context),
       )
     ),
@@ -439,7 +427,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       );
     },
     controlBuilder: (context, state) => IndividualSwitchControl(
-      statusTextBuilder: (context, checked) =>
+      secondaryTextBuilder: (context, checked) =>
         Text(checked ? activeLabel : inactiveLabel),
       value: state.value ?? initialValue,
       description: description,
@@ -662,7 +650,7 @@ class MultipleChoiceMenuItem<T> extends StatelessWidget {
     Key key,
     this.leading,
     @required this.label,
-    this.statusTextBuilder,
+    this.secondaryTextBuilder,
     @required this.controlBuilder,
     @required this.choices,
     @required this.value,
@@ -672,7 +660,7 @@ class MultipleChoiceMenuItem<T> extends StatelessWidget {
   
   final Widget leading;
   final Text label;
-  final StatusBuilder<List<Choice<T>>> statusTextBuilder;
+  final StatusBuilder<List<Choice<T>>> secondaryTextBuilder;
   final WidgetBuilder controlBuilder;
   final List<Choice<T>> choices;
   final List<T> value;
@@ -696,8 +684,8 @@ class MultipleChoiceMenuItem<T> extends StatelessWidget {
       (choice) => value.contains(choice.value)
     ).toList();
 
-    if (statusTextBuilder != null) {
-      return statusTextBuilder(context, checkedChoices);
+    if (secondaryTextBuilder != null) {
+      return secondaryTextBuilder(context, checkedChoices);
     } else {
       String statusText = checkedChoices.map(
         (choice) => choice.label.data
@@ -732,20 +720,25 @@ class Section extends StatelessWidget {
     this.showBottomDivider = true,
   }) : super(key: key);
 
-  final Widget title;
+  final Text title;
   final SettingsItemBuilder itemBuilder;
   final bool enabled;
   final bool showTopDivider;
   final bool showBottomDivider;
 
   Widget _buildTitle(BuildContext context) {
-    return title == null ? Container() : Container(
+    if (title == null) return Container();
+
+    return Container(
       alignment: Alignment.centerLeft,
-      child: title,
-      padding: const EdgeInsets.only(
+      child: DefaultTextStyle(
+        style: (title.style ?? Theme.of(context).textTheme.body1).copyWith(
+          color: title.style?.color ?? Theme.of(context).primaryColor
+        ),
+        child: title,
+      ),
+      padding: const EdgeInsets.all(16.0).copyWith(
         left: 72.0,
-        right: 16.0,
-        top: 16.0,
         bottom: 8.0
       ),
     );
@@ -885,7 +878,6 @@ class SingleChoiceControl<T> extends StatelessWidget {
       title: option.label,
       value: option.value,
       groupValue: value,
-      selected: value == option.value,
       onChanged: onChanged,
       controlAffinity: ListTileControlAffinity.trailing
     );
@@ -918,7 +910,6 @@ class MultipleChoiceControl<T> extends StatelessWidget {
     return CheckboxListTile(
       title: option.label,
       value: checked,
-      selected: checked,
       onChanged: (bool isChecked) {
         List<T> _value = []..addAll(value);
         isChecked ? _value.add(option.value) : _value.remove(option.value);
@@ -1017,7 +1008,7 @@ class DatePickerListTile extends StatelessWidget {
     @required this.id,
     this.leading,
     @required this.label,
-    this.statusTextBuilder,
+    this.secondaryTextBuilder,
     @required this.value,
     @required this.firstDate,
     @required this.lastDate,
@@ -1029,7 +1020,7 @@ class DatePickerListTile extends StatelessWidget {
   final String id;
   final Widget leading;
   final Text label;
-  final StatusBuilder<DateTime> statusTextBuilder;
+  final StatusBuilder<DateTime> secondaryTextBuilder;
   final DateTime value;
   final DateTime firstDate;
   final DateTime lastDate;
@@ -1051,8 +1042,8 @@ class DatePickerListTile extends StatelessWidget {
   }
 
   Widget _buildStatusText(BuildContext context) {
-    if (statusTextBuilder != null)
-      return statusTextBuilder(context, value);
+    if (secondaryTextBuilder != null)
+      return secondaryTextBuilder(context, value);
 
     return Text(value.toIso8601String());
   }
@@ -1132,6 +1123,74 @@ class DependencyControl extends StatelessWidget {
   }
 }
 
+class MasterSwitchListTile extends StatelessWidget {
+  MasterSwitchListTile({
+    Key key,
+    this.leading,
+    @required this.title,
+    this.subtitle,
+    this.showSwitch = true,
+    @required this.value,
+    this.enabled = true,
+    this.selected = false,
+    this.onChanged,
+    this.onTap
+  }) : super(key: key);
+  
+  final Widget leading;
+  final Widget title;
+  final Widget subtitle;
+  final bool showSwitch;
+  final bool value;
+  final bool enabled;
+  final bool selected;
+  final ValueChanged<bool> onChanged;
+  final VoidCallback onTap;
+
+  Widget _buildSwitch(BuildContext context) {
+    if (!showSwitch) return Container();
+
+    return Container(
+      child: Switch(
+        value: value,
+        onChanged: onChanged,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            color: Theme.of(context).dividerColor,
+            width: 1.0
+          )
+        )
+      ),
+    );
+  }
+
+  Widget _buildListTile(BuildContext context) {
+    return ListTile(
+      leading: leading ?? Icon(null),
+      title: title,
+      subtitle: subtitle,
+      onTap: onTap,
+      selected: selected,
+      enabled: enabled,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: _buildListTile(context),
+        ),
+        _buildSwitch(context)
+      ],
+    );
+  }
+}
+
 class MasterSwitchControl extends StatelessWidget {
   MasterSwitchControl({
     Key key,
@@ -1162,19 +1221,19 @@ class MasterSwitchControl extends StatelessWidget {
 class IndividualSwitchControl extends StatelessWidget {
   IndividualSwitchControl({
     Key key,
-    @required this.statusTextBuilder,
+    @required this.secondaryTextBuilder,
     @required this.value,
     @required this.onChanged,
     @required this.description
   }) : super(key: key);
 
-  final StatusBuilder statusTextBuilder;
+  final StatusBuilder secondaryTextBuilder;
   final bool value;
   final Widget description;
   final ValueChanged<bool> onChanged;
 
   Widget _buildTitle(BuildContext context) {
-    return statusTextBuilder(context, value);
+    return secondaryTextBuilder(context, value);
   }
 
   @override
@@ -1217,11 +1276,17 @@ class ContentSwitchControl extends StatelessWidget {
           visible: false,
           child: CircleAvatar()
         ),
-        title: title,
+        title: DefaultTextStyle(
+          style: (title.style ?? Theme.of(context).textTheme.subhead).copyWith(
+            color: title.style?.color ?? Theme.of(context).colorScheme.onBackground,
+            fontWeight: title.style?.fontWeight ?? FontWeight.w500
+          ),
+          child: title,
+        ),
         value: value,
         onChanged: onChanged,
-        activeColor: Colors.white,
-        inactiveThumbColor: Colors.white,
+        activeColor: Theme.of(context).colorScheme.onBackground,
+        inactiveThumbColor: Theme.of(context).colorScheme.onBackground,
       ),
       decoration: BoxDecoration(
         color: value
