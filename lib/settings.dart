@@ -1368,6 +1368,15 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   final SettingsItemBuilder itemBuilder;
   final Iterable<Suggestion> _history = [];
 
+  void _showSearch(context) {
+    showSearch(
+      context: context,
+      delegate: SettingsSearchDelegate(
+        itemBuilder: itemBuilder
+      )
+    );
+  }
+
   Iterable<SettingsMenuItem> _getResults(BuildContext context) {
     return itemBuilder(context).where(
       (item) => item.label != null && item.label.data.contains(query)
@@ -1433,37 +1442,15 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     );
   }
 
-//  List<SettingsMenuItem> _getGroupWithSelected(
-//    BuildContext context,
-//    SettingsItemBuilder itemBuilder,
-//    SettingsMenuItem selectedItem
-//  ) {
-//    return itemBuilder(context).map((item) {
-//      if (item == selectedItem) {
-//        return SettingsMenuItem._(item, selected: true);
-//      } else if (item.itemBuilder != null) {
-//        List<SettingsMenuItem> itemGroup = item.itemBuilder(context);
-//
-//        if (itemGroup.isEmpty) return item;
-//
-//        List<SettingsMenuItem> replacement = _getGroupWithSelected(
-//          context,
-//          item.itemBuilder,
-//          selectedItem
-//        );
-//        item.itemBuilder = (context) => replacement;
-//      }
-//
-//      return item;
-//    }).toList();
-//  }
-
   Widget _buildPage(BuildContext context, Suggestion suggestion) {
+    VoidCallback showSearch = () => _showSearch(context);
+
     if (suggestion.pageBuilder != null)
       return suggestion.pageBuilder(
         context,
         SettingsMenuItemState(
-          selectItem: suggestion.item
+          selectItem: suggestion.item,
+          onSearch: showSearch
         )
       );
 
@@ -1474,7 +1461,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         itemBuilder: this.itemBuilder,
         selectItem: suggestion.item,
       ),
-      () => null
+      showSearch
     );
   }
 
@@ -1489,7 +1476,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       query: query,
       suggestions: suggestions,
       onSelected: (Suggestion suggestion) {
-        query = suggestion.item.label.data;
+        close(context, null);
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => _buildPage(context, suggestion)
