@@ -52,7 +52,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
     this.pageBuilder,
     this.pageContentBuilder,
     @required this.label,
-    this.itemBuilder,
+    this.groupBuilder,
     this.needUpdateOnChanged = false,
     @required this.type,
   });
@@ -63,7 +63,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
   final SettingsStateBuilder controlBuilder;
   final SettingsStateBuilder pageContentBuilder;
   final SettingsPageBuilder pageBuilder;
-  final SettingsItemBuilder itemBuilder;
+  final SettingsItemBuilder groupBuilder;
   final bool needUpdateOnChanged;
   final SettingsMenuItemType type;
 }
@@ -154,22 +154,24 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   SettingsMenuItem.section({
     Key key,
     Widget title,
-    @required SettingsItemBuilder itemBuilder,
+    @required SettingsItemBuilder groupBuilder,
     bool enabled = true,
   }) : super(
     key: key,
     builder: (context, state) => Section(
       title: title,
-      content: SettingsList(
-        itemBuilder: itemBuilder,
+      content: SettingsMenu(
+        groupBuilder: groupBuilder,
         enabled: state.enabled ?? enabled,
         selectItem: state.selectItem,
+        onSearch: state.onSearch,
+        scrolled: false,
       ),
       enabled: state.enabled ?? enabled,
       showTopDivider: state.showTopDivider ?? true,
       showBottomDivider: state.showBottomDivider ?? true
     ),
-    itemBuilder: itemBuilder,
+    groupBuilder: groupBuilder,
     type: SettingsMenuItemType.section
   );
 
@@ -319,7 +321,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required Text label,
     Widget leading,
     Widget secondaryText,
-    @required SettingsItemBuilder itemBuilder,
+    @required SettingsItemBuilder groupBuilder,
     @required SettingsPageBuilder pageBuilder,
     bool enabled = true,
   }) : super(
@@ -337,7 +339,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ),
     pageContentBuilder: (context, state) {
       return SettingsMenu(
-        itemBuilder: itemBuilder,
+        groupBuilder: groupBuilder,
         onSearch: state.onSearch,
         selectItem: state.selectItem,
       );
@@ -345,7 +347,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     pageBuilder: pageBuilder,
     id: id,
     label: label,
-    itemBuilder: itemBuilder,
+    groupBuilder: groupBuilder,
     type: SettingsMenuItemType.listSubpage
   );
 
@@ -358,7 +360,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ValueBuilder<bool> secondaryTextBuilder,
     @required WidgetBuilder inactiveTextBuilder,
     bool showDuplicateSwitch = false,
-    @required SettingsItemBuilder itemBuilder,
+    @required SettingsItemBuilder groupBuilder,
     @required bool initialValue,
     bool enabled = true,
     ValueChanged<bool> onChanged,
@@ -389,7 +391,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       value: state.value ?? initialValue,
       onChanged: state.onChanged ?? onChanged,
       activeContentBuilder: (context) => SettingsMenu(
-        itemBuilder: itemBuilder,
+        groupBuilder: groupBuilder,
         onSearch: state.onSearch,
         selectItem: state.selectItem
       ),
@@ -403,7 +405,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     pageBuilder: pageBuilder,
     id: id,
     label: label,
-    itemBuilder: itemBuilder,
+    groupBuilder: groupBuilder,
     needUpdateOnChanged: true,
     type: SettingsMenuItemType.masterSwitch
   );
@@ -456,7 +458,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Widget leading,
     @required Text label,
     ValueBuilder<bool> secondaryTextBuilder,
-    @required SettingsItemBuilder itemBuilder,
+    @required SettingsItemBuilder groupBuilder,
     @required bool initialValue,
     ValueChanged<bool> onChanged,
     bool enabled = true,
@@ -467,10 +469,12 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       leading: leading,
       title: label,
       secondaryTextBuilder: secondaryTextBuilder,
-      dependentBuilder: (context, dependencyEnabled) => SettingsList(
-        itemBuilder: itemBuilder,
+      dependentBuilder: (context, dependencyEnabled) => SettingsMenu(
+        groupBuilder: groupBuilder,
         enabled: dependencyEnabled,
-        selectItem: state.selectItem
+        selectItem: state.selectItem,
+        onSearch: state.onSearch,
+        scrolled: false
       ),
       dependencyEnabled: state.value ?? initialValue,
       enabled: state.enabled ?? enabled,
@@ -479,7 +483,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ),
     id: id,
     label: label,
-    itemBuilder: itemBuilder,
+    groupBuilder: groupBuilder,
     type: SettingsMenuItemType.dependency
   );
 
@@ -537,8 +541,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     return this.builder(context, state);
   }
 
-  @override
-  Widget build(BuildContext context, {
+  Widget buildWith(BuildContext context, {
     bool selected = false,
     bool enabled,
     bool showTopDivider,
@@ -558,90 +561,75 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       )
     );
   }
-}
-
-class SettingsList extends StatelessWidget {
-  SettingsList({
-    Key key,
-    @required this.itemBuilder,
-    this.enabled = true,
-    this.selectItem
-  }) : super(key: key);
-
-  final SettingsItemBuilder itemBuilder;
-  final bool enabled;
-  final SettingsMenuItem selectItem;
 
   @override
-  Widget build(BuildContext context) {
-    List<SettingsMenuItem> group = itemBuilder(context);
-    return Column(
-      children: group.map((item) {
-        bool selected = selectItem != null && selectItem.id == item.id;
-        return item.build(
-          context,
-          enabled: enabled,
-          selected: selected,
-          selectItem: selectItem,
-          showTopDivider: Section.needShowTopDivider(
-            context: context,
-            item: item,
-            group: group
-          ),
-          showBottomDivider: Section.needShowBottomDivider(
-            context: context,
-            item: item,
-            group: group
-          )
-        );
-      }).toList(),
-    );
-  }
+  Widget build(BuildContext context) => buildWith(context);
 }
 
 class SettingsMenu extends StatelessWidget {
   SettingsMenu({
     Key key,
-    @required this.itemBuilder,
+    @required this.groupBuilder,
     this.enabled = true,
+    this.scrolled = true,
     this.selectItem,
-    this.onSearch
+    this.onSearch,
   }) : super(key: key);
 
-  final SettingsItemBuilder itemBuilder;
+  final SettingsItemBuilder groupBuilder;
   final SettingsMenuItem selectItem;
   final bool enabled;
+  final bool scrolled;
   final VoidCallback onSearch;
 
-  @override
-  Widget build(BuildContext context) {
-    List<SettingsMenuItem> group = itemBuilder(context);
+  Widget _buildItem(
+    BuildContext context,
+    SettingsMenuItem item,
+    List<SettingsMenuItem> group
+  ) {
+    bool selected = selectItem != null && selectItem.id == item.id;
+    return item.buildWith(
+      context,
+      enabled: enabled,
+      selected: selected,
+      onSearch: onSearch,
+      selectItem: selectItem,
+      showTopDivider: Section.needShowTopDivider(
+        context: context,
+        item: item,
+        group: group,
+        hideWhenFirst: true
+      ),
+      showBottomDivider: Section.needShowBottomDivider(
+        context: context,
+        item: item,
+        group: group,
+        hideWhenLast: true
+      )
+    );
+  }
+
+  Widget _buildList(BuildContext context) {
+    List<SettingsMenuItem> group = groupBuilder(context);
+    return Column(
+      children: group.map((item) => _buildItem(context, item, group)).toList(),
+    );
+  }
+
+  Widget _buildListView(BuildContext context) {
+    List<SettingsMenuItem> group = groupBuilder(context);
     return ListView.builder(
       itemCount: group.length,
       itemBuilder: (context, index) {
         SettingsMenuItem item = group[index];
-        bool selected = selectItem != null && selectItem.id == item.id;
-        return item.build(
-          context,
-          enabled: enabled,
-          selected: selected,
-          onSearch: onSearch,
-          selectItem: selectItem,
-          showTopDivider: Section.needShowTopDivider(
-            context: context,
-            item: item,
-            group: group,
-            hideWhenFirst: true
-          ),
-          showBottomDivider: Section.needShowBottomDivider(
-            context: context,
-            item: item,
-            group: group,
-            hideWhenLast: true
-          )
-        );
+        return _buildItem(context, item, group);
       }
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return scrolled ? _buildListView(context) : _buildList(context);
   }
 }
 
@@ -649,7 +637,7 @@ class SettingsPage extends StatelessWidget {
   SettingsPage({
     Key key,
     this.title,
-    @required this.itemBuilder,
+    @required this.groupBuilder,
     this.builder,
   }) : super(key: key);
 
@@ -658,20 +646,20 @@ class SettingsPage extends StatelessWidget {
 
   final Widget title;
   final SettingsPageBuilder builder;
-  final SettingsItemBuilder itemBuilder;
+  final SettingsItemBuilder groupBuilder;
 
   void _showSearch(context) {
     showSearch(
       context: context,
       delegate: SettingsSearchDelegate(
-        itemBuilder: itemBuilder
+        groupBuilder: groupBuilder
       )
     );
   }
 
   Widget _buildBody(BuildContext context) {
     return SettingsMenu(
-      itemBuilder: itemBuilder,
+      groupBuilder: groupBuilder,
       onSearch: () => _showSearch(context),
     );
   }
@@ -836,9 +824,9 @@ class Section extends StatelessWidget {
     bool isPageLinkPrevious = previous?.pageBuilder != null;
     if (isPageLinkPrevious) return true;
 
-    bool isNotEmptyPrevious = previous?.itemBuilder != null;
+    bool isNotEmptyPrevious = previous?.groupBuilder != null;
     if (isNotEmptyPrevious) {
-      List<SettingsMenuItem> previousGroup = previous.itemBuilder(context);
+      List<SettingsMenuItem> previousGroup = previous.groupBuilder(context);
       bool isSectionLastPreviousItem = previousGroup?.last?.type == SettingsMenuItemType.section;
       if (isSectionLastPreviousItem) return false;
     }
@@ -1362,23 +1350,23 @@ class Suggestion {
 
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
-    @required this.itemBuilder
+    @required this.groupBuilder
   });
 
-  final SettingsItemBuilder itemBuilder;
+  final SettingsItemBuilder groupBuilder;
   final Iterable<Suggestion> _history = [];
 
   void _showSearch(context) {
     showSearch(
       context: context,
       delegate: SettingsSearchDelegate(
-        itemBuilder: itemBuilder
+        groupBuilder: groupBuilder
       )
     );
   }
 
   Iterable<SettingsMenuItem> _getResults(BuildContext context) {
-    return itemBuilder(context).where(
+    return groupBuilder(context).where(
       (item) => item.label != null && item.label.data.contains(query)
     ).toList();
   }
@@ -1389,7 +1377,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     List<Suggestion> suggestions,
     List<String> parentsTitles
   }) {
-    List<SettingsMenuItem> data = parent != null ? parent.itemBuilder(context) : this.itemBuilder(context);
+    List<SettingsMenuItem> data = parent != null ? parent.groupBuilder(context) : this.groupBuilder(context);
     parentsTitles = parentsTitles ?? [];
     suggestions = suggestions ?? [];
 
@@ -1407,7 +1395,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         );
       }
 
-      if (item.itemBuilder != null) {
+      if (item.groupBuilder != null) {
         if (isPage) {
           itemParentsTitles = []
             ..addAll(parentsTitles)
@@ -1458,8 +1446,9 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       context,
       null,
       SettingsMenu(
-        itemBuilder: this.itemBuilder,
+        groupBuilder: this.groupBuilder,
         selectItem: suggestion.item,
+        onSearch: showSearch,
       ),
       showSearch
     );

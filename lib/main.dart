@@ -6,7 +6,7 @@ void main() => runApp(App());
 
 class App extends StatelessWidget {
 
-  List<SettingsMenuItem> _itemBuilder(BuildContext context) => [
+  List<SettingsMenuItem> _groupBuilder(BuildContext context) => [
     SettingsMenuItem.individualSwitch(
       id: 'SETTING_1',
       leading: Icon(Icons.settings),
@@ -29,7 +29,7 @@ class App extends StatelessWidget {
         onChanged: (bool value) => print('value: $value'),
         //enabled: true,
         //pageBuilder: _buildPage,
-        itemBuilder: (context) => <SettingsMenuItem>[
+        groupBuilder: (context) => <SettingsMenuItem>[
           SettingsMenuItem.toggleSwitch(
             id: 'SETTING_2.1',
             leading: Icon(Icons.settings),
@@ -47,7 +47,7 @@ class App extends StatelessWidget {
           ),
           SettingsMenuItem.section(
             title: Text('Section'),
-            itemBuilder: (context) =>  <SettingsMenuItem>[
+            groupBuilder: (context) =>  <SettingsMenuItem>[
               SettingsMenuItem.toggleSwitch(
                 id: 'SETTING_3.3.1',
                 leading: Icon(Icons.settings),
@@ -75,7 +75,7 @@ class App extends StatelessWidget {
           : Text('Зависимости не доступны'),
       initialValue: true,
       onChanged: (value) => print('value: $value'),
-      itemBuilder: (context) => <SettingsMenuItem>[
+      groupBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_3.1',
           leading: Icon(Icons.settings),
@@ -94,7 +94,7 @@ class App extends StatelessWidget {
         ),
         SettingsMenuItem.section(
           title: Text('Section 1'),
-          itemBuilder: (context) => <SettingsMenuItem>[
+          groupBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_3.3.1',
               leading: Icon(Icons.settings),
@@ -122,7 +122,7 @@ class App extends StatelessWidget {
 //    ),
     SettingsMenuItem.section(
       title: Text('Section 2'),
-      itemBuilder: (context) => <SettingsMenuItem>[
+      groupBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.toggleSwitch(
           id: 'SETTING_4.1',
           leading: Icon(Icons.settings),
@@ -155,14 +155,14 @@ class App extends StatelessWidget {
       leading: Icon(Icons.settings),
       secondaryText: Text('Страница настроек'),
       pageBuilder: _buildPage,
-      itemBuilder: (context) => <SettingsMenuItem>[
+      groupBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.listSubpage(
           id: 'ListSubpageItem1',
           label: Text('List Subpage Item 1'),
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
           pageBuilder: _buildPage,
-          itemBuilder: (context) => <SettingsMenuItem>[
+          groupBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_6.1',
               leading: Icon(Icons.settings),
@@ -185,7 +185,7 @@ class App extends StatelessWidget {
           leading: Icon(Icons.settings),
           secondaryText: Text('Страница настроек'),
           pageBuilder: _buildPage,
-          itemBuilder: (context) => <SettingsMenuItem>[
+          groupBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.toggleSwitch(
               id: 'SETTING_7.1',
               leading: Icon(Icons.settings),
@@ -290,7 +290,7 @@ class App extends StatelessWidget {
         Home.routeName: (context) => Home(),
         SettingsPage.routeName: (context) => SettingsPage(
           title: Text('Settings'),
-          itemBuilder: _itemBuilder,
+          groupBuilder: _groupBuilder,
           //builder: _buildPage,
         )
       },
