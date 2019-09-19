@@ -540,10 +540,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     type: SettingsMenuItemType.dependency
   );
 
-  final ValueNotifier _valueNotifier = ValueNotifier(null);
-  void _handleChanged(newValue) => _valueNotifier.value = newValue;
-
-  SettingsMenuItemState get defaultState => SettingsMenuItemState(
+  SettingsMenuItemState get initialState => SettingsMenuItemState(
     selected: false,
     enabled: enabled,
     value: initialValue,
@@ -554,12 +551,15 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     pageContentBuilder: buildPageContent
   );
 
+  final ValueNotifier _valueNotifier = ValueNotifier(null);
+  void _handleChanged(newValue) => _valueNotifier.value = newValue;
+
   Widget buildPageContent(BuildContext context, [SettingsMenuItemState state]) {
-    return pageContentBuilder(context, state ?? defaultState);
+    return pageContentBuilder(context, state ?? initialState);
   }
 
   Widget buildControl(BuildContext context, [SettingsMenuItemState state]) {
-    state = state ?? defaultState;
+    state = state ?? initialState;
     return ValueListenableBuilder(
       valueListenable: _valueNotifier,
       builder: (context, value, _) => this.controlBuilder(
@@ -573,7 +573,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }
 
   Widget buildPage(BuildContext context, [SettingsMenuItemState state]) {
-    state = defaultState.copyFrom(state);
+    state = initialState.copyFrom(state);
     Widget title = label;
     Widget body = this.pageContentBuilder(context, state);
     return (this.pageBuilder ?? SettingsPage.pageBuilder)(
@@ -585,7 +585,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }
 
   Widget _build(BuildContext context, [SettingsMenuItemState state]) {
-    state = defaultState.copyFrom(state);
+    state = initialState.copyFrom(state);
 
     if (needUpdateOnChanged) return ValueListenableBuilder(
       valueListenable: _valueNotifier,
@@ -611,7 +611,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }) {
     return _build(
       context,
-      defaultState.copyWith(
+      initialState.copyWith(
         enabled: enabled,
         selected: selected,
         showTopDivider: showTopDivider,
