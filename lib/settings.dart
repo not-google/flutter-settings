@@ -80,7 +80,7 @@ class SettingsMenuItemState<T> {
     this.controlBuilder,
     this.pageContentBuilder,
     this.onSearch,
-    this.selectItem
+    this.selectedId
   });
 
   final bool selected;
@@ -93,7 +93,7 @@ class SettingsMenuItemState<T> {
   final WidgetBuilder pageBuilder;
   final WidgetBuilder controlBuilder;
   final WidgetBuilder pageContentBuilder;
-  final SettingsMenuItem selectItem;
+  final String selectedId;
 
   SettingsMenuItemState<T> copyWith({
     bool selected,
@@ -106,7 +106,7 @@ class SettingsMenuItemState<T> {
     WidgetBuilder pageBuilder,
     WidgetBuilder controlBuilder,
     WidgetBuilder pageContentBuilder,
-    SettingsMenuItem selectItem
+    String selectedId
   }) {
     return SettingsMenuItemState(
       selected: selected ?? this.selected,
@@ -119,7 +119,7 @@ class SettingsMenuItemState<T> {
       pageBuilder: pageBuilder ?? this.pageBuilder,
       controlBuilder: controlBuilder ?? this.controlBuilder,
       pageContentBuilder: pageBuilder ?? this.pageContentBuilder,
-      selectItem: selectItem ?? this.selectItem
+      selectedId: selectedId ?? this.selectedId
     );
   }
 }
@@ -163,7 +163,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       content: SettingsMenu(
         groupBuilder: groupBuilder,
         enabled: state.enabled ?? enabled,
-        selectItem: state.selectItem,
+        selectedId: state.selectedId,
         onSearch: state.onSearch,
         scrolled: false,
       ),
@@ -341,7 +341,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       return SettingsMenu(
         groupBuilder: groupBuilder,
         onSearch: state.onSearch,
-        selectItem: state.selectItem,
+        selectedId: state.selectedId,
       );
     },
     pageBuilder: pageBuilder,
@@ -393,7 +393,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       activeContentBuilder: (context) => SettingsMenu(
         groupBuilder: groupBuilder,
         onSearch: state.onSearch,
-        selectItem: state.selectItem
+        selectedId: state.selectedId
       ),
       inactiveContentBuilder: (context) => Container(
         alignment: Alignment.topLeft,
@@ -472,7 +472,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       dependentBuilder: (context, dependencyEnabled) => SettingsMenu(
         groupBuilder: groupBuilder,
         enabled: dependencyEnabled,
-        selectItem: state.selectItem,
+        selectedId: state.selectedId,
         onSearch: state.onSearch,
         scrolled: false
       ),
@@ -547,7 +547,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     bool showTopDivider,
     bool showBottomDivider,
     VoidCallback onSearch,
-    SettingsMenuItem selectItem
+    String selectedId
   }) {
     return _buildState(
       context,
@@ -557,7 +557,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         showTopDivider: showTopDivider,
         showBottomDivider: showBottomDivider,
         onSearch: onSearch,
-        selectItem: selectItem
+        selectedId: selectedId
       )
     );
   }
@@ -572,12 +572,12 @@ class SettingsMenu extends StatelessWidget {
     @required this.groupBuilder,
     this.enabled = true,
     this.scrolled = true,
-    this.selectItem,
+    this.selectedId,
     this.onSearch,
   }) : super(key: key);
 
   final SettingsItemBuilder groupBuilder;
-  final SettingsMenuItem selectItem;
+  final String selectedId;
   final bool enabled;
   final bool scrolled;
   final VoidCallback onSearch;
@@ -587,13 +587,13 @@ class SettingsMenu extends StatelessWidget {
     SettingsMenuItem item,
     List<SettingsMenuItem> group
   ) {
-    bool selected = selectItem != null && selectItem.id == item.id;
+    bool selected = selectedId == item.id;
     return item.buildWith(
       context,
       enabled: enabled,
       selected: selected,
       onSearch: onSearch,
-      selectItem: selectItem,
+      selectedId: selectedId,
       showTopDivider: Section.needShowTopDivider(
         context: context,
         item: item,
@@ -1437,7 +1437,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       return suggestion.pageBuilder(
         context,
         SettingsMenuItemState(
-          selectItem: suggestion.item,
+          selectedId: suggestion.item.id,
           onSearch: showSearch
         )
       );
@@ -1447,7 +1447,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       null,
       SettingsMenu(
         groupBuilder: this.groupBuilder,
-        selectItem: suggestion.item,
+        selectedId: suggestion.item.id,
         onSearch: showSearch,
       ),
       showSearch
