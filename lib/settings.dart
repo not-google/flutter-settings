@@ -340,7 +340,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       leading: leading,
       label: label,
       secondaryTextBuilder: secondaryTextBuilder,
-      value: state.value,
+      initialDate: state.value,
       firstDate: firstDate,
       lastDate: lastDate,
       enabled: state.enabled,
@@ -543,7 +543,10 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   );
 
   final ValueNotifier _valueNotifier = ValueNotifier(null);
-  void _handleChanged(newValue) => _valueNotifier.value = newValue;
+  void _handleChanged(newValue) {
+    if (initialState.onChanged != null) initialState.onChanged(newValue);
+    _valueNotifier.value = newValue;
+  }
 
   Widget _buildValueListenable(
     BuildContext context,
@@ -1079,7 +1082,7 @@ class DatePickerListTile extends StatelessWidget {
     this.leading,
     @required this.label,
     this.secondaryTextBuilder,
-    @required this.value,
+    @required this.initialDate,
     @required this.firstDate,
     @required this.lastDate,
     this.enabled = true,
@@ -1090,7 +1093,7 @@ class DatePickerListTile extends StatelessWidget {
   final Widget leading;
   final Text label;
   final ValueBuilder<DateTime> secondaryTextBuilder;
-  final DateTime value;
+  final DateTime initialDate;
   final DateTime firstDate;
   final DateTime lastDate;
   final bool enabled;
@@ -1100,21 +1103,21 @@ class DatePickerListTile extends StatelessWidget {
   Future<void> _showDatePicker(BuildContext context) async {
     final DateTime newValue = await showDatePicker(
       context: context,
-      initialDate: value,
+      initialDate: initialDate,
       firstDate: firstDate,
       lastDate: lastDate,
     );
 
-    if (newValue != null && newValue != value && onChanged != null) {
+    if (newValue != null && newValue != initialDate && onChanged != null) {
       onChanged(newValue);
     }
   }
 
   Widget _buildStatusText(BuildContext context) {
     if (secondaryTextBuilder != null)
-      return secondaryTextBuilder(context, value);
+      return secondaryTextBuilder(context, initialDate);
 
-    return Text(value.toLocal().toString());
+    return Text(initialDate.toLocal().toString());
   }
 
   @override
@@ -1284,7 +1287,7 @@ class IndividualSwitchControl extends StatelessWidget {
     @required this.onChanged,
     @required this.description
   }) : super(key: key);
-
+  
   final bool value;
   final Widget description;
   final ValueChanged<bool> onChanged;
@@ -1370,19 +1373,9 @@ class ContentSwitchControl extends StatelessWidget {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-class Suggestion {
-  Suggestion({
+// Settings Search
+class SettingsSearchSuggestion {
+  SettingsSearchSuggestion({
     @required this.item,
     this.pageBuilder,
     this.parentsTitles,
@@ -1399,7 +1392,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   });
 
   final SettingsItemBuilder groupBuilder;
-  final Iterable<Suggestion> _history = [];
+  final Iterable<SettingsSearchSuggestion> _history = [];
 
   void _showSearch(context) {
     showSearch(
@@ -1410,16 +1403,10 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     );
   }
 
-  Iterable<SettingsMenuItem> _getResults(BuildContext context) {
-    return groupBuilder(context).where(
-      (item) => item.label != null && item.label.data.contains(query)
-    ).toList();
-  }
-
-  List<Suggestion> _getSuggestions(BuildContext context, {
+  List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
     SettingsStateBuilder pageBuilder,
     SettingsMenuItem parent,
-    List<Suggestion> suggestions,
+    List<SettingsSearchSuggestion> suggestions,
     List<String> parentsTitles
   }) {
     List<SettingsMenuItem> data = parent != null ? parent.groupBuilder(context) : this.groupBuilder(context);
@@ -1432,7 +1419,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
       if ((item.label?.data ?? '').startsWith(query)) {
         suggestions.add(
-          Suggestion(
+          SettingsSearchSuggestion(
             pageBuilder: pageBuilder,
             item: item,
             parentsTitles: parentsTitles
@@ -1475,16 +1462,16 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     );
   }
 
-  Widget _buildPage(BuildContext context, Suggestion suggestion) {
+  Widget _buildPage(BuildContext context, SettingsSearchSuggestion suggestion) {
     VoidCallback showSearch = () => _showSearch(context);
 
     if (suggestion.pageBuilder != null) {
       return suggestion.pageBuilder(
-          context,
-          SettingsMenuItemState(
-            selectedId: suggestion.item.id,
-            onSearch: showSearch
-          )
+        context,
+        SettingsMenuItemState(
+          selectedId: suggestion.item.id,
+          onSearch: showSearch
+        )
       );
     }
 
@@ -1502,15 +1489,14 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-
-    final Iterable<Suggestion> suggestions = query.isEmpty
+    final Iterable<SettingsSearchSuggestion> suggestions = query.isEmpty
         ? _history
         : _getSuggestions(context);
 
-    return _SuggestionList(
+    return _SettingsSearchSuggestionList(
       query: query,
       suggestions: suggestions,
-      onSelected: (Suggestion suggestion) {
+      onSelected: (SettingsSearchSuggestion suggestion) {
         close(context, null);
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -1522,28 +1508,8 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     );
   }
 
-  Widget _buildEmpty(BuildContext context) {
-    return Center(
-      child: Text(
-        '"$query"\n has no results',
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
   @override
-  Widget buildResults(BuildContext context) {
-    Iterable<SettingsMenuItem> results = _getResults(context);
-
-    if (query == null || results.isEmpty) return _buildEmpty(context);
-
-    return ListView(
-      children: results.map((item) => _ResultCard(
-        item: item,
-        searchDelegate: this,
-      )).toList()
-    );
-  }
+  Widget buildResults(BuildContext context) => null;
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -1572,66 +1538,47 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 }
 
-class _ResultCard extends StatelessWidget {
-  const _ResultCard({this.item, this.searchDelegate});
+class _SettingsSearchSuggestionList extends StatelessWidget {
+  const _SettingsSearchSuggestionList({
+    this.suggestions,
+    this.query,
+    this.onSelected
+  });
 
-  final SettingsMenuItem item;
-  final SearchDelegate<SettingsMenuItem> searchDelegate;
+  final Iterable<SettingsSearchSuggestion> suggestions;
+  final String query;
+  final ValueChanged<SettingsSearchSuggestion> onSelected;
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildItem(BuildContext context, int index) {
+    final SettingsSearchSuggestion suggestion = suggestions.elementAt(index);
+    final String label = suggestion.item.label.data;
     final ThemeData theme = Theme.of(context);
-    return GestureDetector(
-      onTap: () {
-        searchDelegate.close(context, item);
-      },
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            '${item.label}',
-            style: theme.textTheme.headline.copyWith(fontSize: 72.0),
+    return ListTile(
+      leading: query.isEmpty ? const Icon(Icons.history) : const Icon(null),
+      title: RichText(
+        text: TextSpan(
+          text: label.substring(0, query.length),
+          style: theme.textTheme.subhead.copyWith(
+            fontWeight: FontWeight.bold
           ),
+          children: <TextSpan>[
+            TextSpan(
+              text: label.substring(query.length),
+              style: theme.textTheme.subhead,
+            ),
+          ],
         ),
       ),
+      subtitle: Text(suggestion.parentsTitles.join(' > ')),
+      onTap: () => onSelected(suggestion),
     );
   }
-}
-
-class _SuggestionList extends StatelessWidget {
-  const _SuggestionList({this.suggestions, this.query, this.onSelected});
-
-  final Iterable<Suggestion> suggestions;
-  final String query;
-  final ValueChanged<Suggestion> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     return ListView.builder(
       itemCount: suggestions.length,
-      itemBuilder: (BuildContext context, int i) {
-        final Suggestion suggestion = suggestions.elementAt(i);
-        return ListTile(
-          leading: query.isEmpty ? const Icon(Icons.history) : const Icon(null),
-          title: RichText(
-            text: TextSpan(
-              text: suggestion.item.label.data.substring(0, query.length),
-              style: theme.textTheme.subhead.copyWith(fontWeight: FontWeight.bold),
-              children: <TextSpan>[
-                TextSpan(
-                  text: suggestion.item.label.data.substring(query.length),
-                  style: theme.textTheme.subhead,
-                ),
-              ],
-            ),
-          ),
-          subtitle: Text(suggestion.parentsTitles.join(' > ')),
-          onTap: () {
-            onSelected(suggestion);
-          },
-        );
-      },
+      itemBuilder: _buildItem,
     );
   }
 }
