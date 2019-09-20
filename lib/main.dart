@@ -24,7 +24,7 @@ class App extends StatelessWidget {
         //masterSwitchTitle: Text('Use Master Switch'),
         //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (context) => Text('Текст неактивного состояния'),
-        initialValue: true,
+        initialValue: false,
         showDuplicateSwitch: true,
         onChanged: (bool value) => print('value: $value'),
         //enabled: true,
