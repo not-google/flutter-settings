@@ -52,6 +52,8 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
     @required this.initialValue,
     @required this.builder,
     this.onChanged,
+    this.onChangeStart,
+    this.onChangeEnd,
     this.controlBuilder,
     this.pageBuilder,
     this.pageContentBuilder,
@@ -65,6 +67,8 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
   final bool enabled;
   final initialValue;
   final onChanged;
+  final onChangeStart;
+  final onChangeEnd;
   final SettingsStateBuilder builder;
   final SettingsStateBuilder controlBuilder;
   final SettingsStateBuilder pageContentBuilder;
@@ -82,6 +86,8 @@ class SettingsMenuItemState {
     this.showBottomDivider,
     this.value,
     this.onChanged,
+    this.onChangeStart,
+    this.onChangeEnd,
     this.pageBuilder,
     this.controlBuilder,
     this.pageContentBuilder,
@@ -95,6 +101,8 @@ class SettingsMenuItemState {
   final bool showBottomDivider;
   final value;
   final onChanged;
+  final onChangeStart;
+  final onChangeEnd;
   final VoidCallback onSearch;
   final SettingsStateBuilder pageBuilder;
   final SettingsStateBuilder controlBuilder;
@@ -108,6 +116,8 @@ class SettingsMenuItemState {
     bool showBottomDivider,
     VoidCallback onSearch,
     onChanged,
+    onChangeStart,
+    onChangeEnd,
     value,
     SettingsStateBuilder pageBuilder,
     SettingsStateBuilder controlBuilder,
@@ -120,6 +130,8 @@ class SettingsMenuItemState {
       showTopDivider: showTopDivider ?? this.showTopDivider,
       showBottomDivider: showBottomDivider ?? this.showBottomDivider,
       onChanged: onChanged ?? this.onChanged,
+      onChangeStart: onChangeStart ?? this.onChangeStart,
+      onChangeEnd: onChangeEnd ?? this.onChangeEnd,
       onSearch: onSearch ?? this.onSearch,
       value: value ?? this.value,
       pageBuilder: pageBuilder ?? this.pageBuilder,
@@ -135,7 +147,9 @@ class SettingsMenuItemState {
       enabled: state.enabled ?? this.enabled,
       showTopDivider: state.showTopDivider ?? this.showTopDivider,
       showBottomDivider: state.showBottomDivider ?? this.showBottomDivider,
-      onChanged: state.onChanged ?? this.onChanged,
+      onChanged: onChanged ?? this.onChanged,
+      onChangeStart: onChangeStart ?? this.onChangeStart,
+      onChangeEnd: onChangeEnd ?? this.onChangeEnd,
       onSearch: state.onSearch ?? this.onSearch,
       value: state.value ?? this.value,
       pageBuilder: state.pageBuilder ?? this.pageBuilder,
@@ -317,14 +331,16 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       inactiveColor: inactiveColor,
       semanticFormatterCallback: semanticFormatterCallback,
       onChanged: state.enabled ? state.onChanged : null,
-      onChangeStart: state.enabled ? onChangeStart : null,
-      onChangeEnd: state.enabled ? onChangeEnd : null,
+      onChangeStart: state.enabled ? state.onChangeStart : null,
+      onChangeEnd: state.enabled ? state.onChangeEnd : null,
     ),
     id: id,
     label: label,
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
+    onChangeStart: onChangeStart,
+    onChangeEnd: onChangeEnd,
     type: SettingsMenuItemType.slider
   );
 
@@ -552,7 +568,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     enabled: enabled,
     value: initialValue,
     onChanged: onChanged,
-    onSearch: null,
+    onChangeStart: onChangeStart,
+    onChangeEnd: onChangeEnd,
     controlBuilder: buildControl,
     pageBuilder: buildPage,
     pageContentBuilder: buildPageContent
@@ -560,7 +577,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
 
   final ValueNotifier _valueNotifier = ValueNotifier(null);
   void _handleChanged(newValue) {
-    if (initialState.onChanged != null) initialState.onChanged(newValue);
+    if (onChanged != null) onChanged(newValue);
     _valueNotifier.value = newValue;
   }
 
@@ -574,16 +591,20 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       context,
       initialState.copyFrom(state).copyWith(
         value: value,
-        onChanged: _handleChanged
+        onChanged: _handleChanged,
       )
     )
   );
 
   Widget buildPageContent(BuildContext context, [SettingsMenuItemState state])
-    => pageContentBuilder(context, state ?? initialState);
+    => pageContentBuilder(context, initialState.copyFrom(state));
 
   Widget buildControl(BuildContext context, [SettingsMenuItemState state])
-    => _buildValueListenable(context, this.controlBuilder, state);
+    => _buildValueListenable(
+    context,
+    this.controlBuilder,
+    initialState.copyFrom(state)
+  );
 
   Widget buildPage(BuildContext context, [SettingsMenuItemState state]) {
     state = initialState.copyFrom(state);
@@ -598,28 +619,29 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }
 
   Widget buildWith(BuildContext context, {
-    bool selected,
     bool enabled,
     bool showTopDivider,
     bool showBottomDivider,
     VoidCallback onSearch,
     String selectedId
-  }) => _build(
-    context,
-    initialState.copyWith(
-      enabled: enabled,
-      selected: selected,
-      showTopDivider: showTopDivider,
-      showBottomDivider: showBottomDivider,
-      onSearch: onSearch,
-      selectedId: selectedId
-    )
-  );
+  }) {
+    return _build(
+      context,
+      initialState.copyWith(
+        enabled: enabled,
+        selected: id == selectedId,
+        showTopDivider: showTopDivider,
+        showBottomDivider: showBottomDivider,
+        onSearch: onSearch,
+        selectedId: selectedId
+      )
+    );
+  }
 
   Widget _build(BuildContext context, [SettingsMenuItemState state]) {
     return updatedWhenChanged
-      ? _buildValueListenable(context, this.builder, state)
-      : this.builder(context, state);
+      ? _buildValueListenable(context, this.builder, initialState.copyFrom(state))
+      : this.builder(context, initialState.copyFrom(state));
   }
 
   @override
@@ -647,11 +669,9 @@ class SettingsMenu extends StatelessWidget {
     SettingsMenuItem item,
     List<SettingsMenuItem> group
   ) {
-    bool selected = selectedId == item.id;
     return item.buildWith(
       context,
       enabled: enabled,
-      selected: selected,
       onSearch: onSearch,
       selectedId: selectedId,
       showTopDivider: Section.needShowTopDivider(
