@@ -246,7 +246,7 @@ class App extends StatelessWidget {
       label: Text('DateTime'),
       firstDate: DateTime(2019),
       lastDate: DateTime(2021),
-      initialDate: DateTime(2020),
+      initialValue: DateTime(2020),
       enabled: false,
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),

@@ -350,7 +350,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Widget leading,
     @required Text label,
     ValueBuilder<DateTime> secondaryTextBuilder,
-    @required DateTime initialDate,
+    @required DateTime initialValue,
     @required DateTime firstDate,
     @required DateTime lastDate,
     DatePickerMode initialDatePickerMode = DatePickerMode.day,
@@ -382,7 +382,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     id: id,
     label: label,
     enabled: enabled,
-    initialValue: initialDate,
+    initialValue: initialValue,
     onChanged: onChanged,
     type: SettingsMenuItemType.dateTime
   );
