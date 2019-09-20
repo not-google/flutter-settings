@@ -619,7 +619,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }
 
   Widget buildWith(BuildContext context, {
-    bool enabled,
+    bool dependencyEnabled,
     bool showTopDivider,
     bool showBottomDivider,
     VoidCallback onSearch,
@@ -628,7 +628,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     return _build(
       context,
       initialState.copyWith(
-        enabled: enabled,
+        enabled: enabled == false ? false : dependencyEnabled,
         selected: id == selectedId,
         showTopDivider: showTopDivider,
         showBottomDivider: showBottomDivider,
@@ -671,7 +671,7 @@ class SettingsMenu extends StatelessWidget {
   ) {
     return item.buildWith(
       context,
-      enabled: enabled,
+      dependencyEnabled: enabled,
       onSearch: onSearch,
       selectedId: selectedId,
       showTopDivider: Section.needShowTopDivider(
