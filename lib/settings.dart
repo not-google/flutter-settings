@@ -233,7 +233,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         enabled: state.enabled,
       );
     },
-    controlBuilder: (context, state) => SingleChoiceControl<T>(
+    controlBuilder: (context, state) => SingleChoice<T>(
       choices: choices,
       value: state.value,
       onChanged: state.onChanged,
@@ -261,7 +261,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ValueChanged<List<T>> onChanged
   }) : super(
     key: key,
-    builder: (context, state) => MultipleChoiceMenuItem<T>(
+    builder: (context, state) => MultipleChoiceListTile<T>(
       leading: leading,
       label: label,
       secondaryTextBuilder: secondaryTextBuilder,
@@ -271,7 +271,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       enabled: state.enabled,
       selected: state.selected,
     ),
-    controlBuilder: (context, state) =>  MultipleChoiceControl<T>(
+    controlBuilder: (context, state) =>  MultipleChoice<T>(
       choices: choices,
       value: state.value,
       onChanged: state.onChanged
@@ -295,6 +295,9 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     double min = 0.0,
     double max = 1.0,
     int divisions,
+    Color activeColor,
+    Color inactiveColor,
+    SemanticFormatterCallback semanticFormatterCallback,
     ValueChanged<double> onChanged,
     ValueChanged<double> onChangeStart,
     ValueChanged<double> onChangeEnd,
@@ -310,6 +313,9 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       min: min,
       max: max,
       divisions: divisions,
+      activeColor: activeColor,
+      inactiveColor: inactiveColor,
+      semanticFormatterCallback: semanticFormatterCallback,
       onChanged: state.enabled ? state.onChanged : null,
       onChangeStart: state.enabled ? onChangeStart : null,
       onChangeEnd: state.enabled ? onChangeEnd : null,
@@ -328,21 +334,31 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Widget leading,
     @required Text label,
     ValueBuilder<DateTime> secondaryTextBuilder,
-    @required DateTime initialValue,
+    @required DateTime initialDate,
     @required DateTime firstDate,
     @required DateTime lastDate,
+    DatePickerMode initialDatePickerMode = DatePickerMode.day,
+    SelectableDayPredicate selectableDayPredicate,
+    Locale locale,
+    TextDirection textDirection,
+    TransitionBuilder builder,
     bool enabled = true,
     ValueChanged<DateTime> onChanged
   }) : super(
     key: key,
     builder: (context, state) => state.controlBuilder(context, state),
-    controlBuilder: (context, state) => DatePickerListTile(
+    controlBuilder: (context, state) => DateTimeListTile(
       leading: leading,
       label: label,
       secondaryTextBuilder: secondaryTextBuilder,
-      initialDate: state.value,
+      dateTime: state.value,
       firstDate: firstDate,
       lastDate: lastDate,
+      initialDatePickerMode: initialDatePickerMode,
+      selectableDayPredicate: selectableDayPredicate,
+      locale: locale,
+      textDirection: textDirection,
+      builder: builder,
       enabled: state.enabled,
       selected: state.selected,
       onChanged: state.onChanged,
@@ -350,7 +366,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     id: id,
     label: label,
     enabled: enabled,
-    initialValue: initialValue,
+    initialValue: initialDate,
     onChanged: onChanged,
     type: SettingsMenuItemType.dateTime
   );
@@ -423,7 +439,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
         )
       ),
     ),
-    controlBuilder: (context, state) => MasterSwitchControl(
+    controlBuilder: (context, state) => MasterSwitch(
       title: switchTitle ?? Text('Use ${label.data}'),
       value: state.value,
       onChanged: state.onChanged,
@@ -477,7 +493,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
       selected: state.selected,
       enabled: state.enabled,
     ),
-    controlBuilder: (context, state) => IndividualSwitchControl(
+    controlBuilder: (context, state) => IndividualSwitch(
       value: state.value,
       description: description,
       onChanged: state.onChanged,
@@ -506,7 +522,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }) : super(
     key: key,
     builder: (context, state) => state.controlBuilder(context, state),
-    controlBuilder: (context, state) => DependencyControl(
+    controlBuilder: (context, state) => Dependency(
       leading: leading,
       title: label,
       secondaryTextBuilder: secondaryTextBuilder,
@@ -737,8 +753,8 @@ class SettingsPage extends StatelessWidget {
   );
 }
 
-class MultipleChoiceMenuItem<T> extends StatelessWidget {
-  MultipleChoiceMenuItem({
+class MultipleChoiceListTile<T> extends StatelessWidget {
+  MultipleChoiceListTile({
     Key key,
     this.leading,
     @required this.label,
@@ -925,8 +941,8 @@ class ConfirmationDialog extends StatelessWidget {
   }
 }
 
-class SingleChoiceControl<T> extends StatelessWidget {
-  SingleChoiceControl({
+class SingleChoice<T> extends StatelessWidget {
+  SingleChoice({
     Key key,
     @required this.choices,
     @required this.value,
@@ -962,8 +978,8 @@ class SingleChoiceControl<T> extends StatelessWidget {
   }
 }
 
-class MultipleChoiceControl<T> extends StatelessWidget {
-  MultipleChoiceControl({
+class MultipleChoice<T> extends StatelessWidget {
+  MultipleChoice({
     Key key,
     @required this.choices,
     @required this.value,
@@ -1076,65 +1092,161 @@ class SliderListTile extends StatelessWidget {
   }
 }
 
-class DatePickerListTile extends StatelessWidget {
-  DatePickerListTile({
+class DateTimeListTile extends StatelessWidget {
+  DateTimeListTile({
     Key key,
     this.leading,
     @required this.label,
     this.secondaryTextBuilder,
-    @required this.initialDate,
+    @required this.dateTime,
     @required this.firstDate,
     @required this.lastDate,
+    this.initialDatePickerMode = DatePickerMode.day,
+    this.selectableDayPredicate,
+    this.locale,
+    this.textDirection,
+    this.builder,
     this.enabled = true,
     this.selected = false,
-    this.onChanged
+    @required this.onChanged
   }) : super(key: key);
 
   final Widget leading;
   final Text label;
   final ValueBuilder<DateTime> secondaryTextBuilder;
-  final DateTime initialDate;
+  final DateTime dateTime;
   final DateTime firstDate;
   final DateTime lastDate;
+  final DatePickerMode initialDatePickerMode;
+  final SelectableDayPredicate selectableDayPredicate;
+  final Locale locale;
+  final TextDirection textDirection;
+  final TransitionBuilder builder;
   final bool enabled;
   final bool selected;
   final ValueChanged<DateTime> onChanged;
 
-  Future<void> _showDatePicker(BuildContext context) async {
-    final DateTime newValue = await showDatePicker(
+  Future<DateTime> _pickDate(BuildContext context) async {
+    DateTime newDate = await showDatePicker(
       context: context,
-      initialDate: initialDate,
+      initialDate: dateTime,
       firstDate: firstDate,
       lastDate: lastDate,
+      selectableDayPredicate: selectableDayPredicate,
+      initialDatePickerMode: initialDatePickerMode,
+      locale: locale,
+      textDirection: textDirection,
+      builder: builder
     );
 
-    if (newValue != null && newValue != initialDate && onChanged != null) {
-      onChanged(newValue);
-    }
+    return DateTime(
+      newDate.year,
+      newDate.month,
+      newDate.day,
+      dateTime.hour,
+      dateTime.minute
+    );
+  }
+
+  Future<DateTime> _pickTime(BuildContext context) async {
+    TimeOfDay newTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(dateTime),
+      builder: builder
+    );
+
+    return DateTime(
+      dateTime.year,
+      dateTime.month,
+      dateTime.day,
+      newTime.hour,
+      newTime.minute
+    );
+  }
+
+  Future<DateTime> _pickDateTime(BuildContext context) async {
+    DateTime newDate = await _pickDate(context);
+    DateTime newTime = await _pickTime(context);
+
+    return DateTime(
+      newDate.year,
+      newDate.month,
+      newDate.day,
+      newTime.hour,
+      newTime.minute
+    );
   }
 
   Widget _buildStatusText(BuildContext context) {
     if (secondaryTextBuilder != null)
-      return secondaryTextBuilder(context, initialDate);
+      return secondaryTextBuilder(context, dateTime);
 
-    return Text(initialDate.toLocal().toString());
+    return Text(
+      dateTime.toLocal().toString().replaceAll('.000', ''),
+      softWrap: false,
+      overflow: TextOverflow.ellipsis
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildListTile(BuildContext context) {
     return ListTile(
       leading: leading ?? Icon(null),
       title: label,
       subtitle: _buildStatusText(context),
-      onTap: () => _showDatePicker(context),
+      onTap: () async => onChanged(await _pickDateTime(context)),
       selected: selected,
       enabled: enabled,
     );
   }
+
+  Widget _buildActions(BuildContext context) {
+    Color color = enabled
+      ? Theme.of(context).indicatorColor
+      : Theme.of(context).disabledColor;
+    return Row(
+      children: <Widget>[
+        IconButton(
+          icon: Icon(Icons.calendar_today, color: color),
+          onPressed: enabled
+            ? () async => onChanged(await _pickDate(context))
+            : null,
+        ),
+        IconButton(
+          icon: Icon(Icons.access_time, color: color),
+          onPressed: enabled
+            ? () async => onChanged(await _pickTime(context))
+            : null,
+        )
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: _buildListTile(context),
+        ),
+        Container(
+          child: _buildActions(context),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 1.0
+              )
+            )
+          ),
+        )
+      ],
+    );
+  }
 }
 
-class DependencyControl extends StatelessWidget {
-  DependencyControl({
+class Dependency extends StatelessWidget {
+  Dependency({
     Key key,
     this.leading,
     @required this.title,
@@ -1253,8 +1365,8 @@ class MasterSwitchListTile extends StatelessWidget {
   }
 }
 
-class MasterSwitchControl extends StatelessWidget {
-  MasterSwitchControl({
+class MasterSwitch extends StatelessWidget {
+  MasterSwitch({
     Key key,
     @required this.title,
     @required this.value,
@@ -1280,8 +1392,8 @@ class MasterSwitchControl extends StatelessWidget {
   }
 }
 
-class IndividualSwitchControl extends StatelessWidget {
-  IndividualSwitchControl({
+class IndividualSwitch extends StatelessWidget {
+  IndividualSwitch({
     Key key,
     @required this.value,
     @required this.onChanged,
