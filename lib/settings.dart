@@ -678,13 +678,13 @@ class SettingsMenu extends StatelessWidget {
         context: context,
         item: item,
         group: group,
-        hideWhenFirst: true
+        hideWhenFirst: scrolled
       ),
       showBottomDivider: Section.needShowBottomDivider(
         context: context,
         item: item,
         group: group,
-        hideWhenLast: true
+        hideWhenLast: scrolled
       )
     );
   }
