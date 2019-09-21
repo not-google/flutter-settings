@@ -60,7 +60,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
     this.pageBuilder,
     this.pageContentBuilder,
     this.groupBuilder,
-    this.updatedWhenChanged = false,
+    this.controlSeparated = false,
     @required this.pattern,
   });
 
@@ -76,7 +76,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
   final SettingsStateBuilder pageContentBuilder;
   final SettingsPageBuilder pageBuilder;
   final SettingsItemBuilder groupBuilder;
-  final bool updatedWhenChanged;
+  final bool controlSeparated;
   final SettingsMenuItemPattern pattern;
 }
 
@@ -261,7 +261,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    updatedWhenChanged: true,
+    controlSeparated: true,
     pattern: SettingsMenuItemPattern.singleChoice
   );
 
@@ -297,7 +297,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    updatedWhenChanged: true,
+    controlSeparated: true,
     pattern: SettingsMenuItemPattern.multipleChoice
   );
 
@@ -556,7 +556,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     initialValue: initialValue,
     onChanged: onChanged,
     groupBuilder: groupBuilder,
-    updatedWhenChanged: true,
+    controlSeparated: true,
     pattern: SettingsMenuItemPattern.masterSwitch
   );
 
@@ -597,7 +597,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    updatedWhenChanged: true,
+    controlSeparated: true,
     pattern: SettingsMenuItemPattern.individualSwitch
   );
 
@@ -715,7 +715,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }
 
   Widget _build(BuildContext context, [SettingsMenuItemState state]) {
-    return updatedWhenChanged
+    return controlSeparated
       ? _buildValueListenable(context, this.builder, initialState.copyFrom(state))
       : this.builder(context, initialState.copyFrom(state));
   }
