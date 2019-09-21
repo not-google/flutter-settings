@@ -9,7 +9,12 @@ class MasterSwitch extends StatelessWidget {
     @required this.activeContentBuilder,
     @required this.inactiveContentBuilder,
     @required this.onChanged
-  }) : super(key: key);
+  }) :
+    assert(title != null),
+    assert(value != null),
+    assert(activeContentBuilder != null),
+    assert(inactiveContentBuilder != null),
+    super(key: key);
 
   final Text title;
   final bool value;
@@ -22,7 +27,7 @@ class MasterSwitch extends StatelessWidget {
     return ContentSwitch(
       title: title,
       value: value,
-      pageContentBuilder: value ? activeContentBuilder : inactiveContentBuilder,
+      contentBuilder: value ? activeContentBuilder : inactiveContentBuilder,
       onChanged: onChanged,
     );
   }

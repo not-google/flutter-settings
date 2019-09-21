@@ -9,17 +9,23 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
   MultipleChoiceListTile({
     Key key,
     this.leading,
-    @required this.label,
+    @required this.title,
     this.statusTextBuilder,
     @required this.controlBuilder,
     @required this.choices,
     @required this.value,
     this.enabled = true,
     this.selected = false,
-  }) : super(key: key);
+  }) :
+    assert(title != null),
+    assert(controlBuilder != null),
+    assert(choices != null),
+    assert(enabled != null),
+    assert(selected != null),
+    super(key: key);
 
   final Widget leading;
-  final Text label;
+  final Widget title;
   final ValueBuilder<List<Choice<T>>> statusTextBuilder;
   final WidgetBuilder controlBuilder;
   final List<Choice<T>> choices;
@@ -28,14 +34,13 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
   final bool selected;
 
   Widget _buildDialog(BuildContext context) {
-    return ConfirmationDialog(
-      title: label,
+    return _ConfirmationDialog(
+      title: title,
       contentPadding: const EdgeInsets.only(top: 16.0),
       content: SizedBox(
         height: choices.length * _kListTileHeight,
         child: controlBuilder(context),
-      ),
-      onConfirm: () => Navigator.of(context).pop(),
+      )
     );
   }
 
@@ -57,8 +62,8 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: leading ?? Icon(null),
-      title: label,
+      leading: leading,
+      title: title,
       subtitle: _buildStatusText(context),
       onTap: () => showDialog(
         context: context,
@@ -70,18 +75,20 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
   }
 }
 
-class ConfirmationDialog extends StatelessWidget {
-  ConfirmationDialog({
-    this.title,
-    this.content,
+class _ConfirmationDialog extends StatelessWidget {
+  _ConfirmationDialog({
+    Key key,
+    @required this.title,
+    @required this.content,
     this.contentPadding = const EdgeInsets.only(top: 16.0),
-    this.onConfirm
-  });
+  }) : 
+    assert(title != null),
+    assert(content != null),
+    super(key: key);
 
   final Widget title;
   final Widget content;
   final EdgeInsetsGeometry contentPadding;
-  final VoidCallback onConfirm;
 
   @override
   Widget build(BuildContext context) {

@@ -8,11 +8,17 @@ class Dependency extends StatelessWidget {
     @required this.title,
     this.statusTextBuilder,
     @required this.dependentBuilder,
-    @required this.dependencyEnabled,
+    this.dependencyEnabled = true,
     this.enabled = true,
     this.selected = false,
     @required this.onChanged
-  }) : super(key: key);
+  }) :
+    assert(title != null),
+    assert(dependentBuilder != null),
+    assert(dependencyEnabled != null),
+    assert(enabled != null),
+    assert(selected != null),
+    super(key: key);
 
   final Widget leading;
   final Widget title;
@@ -34,11 +40,11 @@ class Dependency extends StatelessWidget {
     return Column(
       children: <Widget>[
         SwitchListTile(
-          secondary: leading ?? Icon(null),
+          secondary: leading,
           title: title,
           subtitle: _buildStatusText(context),
           value: dependencyEnabled,
-          onChanged: enabled ? onChanged : null,
+          onChanged: enabled ? (onChanged ?? (value) => null) : null,
           selected: selected,
         ),
         dependentBuilder(context, dependencyEnabled)

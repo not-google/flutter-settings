@@ -5,17 +5,22 @@ class TimePickerListTile extends StatelessWidget {
   TimePickerListTile({
     Key key,
     this.leading,
-    @required this.label,
+    @required this.title,
     this.statusTextBuilder,
     @required this.value,
     this.builder,
     this.enabled = true,
     this.selected = false,
     @required this.onChanged
-  }) : super(key: key);
+  }) :
+    assert(title != null),
+    assert(value != null),
+    assert(enabled != null),
+    assert(selected != null),
+    super(key: key);
 
   final Widget leading;
-  final Text label;
+  final Widget title;
   final ValueBuilder<TimeOfDay> statusTextBuilder;
   final TimeOfDay value;
   final TransitionBuilder builder;
@@ -33,7 +38,7 @@ class TimePickerListTile extends StatelessWidget {
 
   void _handleChanged(BuildContext context) async {
     TimeOfDay newValue = await _showTimePicker(context);
-    if (newValue != null && newValue != value)
+    if (onChanged != null && newValue != null && newValue != value)
       onChanged(newValue);
   }
 
@@ -54,8 +59,8 @@ class TimePickerListTile extends StatelessWidget {
         ? Theme.of(context).indicatorColor
         : Theme.of(context).disabledColor;
     return ListTile(
-      leading: leading ?? Icon(null),
-      title: label,
+      leading: leading,
+      title: title,
       subtitle: _buildStatusText(context),
       trailing: IconButton(
         icon: Icon(Icons.access_time, color: color),

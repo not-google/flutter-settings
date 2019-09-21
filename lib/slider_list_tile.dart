@@ -20,13 +20,14 @@ class SliderListTile extends StatelessWidget {
     this.secondary,
     this.selected,
     this.semanticFormatterCallback
-  }) : assert(value != null),
-        assert(min != null),
-        assert(max != null),
-        assert(min <= max),
-        assert(value >= min && value <= max),
-        assert(divisions == null || divisions > 0),
-        super(key: key);
+  }) :
+    assert(value != null),
+    assert(min != null),
+    assert(max != null),
+    assert(min <= max),
+    assert(value >= min && value <= max),
+    assert(divisions == null || divisions > 0),
+    super(key: key);
 
   final double value;
   final double min;

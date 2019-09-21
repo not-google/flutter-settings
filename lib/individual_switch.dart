@@ -8,7 +8,9 @@ class IndividualSwitch extends StatelessWidget {
     @required this.value,
     @required this.onChanged,
     @required this.description
-  }) : super(key: key);
+  }) :
+    assert(value != null),
+    super(key: key);
 
   final bool value;
   final Widget description;
@@ -27,7 +29,7 @@ class IndividualSwitch extends StatelessWidget {
     return ContentSwitch(
       title: _buildTitle(context),
       value: value,
-      pageContentBuilder: (context) => Container(
+      contentBuilder: (context) => Container(
         padding: const EdgeInsets.only(
           left: 72,
           right: 16.0,

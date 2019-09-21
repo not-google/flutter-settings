@@ -13,10 +13,12 @@ typedef SettingsPageBuilder<T> = Widget Function(
 class SettingsPage extends StatelessWidget {
   SettingsPage({
     Key key,
-    this.title,
+    @required this.title,
     @required this.groupBuilder,
     this.builder,
-  }) : super(key: key);
+  }) :
+    assert(groupBuilder != null),
+    super(key: key);
 
   static String routeName = '/settings';
   static String routeTitle = 'Settings';

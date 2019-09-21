@@ -7,7 +7,10 @@ class SingleChoice<T> extends StatelessWidget {
     @required this.choices,
     @required this.value,
     @required this.onChanged
-  }) : super(key: key);
+  }) :
+    assert(value != null),
+    assert(choices != null),
+    super(key: key);
 
   final List<Choice<T>> choices;
   final T value;

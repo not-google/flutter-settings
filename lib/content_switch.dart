@@ -5,13 +5,17 @@ class ContentSwitch extends StatelessWidget {
     Key key,
     @required this.title,
     @required this.value,
-    @required this.pageContentBuilder,
+    @required this.contentBuilder,
     @required this.onChanged
-  }) : super(key: key);
+  }) :
+    assert(title != null),
+    assert(value != null),
+    assert(contentBuilder != null),
+    super(key: key);
 
   final Text title;
   final bool value;
-  final WidgetBuilder pageContentBuilder;
+  final WidgetBuilder contentBuilder;
   final ValueChanged<bool> onChanged;
 
   Widget _buildControl(BuildContext context) {
@@ -43,7 +47,7 @@ class ContentSwitch extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return Expanded(
-        child: pageContentBuilder(context)
+        child: contentBuilder(context)
     );
   }
 

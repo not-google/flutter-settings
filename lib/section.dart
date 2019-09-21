@@ -10,7 +10,12 @@ class Section extends StatelessWidget {
     this.enabled = true,
     this.showTopDivider = true,
     this.showBottomDivider = true,
-  }) : super(key: key);
+  }) :
+    assert(content != null),
+    assert(enabled != null),
+    assert(showTopDivider != null),
+    assert(showBottomDivider != null),
+    super(key: key);
 
   final Text title;
   final Widget content;

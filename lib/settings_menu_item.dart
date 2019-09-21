@@ -270,8 +270,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }) : super(
     key: key,
     builder: (context, state) => MultipleChoiceListTile<T>(
-      leading: leading,
-      label: label,
+      leading: leading ?? Icon(null),
+      title: label,
       statusTextBuilder: statusTextBuilder,
       controlBuilder: (context) => state.controlBuilder(context, state),
       choices: choices,
@@ -358,8 +358,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     key: key,
     builder: (context, state) => state.controlBuilder(context, state),
     controlBuilder: (context, state) => DatePickerListTile(
-      leading: leading,
-      label: label,
+      leading: leading ?? Icon(null),
+      title: label,
       statusTextBuilder: statusTextBuilder,
       value: state.value,
       firstDate: firstDate,
@@ -395,8 +395,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     key: key,
     builder: (context, state) => state.controlBuilder(context, state),
     controlBuilder: (context, state) => TimePickerListTile(
-      leading: leading,
-      label: label,
+      leading: leading ?? Icon(null),
+      title: label,
       statusTextBuilder: statusTextBuilder,
       value: state.value,
       builder: builder,
@@ -432,8 +432,8 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     key: key,
     builder: (context, state) => state.controlBuilder(context, state),
     controlBuilder: (context, state) => DateTimePickerListTile(
-      leading: leading,
-      label: label,
+      leading: leading ?? Icon(null),
+      title: label,
       statusTextBuilder: statusTextBuilder,
       value: state.value,
       firstDate: firstDate,
@@ -509,7 +509,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }) : super(
     key: key,
     builder: (context, state) => MasterSwitchListTile(
-      leading: leading,
+      leading: leading ?? Icon(null),
       title: label,
       statusTextBuilder: statusTextBuilder,
       showSwitch: duplicateSwitch,
@@ -611,7 +611,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     key: key,
     builder: (context, state) => state.controlBuilder(context, state),
     controlBuilder: (context, state) => Dependency(
-      leading: leading,
+      leading: leading ?? Icon(null),
       title: label,
       statusTextBuilder: statusTextBuilder,
       dependentBuilder: (context, dependencyEnabled) => SettingsMenu(

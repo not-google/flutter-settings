@@ -12,9 +12,15 @@ class MasterSwitchListTile extends StatelessWidget {
     @required this.value,
     this.enabled = true,
     this.selected = false,
-    this.onChanged,
+    @required this.onChanged,
     this.onTap
-  }) : super(key: key);
+  }) :
+    assert(title != null),
+    assert(showSwitch != null),
+    assert(value != null),
+    assert(enabled != null),
+    assert(selected != null),
+    super(key: key);
 
   final Widget leading;
   final Widget title;
@@ -58,7 +64,7 @@ class MasterSwitchListTile extends StatelessWidget {
 
   Widget _buildListTile(BuildContext context) {
     return ListTile(
-      leading: leading ?? Icon(null),
+      leading: leading,
       title: title,
       subtitle: _buildStatusText(context),
       onTap: onTap,

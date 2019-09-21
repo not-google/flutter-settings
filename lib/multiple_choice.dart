@@ -7,7 +7,9 @@ class MultipleChoice<T> extends StatelessWidget {
     @required this.choices,
     @required this.value,
     @required this.onChanged
-  }) : super(key: key);
+  }) :
+    assert(choices != null),
+    super(key: key);
 
   final List<Choice<T>> choices;
   final List<T> value;
@@ -23,7 +25,7 @@ class MultipleChoice<T> extends StatelessWidget {
         onChanged: (bool checked) {
           List<T> _value = []..addAll(value);
           checked ? _value.add(option.value) : _value.remove(option.value);
-          onChanged(_value);
+          if (onChanged != null) onChanged(_value);
         }
     );
   }

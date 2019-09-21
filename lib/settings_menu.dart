@@ -9,7 +9,11 @@ class SettingsMenu extends StatelessWidget {
     this.scrolled = true,
     this.selectedId,
     this.onSearch,
-  }) : super(key: key);
+  }) :
+    assert(groupBuilder != null),
+    assert(enabled != null),
+    assert(scrolled != null),
+    super(key: key);
 
   final SettingsGroupBuilder groupBuilder;
   final String selectedId;

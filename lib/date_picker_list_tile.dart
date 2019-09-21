@@ -5,7 +5,7 @@ class DatePickerListTile extends StatelessWidget {
   DatePickerListTile({
     Key key,
     this.leading,
-    @required this.label,
+    @required this.title,
     this.statusTextBuilder,
     @required this.value,
     @required this.firstDate,
@@ -18,10 +18,23 @@ class DatePickerListTile extends StatelessWidget {
     this.enabled = true,
     this.selected = false,
     @required this.onChanged
-  }) : super(key: key);
+  }) :
+    assert(title != null),
+    assert(value != null),
+    assert(enabled != null),
+    assert(selected != null),
+    assert(firstDate != null),
+    assert(lastDate != null),
+    assert(!value.isBefore(firstDate), 'value must be on or after firstDate'),
+    assert(!value.isAfter(lastDate), 'value must be on or before lastDate'),
+    assert(!firstDate.isAfter(lastDate), 'lastDate must be on or after firstDate'),
+    assert(selectableDayPredicate == null || selectableDayPredicate(value),
+      'Provided value must satisfy provided selectableDayPredicate'),
+    assert(initialDatePickerMode != null, 'initialDatePickerMode must not be null'),
+    super(key: key);
 
   final Widget leading;
-  final Text label;
+  final Widget title;
   final ValueBuilder<DateTime> statusTextBuilder;
   final DateTime value;
   final DateTime firstDate;
@@ -64,7 +77,7 @@ class DatePickerListTile extends StatelessWidget {
 
   void _handleChanged(BuildContext context) async {
     DateTime newValue = await _showDatePicker(context);
-    if (newValue != null && newValue != value)
+    if (onChanged != null && newValue != null && newValue != value)
       onChanged(newValue);
   }
 
@@ -89,8 +102,8 @@ class DatePickerListTile extends StatelessWidget {
         ? Theme.of(context).indicatorColor
         : Theme.of(context).disabledColor;
     return ListTile(
-      leading: leading ?? Icon(null),
-      title: label,
+      leading: leading,
+      title: title,
       subtitle: _buildStatusText(context),
       trailing: IconButton(
         icon: Icon(Icons.calendar_today, color: color),

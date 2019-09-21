@@ -8,7 +8,8 @@ class SettingsSearchSuggestion {
     @required this.item,
     this.pageBuilder,
     this.parentsTitles,
-  });
+  }) :
+    assert(item != null);
 
   final SettingsMenuItem item;
   final SettingsStateBuilder pageBuilder;
@@ -18,7 +19,8 @@ class SettingsSearchSuggestion {
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
     @required this.groupBuilder
-  });
+  }) :
+    assert(groupBuilder != null);
 
   final SettingsGroupBuilder groupBuilder;
   final Iterable<SettingsSearchSuggestion> _history = [];
