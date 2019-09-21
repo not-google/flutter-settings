@@ -17,8 +17,8 @@ typedef SettingsItemBuilder<T> = List<SettingsMenuItem<T>> Function(BuildContext
 typedef ValueBuilder<T> = Widget Function(BuildContext context, T value);
 typedef SettingsStateBuilder = Widget Function(BuildContext context, SettingsMenuItemState state);
 
-enum SettingsMenuItemType {
-  toggleSwitch,
+enum SettingsMenuItemPattern {
+  simpleSwitch,
   section,
   // Selection Patterns
   singleChoice,
@@ -61,7 +61,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
     this.pageContentBuilder,
     this.groupBuilder,
     this.updatedWhenChanged = false,
-    @required this.type,
+    @required this.pattern,
   });
 
   final String id;
@@ -77,7 +77,7 @@ abstract class SettingsMenuEntry<T> extends StatelessWidget {
   final SettingsPageBuilder pageBuilder;
   final SettingsItemBuilder groupBuilder;
   final bool updatedWhenChanged;
-  final SettingsMenuItemType type;
+  final SettingsMenuItemPattern pattern;
 }
 
 class SettingsMenuItemState {
@@ -163,7 +163,7 @@ class SettingsMenuItemState {
 }
 
 class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
-  SettingsMenuItem.toggleSwitch({
+  SettingsMenuItem.simpleSwitch({
     Key key,
     @required String id,
     Widget leading,
@@ -189,7 +189,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    type: SettingsMenuItemType.toggleSwitch
+    pattern: SettingsMenuItemPattern.simpleSwitch
   );
 
   SettingsMenuItem.section({
@@ -214,7 +214,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     ),
     enabled: enabled,
     groupBuilder: groupBuilder,
-    type: SettingsMenuItemType.section
+    pattern: SettingsMenuItemPattern.section
   );
 
   SettingsMenuItem.singleChoice({
@@ -262,7 +262,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     initialValue: initialValue,
     onChanged: onChanged,
     updatedWhenChanged: true,
-    type: SettingsMenuItemType.singleChoice
+    pattern: SettingsMenuItemPattern.singleChoice
   );
 
   SettingsMenuItem.multipleChoice({
@@ -298,7 +298,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     initialValue: initialValue,
     onChanged: onChanged,
     updatedWhenChanged: true,
-    type: SettingsMenuItemType.multipleChoice
+    pattern: SettingsMenuItemPattern.multipleChoice
   );
 
   SettingsMenuItem.slider({
@@ -343,7 +343,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     onChanged: onChanged,
     onChangeStart: onChangeStart,
     onChangeEnd: onChangeEnd,
-    type: SettingsMenuItemType.slider
+    pattern: SettingsMenuItemPattern.slider
   );
 
   SettingsMenuItem.date({
@@ -386,7 +386,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    type: SettingsMenuItemType.date
+    pattern: SettingsMenuItemPattern.date
   );
 
   SettingsMenuItem.time({
@@ -417,7 +417,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    type: SettingsMenuItemType.time
+    pattern: SettingsMenuItemPattern.time
   );
 
   SettingsMenuItem.dateTime({
@@ -460,7 +460,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    type: SettingsMenuItemType.dateTime
+    pattern: SettingsMenuItemPattern.dateTime
   );
 
   SettingsMenuItem.listSubpage({
@@ -497,7 +497,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     label: label,
     enabled: enabled,
     groupBuilder: groupBuilder,
-    type: SettingsMenuItemType.listSubpage
+    pattern: SettingsMenuItemPattern.listSubpage
   );
 
   SettingsMenuItem.masterSwitch({
@@ -557,7 +557,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     onChanged: onChanged,
     groupBuilder: groupBuilder,
     updatedWhenChanged: true,
-    type: SettingsMenuItemType.masterSwitch
+    pattern: SettingsMenuItemPattern.masterSwitch
   );
 
   SettingsMenuItem.individualSwitch({
@@ -598,7 +598,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     initialValue: initialValue,
     onChanged: onChanged,
     updatedWhenChanged: true,
-    type: SettingsMenuItemType.individualSwitch
+    pattern: SettingsMenuItemPattern.individualSwitch
   );
 
   SettingsMenuItem.dependency({
@@ -636,7 +636,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     initialValue: initialValue,
     onChanged: onChanged,
     groupBuilder: groupBuilder,
-    type: SettingsMenuItemType.dependency
+    pattern: SettingsMenuItemPattern.dependency
   );
 
   SettingsMenuItemState get initialState => SettingsMenuItemState(
@@ -965,7 +965,7 @@ class Section extends StatelessWidget {
     @required List<SettingsMenuItem> group,
     bool hideWhenFirst = false
   }) {
-    bool isNotSection = item.type != SettingsMenuItemType.section;
+    bool isNotSection = item.pattern != SettingsMenuItemPattern.section;
     if (isNotSection) return false;
 
     bool isFirst = item == group.first;
@@ -974,7 +974,7 @@ class Section extends StatelessWidget {
     int itemIndex = group.indexOf(item);
     SettingsMenuItem previous = itemIndex > 0 ? group[itemIndex - 1] : null;
 
-    bool isSectionPrevious = previous?.type == SettingsMenuItemType.section;
+    bool isSectionPrevious = previous?.pattern == SettingsMenuItemPattern.section;
     if (isSectionPrevious) return false;
 
     bool isPageLinkPrevious = previous?.pageBuilder != null;
@@ -983,7 +983,7 @@ class Section extends StatelessWidget {
     bool isNotEmptyPrevious = previous?.groupBuilder != null;
     if (isNotEmptyPrevious) {
       List<SettingsMenuItem> previousGroup = previous.groupBuilder(context);
-      bool isSectionLastPreviousItem = previousGroup?.last?.type == SettingsMenuItemType.section;
+      bool isSectionLastPreviousItem = previousGroup?.last?.pattern == SettingsMenuItemPattern.section;
       if (isSectionLastPreviousItem) return false;
     }
 
@@ -996,7 +996,7 @@ class Section extends StatelessWidget {
     @required List<SettingsMenuItem> group,
     bool hideWhenLast = false
   }) {
-    bool isNotSection = item.type != SettingsMenuItemType.section;
+    bool isNotSection = item.pattern != SettingsMenuItemPattern.section;
     if (isNotSection) return false;
 
     bool isLast = item == group.last;

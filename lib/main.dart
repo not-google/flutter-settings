@@ -30,35 +30,35 @@ class App extends StatelessWidget {
         //enabled: true,
         //pageBuilder: _buildPage,
         groupBuilder: (context) => <SettingsMenuItem>[
-          SettingsMenuItem.toggleSwitch(
+          SettingsMenuItem.simpleSwitch(
             id: 'SETTING_2.1',
             leading: Icon(Icons.settings),
-            label: Text('Toggle Switch 1'),
+            label: Text('Simple Switch 1'),
             initialValue: true,
             secondaryText: Text('Описание настройки'),
             onChanged: (value) => print(value),
           ),
-          SettingsMenuItem.toggleSwitch(
+          SettingsMenuItem.simpleSwitch(
             id: 'SETTING_2.2',
             leading: Icon(Icons.settings),
-            label: Text('Toggle Switch 2'),
+            label: Text('Simple Switch 2'),
             initialValue: false,
             secondaryText: Text('Описание настройки'),
           ),
           SettingsMenuItem.section(
             title: Text('Section'),
             groupBuilder: (context) =>  <SettingsMenuItem>[
-              SettingsMenuItem.toggleSwitch(
+              SettingsMenuItem.simpleSwitch(
                 id: 'SETTING_3.3.1',
                 leading: Icon(Icons.settings),
-                label: Text('Toggle Switch 3'),
+                label: Text('Simple Switch 3'),
                 initialValue: true,
                 secondaryText: Text('Описание настройки'),
               ),
-              SettingsMenuItem.toggleSwitch(
+              SettingsMenuItem.simpleSwitch(
                 id: 'SETTING_3.3.2',
                 leading: Icon(Icons.settings),
-                label: Text('Toggle Switch 4'),
+                label: Text('Simple Switch 4'),
                 initialValue: false,
                 secondaryText: Text('Описание настройки'),
               ),
@@ -76,18 +76,18 @@ class App extends StatelessWidget {
       initialValue: true,
       onChanged: (value) => print('value: $value'),
       groupBuilder: (context) => <SettingsMenuItem>[
-        SettingsMenuItem.toggleSwitch(
+        SettingsMenuItem.simpleSwitch(
           id: 'SETTING_3.1',
           leading: Icon(Icons.settings),
-          label: Text('Toggle Switch 5'),
+          label: Text('Simple Switch 5'),
           initialValue: true,
           secondaryText: Text('Описание настройки'),
           onChanged: (value) => print('value: $value'),
         ),
-        SettingsMenuItem.toggleSwitch(
+        SettingsMenuItem.simpleSwitch(
           id: 'SETTING_3.2',
           leading: Icon(Icons.settings),
-          label: Text('Toggle Switch 6'),
+          label: Text('Simple Switch 6'),
           initialValue: true,
           enabled: false,
           secondaryText: Text('Описание настройки'),
@@ -96,17 +96,17 @@ class App extends StatelessWidget {
         SettingsMenuItem.section(
           title: Text('Section 1'),
           groupBuilder: (context) => <SettingsMenuItem>[
-            SettingsMenuItem.toggleSwitch(
+            SettingsMenuItem.simpleSwitch(
               id: 'SETTING_3.3.1',
               leading: Icon(Icons.settings),
-              label: Text('Toggle Switch 7'),
+              label: Text('Simple Switch 7'),
               initialValue: true,
               secondaryText: Text('Описание настройки'),
             ),
-            SettingsMenuItem.toggleSwitch(
+            SettingsMenuItem.simpleSwitch(
               id: 'SETTING_3.3.2',
               leading: Icon(Icons.settings),
-              label: Text('Toggle Switch 8'),
+              label: Text('Simple Switch 8'),
               initialValue: false,
               secondaryText: Text('Описание настройки'),
             ),
@@ -114,27 +114,27 @@ class App extends StatelessWidget {
         )
       ],
     ),
-//    SettingsMenuItem.toggleSwitch(
+//    SettingsMenuItem.simpleSwitch(
 //      id: 'SETTING_3.3.1',
 //      leading: Icon(Icons.settings),
-//      label: Text('Toggle Switch 9'),
+//      label: Text('Simple Switch 9'),
 //      initialValue: true,
 //      secondaryText: Text('Описание настройки'),
 //    ),
     SettingsMenuItem.section(
       title: Text('Section 2'),
       groupBuilder: (context) => <SettingsMenuItem>[
-        SettingsMenuItem.toggleSwitch(
+        SettingsMenuItem.simpleSwitch(
           id: 'SETTING_4.1',
           leading: Icon(Icons.settings),
-          label: Text('Toggle Switch 10'),
+          label: Text('Simple Switch 10'),
           initialValue: true,
           secondaryText: Text('Описание настройки'),
         ),
-        SettingsMenuItem.toggleSwitch(
+        SettingsMenuItem.simpleSwitch(
           id: 'SETTING_4.2',
           leading: Icon(Icons.settings),
-          label: Text('Toggle Switch 11'),
+          label: Text('Simple Switch 11'),
           initialValue: false,
           secondaryText: Text('Описание настройки'),
         ),
@@ -164,17 +164,17 @@ class App extends StatelessWidget {
           secondaryText: Text('Страница настроек'),
           pageBuilder: _buildPage,
           groupBuilder: (context) => <SettingsMenuItem>[
-            SettingsMenuItem.toggleSwitch(
+            SettingsMenuItem.simpleSwitch(
               id: 'SETTING_6.1',
               leading: Icon(Icons.settings),
-              label: Text('Toggle Switch 12'),
+              label: Text('Simple Switch 12'),
               initialValue: true,
               secondaryText: Text('Описание настройки'),
             ),
-            SettingsMenuItem.toggleSwitch(
+            SettingsMenuItem.simpleSwitch(
               id: 'SETTING_6.2',
               leading: Icon(Icons.settings),
-              label: Text('Toggle Switch 13'),
+              label: Text('Simple Switch 13'),
               initialValue: false,
               secondaryText: Text('Описание настройки'),
             ),
@@ -187,17 +187,17 @@ class App extends StatelessWidget {
           secondaryText: Text('Страница настроек'),
           pageBuilder: _buildPage,
           groupBuilder: (context) => <SettingsMenuItem>[
-            SettingsMenuItem.toggleSwitch(
+            SettingsMenuItem.simpleSwitch(
               id: 'SETTING_7.1',
               leading: Icon(Icons.settings),
-              label: Text('Toggle Switch 14'),
+              label: Text('Simple Switch 14'),
               initialValue: true,
               secondaryText: Text('Описание настройки'),
             ),
-            SettingsMenuItem.toggleSwitch(
+            SettingsMenuItem.simpleSwitch(
               id: 'SETTING_7.2',
               leading: Icon(Icons.settings),
-              label: Text('Toggle Switch 15'),
+              label: Text('Simple Switch 15'),
               initialValue: false,
               secondaryText: Text('Описание настройки'),
             ),
@@ -271,10 +271,10 @@ class App extends StatelessWidget {
       //secondaryTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),
     ),
-    SettingsMenuItem.toggleSwitch(
+    SettingsMenuItem.simpleSwitch(
       id: 'SETTING_11',
       leading: Icon(Icons.settings),
-      label: Text('Toggle Switch 16'),
+      label: Text('Simple Switch 16'),
       initialValue: true,
       enabled: false,
       secondaryText: Text('Описание настройки'),
