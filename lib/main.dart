@@ -22,7 +22,7 @@ class App extends StatelessWidget {
         leading: Icon(Icons.settings),
         label: Text('Master Switch'),
         //masterSwitchTitle: Text('Use Master Switch'),
-        //secondaryTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
+        //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (context) => Text('Текст неактивного состояния'),
         initialValue: false,
         showDuplicateSwitch: true,
@@ -70,7 +70,7 @@ class App extends StatelessWidget {
       id: 'SETTING_3',
       leading: Icon(Icons.settings),
       label: Text('Dependency'),
-      secondaryTextBuilder: (context, enabled) => enabled
+      statusTextBuilder: (context, enabled) => enabled
           ? Text('Зависимости доступны')
           : Text('Зависимости не доступны'),
       initialValue: true,
@@ -209,7 +209,7 @@ class App extends StatelessWidget {
       id: 'SETTING_8',
       leading: Icon(Icons.settings),
       label: Text('Multiple Choice'),
-//      secondaryTextBuilder: (context, List<Choice<int>> choices) {
+//      statusTextBuilder: (context, List<Choice<int>> choices) {
 //        if (choices.isEmpty) return Text('Not Chosen');
 //        String labels = choices.map((choice) => choice.label).join(', ');
 //        return Text('$labels');
@@ -228,7 +228,7 @@ class App extends StatelessWidget {
       id: 'SETTING_9',
       leading: Icon(Icons.settings),
       label: Text('Single Choice'),
-      //secondaryTextBuilder: (context, Choice<int> choice) => Text('${choice.label}'),
+      //statusTextBuilder: (context, Choice<int> choice) => Text('${choice.label}'),
       pageBuilder: _buildPage,
       choices: <Choice<int>>[
         Choice(label: Text('Опция 1'), value: 1),
@@ -246,7 +246,7 @@ class App extends StatelessWidget {
       label: Text('Time'),
       initialValue: TimeOfDay(hour: 6, minute: 0),
       enabled: true,
-      //secondaryTextBuilder: (context, value) => Text(value.toIso8601String()),
+      //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),
     ),
     SettingsMenuItem.date(
@@ -257,7 +257,7 @@ class App extends StatelessWidget {
       lastDate: DateTime(2021),
       initialValue: DateTime(2020),
       enabled: true,
-      //secondaryTextBuilder: (context, value) => Text(value.toIso8601String()),
+      //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),
     ),
     SettingsMenuItem.dateTime(
@@ -268,7 +268,7 @@ class App extends StatelessWidget {
       lastDate: DateTime(2021),
       initialValue: DateTime(2020),
       enabled: true,
-      //secondaryTextBuilder: (context, value) => Text(value.toIso8601String()),
+      //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),
     ),
     SettingsMenuItem.simpleSwitch(

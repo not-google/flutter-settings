@@ -222,7 +222,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    ValueBuilder<Choice<T>> secondaryTextBuilder,
+    ValueBuilder<Choice<T>> statusTextBuilder,
     @required List<Choice<T>> choices,
     @required T initialValue,
     SettingsPageBuilder pageBuilder,
@@ -233,13 +233,13 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     builder: (context, state) {
       T value = state.value;
       Choice<T> selectedChoice = choices.firstWhere((choice) => choice.value == value);
-      Widget statusText = (secondaryTextBuilder != null)
-          ? secondaryTextBuilder(context, selectedChoice)
+      Widget secondaryText = (statusTextBuilder != null)
+          ? statusTextBuilder(context, selectedChoice)
           : selectedChoice.label;
       return ListTile(
         leading: leading ?? Icon(null),
         title: label,
-        subtitle: statusText,
+        subtitle: secondaryText,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => state.pageBuilder(context, state)
@@ -270,7 +270,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    ValueBuilder<List<Choice<T>>> secondaryTextBuilder,
+    ValueBuilder<List<Choice<T>>> statusTextBuilder,
     @required List<Choice<T>> choices,
     @required List<T> initialValue,
     bool enabled = true,
@@ -280,7 +280,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     builder: (context, state) => MultipleChoiceListTile<T>(
       leading: leading,
       label: label,
-      secondaryTextBuilder: secondaryTextBuilder,
+      statusTextBuilder: statusTextBuilder,
       controlBuilder: (context) => state.controlBuilder(context, state),
       choices: choices,
       value: state.value,
@@ -351,7 +351,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    ValueBuilder<DateTime> secondaryTextBuilder,
+    ValueBuilder<DateTime> statusTextBuilder,
     @required DateTime initialValue,
     @required DateTime firstDate,
     @required DateTime lastDate,
@@ -368,7 +368,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     controlBuilder: (context, state) => DatePickerListTile(
       leading: leading,
       label: label,
-      secondaryTextBuilder: secondaryTextBuilder,
+      statusTextBuilder: statusTextBuilder,
       value: state.value,
       firstDate: firstDate,
       lastDate: lastDate,
@@ -394,7 +394,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    ValueBuilder<TimeOfDay> secondaryTextBuilder,
+    ValueBuilder<TimeOfDay> statusTextBuilder,
     @required TimeOfDay initialValue,
     TransitionBuilder builder,
     bool enabled = true,
@@ -405,7 +405,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     controlBuilder: (context, state) => TimePickerListTile(
       leading: leading,
       label: label,
-      secondaryTextBuilder: secondaryTextBuilder,
+      statusTextBuilder: statusTextBuilder,
       value: state.value,
       builder: builder,
       enabled: state.enabled,
@@ -425,7 +425,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    ValueBuilder<DateTime> secondaryTextBuilder,
+    ValueBuilder<DateTime> statusTextBuilder,
     @required DateTime initialValue,
     @required DateTime firstDate,
     @required DateTime lastDate,
@@ -442,7 +442,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     controlBuilder: (context, state) => DateTimePickerListTile(
       leading: leading,
       label: label,
-      secondaryTextBuilder: secondaryTextBuilder,
+      statusTextBuilder: statusTextBuilder,
       value: state.value,
       firstDate: firstDate,
       lastDate: lastDate,
@@ -506,7 +506,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     Widget leading,
     @required Text label,
     Text switchTitle,
-    ValueBuilder<bool> secondaryTextBuilder,
+    ValueBuilder<bool> statusTextBuilder,
     @required WidgetBuilder inactiveTextBuilder,
     bool showDuplicateSwitch = false,
     @required SettingsItemBuilder groupBuilder,
@@ -519,7 +519,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     builder: (context, state) => MasterSwitchListTile(
       leading: leading,
       title: label,
-      secondaryTextBuilder: secondaryTextBuilder,
+      statusTextBuilder: statusTextBuilder,
       showSwitch: showDuplicateSwitch,
       value: state.value,
       enabled: state.enabled,
@@ -606,7 +606,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     @required String id,
     Widget leading,
     @required Text label,
-    ValueBuilder<bool> secondaryTextBuilder,
+    ValueBuilder<bool> statusTextBuilder,
     @required SettingsItemBuilder groupBuilder,
     @required bool initialValue,
     ValueChanged<bool> onChanged,
@@ -617,7 +617,7 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     controlBuilder: (context, state) => Dependency(
       leading: leading,
       title: label,
-      secondaryTextBuilder: secondaryTextBuilder,
+      statusTextBuilder: statusTextBuilder,
       dependentBuilder: (context, dependencyEnabled) => SettingsMenu(
         groupBuilder: groupBuilder,
         enabled: dependencyEnabled,
@@ -854,7 +854,7 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
     Key key,
     this.leading,
     @required this.label,
-    this.secondaryTextBuilder,
+    this.statusTextBuilder,
     @required this.controlBuilder,
     @required this.choices,
     @required this.value,
@@ -864,7 +864,7 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
   
   final Widget leading;
   final Text label;
-  final ValueBuilder<List<Choice<T>>> secondaryTextBuilder;
+  final ValueBuilder<List<Choice<T>>> statusTextBuilder;
   final WidgetBuilder controlBuilder;
   final List<Choice<T>> choices;
   final List<T> value;
@@ -888,13 +888,13 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
       (choice) => value.contains(choice.value)
     ).toList();
 
-    if (secondaryTextBuilder != null) {
-      return secondaryTextBuilder(context, checkedChoices);
+    if (statusTextBuilder != null) {
+      return statusTextBuilder(context, checkedChoices);
     } else {
-      String statusText = checkedChoices.map(
+      String secondaryText = checkedChoices.map(
         (choice) => choice.label.data
       ).join(', ');
-      return Text(statusText);
+      return Text(secondaryText);
     }
   }
   
@@ -1193,7 +1193,7 @@ class TimePickerListTile extends StatelessWidget {
     Key key,
     this.leading,
     @required this.label,
-    this.secondaryTextBuilder,
+    this.statusTextBuilder,
     @required this.value,
     this.builder,
     this.enabled = true,
@@ -1203,7 +1203,7 @@ class TimePickerListTile extends StatelessWidget {
 
   final Widget leading;
   final Text label;
-  final ValueBuilder<TimeOfDay> secondaryTextBuilder;
+  final ValueBuilder<TimeOfDay> statusTextBuilder;
   final TimeOfDay value;
   final TransitionBuilder builder;
   final bool enabled;
@@ -1225,8 +1225,8 @@ class TimePickerListTile extends StatelessWidget {
   }
 
   Widget _buildSecondaryText(BuildContext context) {
-    if (secondaryTextBuilder != null)
-      return secondaryTextBuilder(context, value);
+    if (statusTextBuilder != null)
+      return statusTextBuilder(context, value);
 
     return Text(
       value.format(context),
@@ -1260,7 +1260,7 @@ class DatePickerListTile extends StatelessWidget {
     Key key,
     this.leading,
     @required this.label,
-    this.secondaryTextBuilder,
+    this.statusTextBuilder,
     @required this.value,
     @required this.firstDate,
     @required this.lastDate,
@@ -1276,7 +1276,7 @@ class DatePickerListTile extends StatelessWidget {
 
   final Widget leading;
   final Text label;
-  final ValueBuilder<DateTime> secondaryTextBuilder;
+  final ValueBuilder<DateTime> statusTextBuilder;
   final DateTime value;
   final DateTime firstDate;
   final DateTime lastDate;
@@ -1323,8 +1323,8 @@ class DatePickerListTile extends StatelessWidget {
   }
 
   Widget _buildSecondaryText(BuildContext context) {
-    if (secondaryTextBuilder != null)
-      return secondaryTextBuilder(context, value);
+    if (statusTextBuilder != null)
+      return statusTextBuilder(context, value);
 
     RegExp timeRegExp = RegExp(' [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}\$');
     String secondaryText = value
@@ -1362,7 +1362,7 @@ class DateTimePickerListTile extends StatelessWidget {
     Key key,
     this.leading,
     @required this.label,
-    this.secondaryTextBuilder,
+    this.statusTextBuilder,
     @required this.value,
     @required this.firstDate,
     @required this.lastDate,
@@ -1378,7 +1378,7 @@ class DateTimePickerListTile extends StatelessWidget {
 
   final Widget leading;
   final Text label;
-  final ValueBuilder<DateTime> secondaryTextBuilder;
+  final ValueBuilder<DateTime> statusTextBuilder;
   final DateTime value;
   final DateTime firstDate;
   final DateTime lastDate;
@@ -1465,8 +1465,8 @@ class DateTimePickerListTile extends StatelessWidget {
   }
 
   Widget _buildSecondaryText(BuildContext context) {
-    if (secondaryTextBuilder != null)
-      return secondaryTextBuilder(context, value);
+    if (statusTextBuilder != null)
+      return statusTextBuilder(context, value);
 
     RegExp millisecondsRegExp = RegExp('\.[0-9]{3}\$');
     String secondaryText = value.toLocal()
@@ -1541,7 +1541,7 @@ class Dependency extends StatelessWidget {
     Key key,
     this.leading,
     @required this.title,
-    this.secondaryTextBuilder,
+    this.statusTextBuilder,
     @required this.dependentBuilder,
     @required this.dependencyEnabled,
     this.enabled = true,
@@ -1551,7 +1551,7 @@ class Dependency extends StatelessWidget {
 
   final Widget leading;
   final Widget title;
-  final ValueBuilder<bool> secondaryTextBuilder;
+  final ValueBuilder<bool> statusTextBuilder;
   final ValueBuilder<bool> dependentBuilder;
   final bool dependencyEnabled;
   final bool enabled;
@@ -1559,9 +1559,9 @@ class Dependency extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   Widget _buildSecondaryText(BuildContext context) {
-    if (secondaryTextBuilder == null) return null;
+    if (statusTextBuilder == null) return null;
 
-    return secondaryTextBuilder(context, dependencyEnabled);
+    return statusTextBuilder(context, dependencyEnabled);
   }
 
   @override
@@ -1587,7 +1587,7 @@ class MasterSwitchListTile extends StatelessWidget {
     Key key,
     this.leading,
     @required this.title,
-    this.secondaryTextBuilder,
+    this.statusTextBuilder,
     this.showSwitch = true,
     @required this.value,
     this.enabled = true,
@@ -1598,7 +1598,7 @@ class MasterSwitchListTile extends StatelessWidget {
   
   final Widget leading;
   final Widget title;
-  final ValueBuilder<bool> secondaryTextBuilder;
+  final ValueBuilder<bool> statusTextBuilder;
   final bool showSwitch;
   final bool value;
   final bool enabled;
@@ -1627,8 +1627,8 @@ class MasterSwitchListTile extends StatelessWidget {
   }
 
   Widget _buildSecondaryText(BuildContext context) {
-    return secondaryTextBuilder != null
-        ? secondaryTextBuilder(context, value)
+    return statusTextBuilder != null
+        ? statusTextBuilder(context, value)
         : Text(value ? activeLabel : inactiveLabel);
   }
 
