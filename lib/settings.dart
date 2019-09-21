@@ -24,6 +24,8 @@ enum SettingsMenuItemType {
   singleChoice,
   multipleChoice,
   slider,
+  date,
+  time,
   dateTime,
   listSubpage,
   masterSwitch,
@@ -344,6 +346,80 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
     type: SettingsMenuItemType.slider
   );
 
+  SettingsMenuItem.date({
+    Key key,
+    @required String id,
+    Widget leading,
+    @required Text label,
+    ValueBuilder<DateTime> secondaryTextBuilder,
+    @required DateTime initialValue,
+    @required DateTime firstDate,
+    @required DateTime lastDate,
+    DatePickerMode initialDatePickerMode = DatePickerMode.day,
+    SelectableDayPredicate selectableDayPredicate,
+    Locale locale,
+    TextDirection textDirection,
+    TransitionBuilder builder,
+    bool enabled = true,
+    ValueChanged<DateTime> onChanged
+  }) : super(
+    key: key,
+    builder: (context, state) => state.controlBuilder(context, state),
+    controlBuilder: (context, state) => DatePickerListTile(
+      leading: leading,
+      label: label,
+      secondaryTextBuilder: secondaryTextBuilder,
+      value: state.value,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      initialDatePickerMode: initialDatePickerMode,
+      selectableDayPredicate: selectableDayPredicate,
+      locale: locale,
+      textDirection: textDirection,
+      builder: builder,
+      enabled: state.enabled,
+      selected: state.selected,
+      onChanged: state.onChanged,
+    ),
+    id: id,
+    label: label,
+    enabled: enabled,
+    initialValue: initialValue,
+    onChanged: onChanged,
+    type: SettingsMenuItemType.date
+  );
+
+  SettingsMenuItem.time({
+    Key key,
+    @required String id,
+    Widget leading,
+    @required Text label,
+    ValueBuilder<TimeOfDay> secondaryTextBuilder,
+    @required TimeOfDay initialValue,
+    TransitionBuilder builder,
+    bool enabled = true,
+    ValueChanged<TimeOfDay> onChanged
+  }) : super(
+    key: key,
+    builder: (context, state) => state.controlBuilder(context, state),
+    controlBuilder: (context, state) => TimePickerListTile(
+      leading: leading,
+      label: label,
+      secondaryTextBuilder: secondaryTextBuilder,
+      value: state.value,
+      builder: builder,
+      enabled: state.enabled,
+      selected: state.selected,
+      onChanged: state.onChanged,
+    ),
+    id: id,
+    label: label,
+    enabled: enabled,
+    initialValue: initialValue,
+    onChanged: onChanged,
+    type: SettingsMenuItemType.time
+  );
+
   SettingsMenuItem.dateTime({
     Key key,
     @required String id,
@@ -363,11 +439,11 @@ class SettingsMenuItem<T> extends SettingsMenuEntry<T> {
   }) : super(
     key: key,
     builder: (context, state) => state.controlBuilder(context, state),
-    controlBuilder: (context, state) => DateTimeListTile(
+    controlBuilder: (context, state) => DateTimePickerListTile(
       leading: leading,
       label: label,
       secondaryTextBuilder: secondaryTextBuilder,
-      dateTime: state.value,
+      value: state.value,
       firstDate: firstDate,
       lastDate: lastDate,
       initialDatePickerMode: initialDatePickerMode,
@@ -807,7 +883,7 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusText(BuildContext context) {
+  Widget _buildSecondaryText(BuildContext context) {
     List<Choice<T>> checkedChoices = choices.where(
       (choice) => value.contains(choice.value)
     ).toList();
@@ -827,7 +903,7 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
     return ListTile(
       leading: leading ?? Icon(null),
       title: label,
-      subtitle: _buildStatusText(context),
+      subtitle: _buildSecondaryText(context),
       onTap: () => showDialog(
         context: context,
         builder: _buildDialog
@@ -1112,13 +1188,80 @@ class SliderListTile extends StatelessWidget {
   }
 }
 
-class DateTimeListTile extends StatelessWidget {
-  DateTimeListTile({
+class TimePickerListTile extends StatelessWidget {
+  TimePickerListTile({
     Key key,
     this.leading,
     @required this.label,
     this.secondaryTextBuilder,
-    @required this.dateTime,
+    @required this.value,
+    this.builder,
+    this.enabled = true,
+    this.selected = false,
+    @required this.onChanged
+  }) : super(key: key);
+
+  final Widget leading;
+  final Text label;
+  final ValueBuilder<TimeOfDay> secondaryTextBuilder;
+  final TimeOfDay value;
+  final TransitionBuilder builder;
+  final bool enabled;
+  final bool selected;
+  final ValueChanged<TimeOfDay> onChanged;
+
+  Future<TimeOfDay> _showTimePicker(BuildContext context) async {
+    return await showTimePicker(
+      context: context,
+      initialTime: value,
+      builder: builder
+    );
+  }
+
+  void _handleChanged(BuildContext context) async {
+    TimeOfDay newValue = await _showTimePicker(context);
+    if (newValue != null && newValue != value)
+      onChanged(newValue);
+  }
+
+  Widget _buildSecondaryText(BuildContext context) {
+    if (secondaryTextBuilder != null)
+      return secondaryTextBuilder(context, value);
+
+    return Text(
+      value.format(context),
+      softWrap: false,
+      overflow: TextOverflow.ellipsis
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color color = enabled
+        ? Theme.of(context).indicatorColor
+        : Theme.of(context).disabledColor;
+    return ListTile(
+      leading: leading ?? Icon(null),
+      title: label,
+      subtitle: _buildSecondaryText(context),
+      trailing: IconButton(
+        icon: Icon(Icons.access_time, color: color),
+        onPressed: enabled ? () => _handleChanged(context) : null,
+      ),
+      onTap: () => _handleChanged(context),
+      selected: selected,
+      enabled: enabled,
+    );
+  }
+}
+
+class DatePickerListTile extends StatelessWidget {
+  DatePickerListTile({
+    Key key,
+    this.leading,
+    @required this.label,
+    this.secondaryTextBuilder,
+    @required this.value,
     @required this.firstDate,
     @required this.lastDate,
     this.initialDatePickerMode = DatePickerMode.day,
@@ -1134,7 +1277,7 @@ class DateTimeListTile extends StatelessWidget {
   final Widget leading;
   final Text label;
   final ValueBuilder<DateTime> secondaryTextBuilder;
-  final DateTime dateTime;
+  final DateTime value;
   final DateTime firstDate;
   final DateTime lastDate;
   final DatePickerMode initialDatePickerMode;
@@ -1146,10 +1289,10 @@ class DateTimeListTile extends StatelessWidget {
   final bool selected;
   final ValueChanged<DateTime> onChanged;
 
-  Future<DateTime> _pickDate(BuildContext context) async {
+  Future<DateTime> _showDatePicker(BuildContext context) async {
     DateTime newDate = await showDatePicker(
       context: context,
-      initialDate: dateTime,
+      initialDate: value,
       firstDate: firstDate,
       lastDate: lastDate,
       selectableDayPredicate: selectableDayPredicate,
@@ -1159,50 +1302,178 @@ class DateTimeListTile extends StatelessWidget {
       builder: builder
     );
 
+    if (newDate == null) return null;
+
     return DateTime(
       newDate.year,
       newDate.month,
       newDate.day,
-      dateTime.hour,
-      dateTime.minute
+      value.hour,
+      value.minute,
+      value.second,
+      value.millisecond,
+      value.microsecond
     );
   }
 
-  Future<DateTime> _pickTime(BuildContext context) async {
-    TimeOfDay newTime = await showTimePicker(
+  void _handleChanged(BuildContext context) async {
+    DateTime newValue = await _showDatePicker(context);
+    if (newValue != null && newValue != value)
+      onChanged(newValue);
+  }
+
+  Widget _buildSecondaryText(BuildContext context) {
+    if (secondaryTextBuilder != null)
+      return secondaryTextBuilder(context, value);
+
+    RegExp timeRegExp = RegExp(' [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}\$');
+    String secondaryText = value
+      .toString()
+      .replaceAll(timeRegExp, '');
+    return Text(
+      secondaryText,
+      softWrap: false,
+      overflow: TextOverflow.ellipsis
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color color = enabled
+        ? Theme.of(context).indicatorColor
+        : Theme.of(context).disabledColor;
+    return ListTile(
+      leading: leading ?? Icon(null),
+      title: label,
+      subtitle: _buildSecondaryText(context),
+      trailing: IconButton(
+        icon: Icon(Icons.calendar_today, color: color),
+        onPressed: enabled ? () => _handleChanged(context) : null,
+      ),
+      onTap: () => _handleChanged(context),
+      selected: selected,
+      enabled: enabled,
+    );
+  }
+}
+
+class DateTimePickerListTile extends StatelessWidget {
+  DateTimePickerListTile({
+    Key key,
+    this.leading,
+    @required this.label,
+    this.secondaryTextBuilder,
+    @required this.value,
+    @required this.firstDate,
+    @required this.lastDate,
+    this.initialDatePickerMode = DatePickerMode.day,
+    this.selectableDayPredicate,
+    this.locale,
+    this.textDirection,
+    this.builder,
+    this.enabled = true,
+    this.selected = false,
+    @required this.onChanged
+  }) : super(key: key);
+
+  final Widget leading;
+  final Text label;
+  final ValueBuilder<DateTime> secondaryTextBuilder;
+  final DateTime value;
+  final DateTime firstDate;
+  final DateTime lastDate;
+  final DatePickerMode initialDatePickerMode;
+  final SelectableDayPredicate selectableDayPredicate;
+  final Locale locale;
+  final TextDirection textDirection;
+  final TransitionBuilder builder;
+  final bool enabled;
+  final bool selected;
+  final ValueChanged<DateTime> onChanged;
+
+  Future<DateTime> _showDatePicker(BuildContext context) async {
+    DateTime newDate = await showDatePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(dateTime),
+      initialDate: value,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      selectableDayPredicate: selectableDayPredicate,
+      initialDatePickerMode: initialDatePickerMode,
+      locale: locale,
+      textDirection: textDirection,
       builder: builder
     );
 
+    if (newDate == null) return null;
+
     return DateTime(
-      dateTime.year,
-      dateTime.month,
-      dateTime.day,
-      newTime.hour,
-      newTime.minute
+      newDate.year,
+      newDate.month,
+      newDate.day,
+      value.hour,
+      value.minute,
+      value.second,
+      value.millisecond,
+      value.microsecond
     );
   }
 
-  Future<DateTime> _pickDateTime(BuildContext context) async {
-    DateTime newDate = await _pickDate(context);
-    DateTime newTime = await _pickTime(context);
+  Future<DateTime> _showTimePicker(BuildContext context) async {
+    TimeOfDay initialTime = TimeOfDay.fromDateTime(value);
+    TimeOfDay newTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: builder
+    );
+
+    if (newTime == null) return null;
+
+    return DateTime(
+      value.year,
+      value.month,
+      value.day,
+      newTime.hour,
+      newTime.minute,
+      value.second,
+      value.millisecond,
+      value.microsecond
+    );
+  }
+
+  Future<DateTime> _showDateTimePicker(BuildContext context) async {
+    DateTime newDate = await _showDatePicker(context);
+
+    if (newDate == null) return null;
+
+    DateTime newTime = await _showTimePicker(context) ?? value;
 
     return DateTime(
       newDate.year,
       newDate.month,
       newDate.day,
       newTime.hour,
-      newTime.minute
+      newTime.minute,
+      value.second,
+      value.millisecond,
+      value.microsecond
     );
   }
 
-  Widget _buildStatusText(BuildContext context) {
-    if (secondaryTextBuilder != null)
-      return secondaryTextBuilder(context, dateTime);
+  void _handleChanged(DateTime newValue) {
+    if (newValue != null && newValue != value)
+      onChanged(newValue);
+  }
 
+  Widget _buildSecondaryText(BuildContext context) {
+    if (secondaryTextBuilder != null)
+      return secondaryTextBuilder(context, value);
+
+    RegExp millisecondsRegExp = RegExp('\.[0-9]{3}\$');
+    String secondaryText = value.toLocal()
+        .toString()
+        .replaceAll(millisecondsRegExp, '');
     return Text(
-      dateTime.toLocal().toString().replaceAll('.000', ''),
+      secondaryText,
       softWrap: false,
       overflow: TextOverflow.ellipsis
     );
@@ -1212,8 +1483,8 @@ class DateTimeListTile extends StatelessWidget {
     return ListTile(
       leading: leading ?? Icon(null),
       title: label,
-      subtitle: _buildStatusText(context),
-      onTap: () async => onChanged(await _pickDateTime(context)),
+      subtitle: _buildSecondaryText(context),
+      onTap: () async => _handleChanged(await _showDateTimePicker(context)),
       selected: selected,
       enabled: enabled,
     );
@@ -1228,13 +1499,13 @@ class DateTimeListTile extends StatelessWidget {
         IconButton(
           icon: Icon(Icons.calendar_today, color: color),
           onPressed: enabled
-            ? () async => onChanged(await _pickDate(context))
+            ? () async => _handleChanged(await _showDatePicker(context))
             : null,
         ),
         IconButton(
           icon: Icon(Icons.access_time, color: color),
           onPressed: enabled
-            ? () async => onChanged(await _pickTime(context))
+            ? () async => _handleChanged(await _showTimePicker(context))
             : null,
         )
       ],

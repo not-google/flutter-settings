@@ -22,7 +22,7 @@ class App extends StatelessWidget {
         leading: Icon(Icons.settings),
         label: Text('Master Switch'),
         //masterSwitchTitle: Text('Use Master Switch'),
-        //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
+        //secondaryTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
         inactiveTextBuilder: (context) => Text('Текст неактивного состояния'),
         initialValue: false,
         showDuplicateSwitch: true,
@@ -209,7 +209,7 @@ class App extends StatelessWidget {
       id: 'SETTING_8',
       leading: Icon(Icons.settings),
       label: Text('Multiple Choice'),
-//      statusTextBuilder: (context, List<Choice<int>> choices) {
+//      secondaryTextBuilder: (context, List<Choice<int>> choices) {
 //        if (choices.isEmpty) return Text('Not Chosen');
 //        String labels = choices.map((choice) => choice.label).join(', ');
 //        return Text('$labels');
@@ -228,7 +228,7 @@ class App extends StatelessWidget {
       id: 'SETTING_9',
       leading: Icon(Icons.settings),
       label: Text('Single Choice'),
-      //statusTextBuilder: (context, Choice<int> choice) => Text('${choice.label}'),
+      //secondaryTextBuilder: (context, Choice<int> choice) => Text('${choice.label}'),
       pageBuilder: _buildPage,
       choices: <Choice<int>>[
         Choice(label: Text('Опция 1'), value: 1),
@@ -240,6 +240,26 @@ class App extends StatelessWidget {
       onChanged: (int value) => print('value: $value'),
       //enabled: false
     ),
+    SettingsMenuItem.time(
+      id: 'SETTINGS_10',
+      leading: Icon(Icons.settings),
+      label: Text('Time'),
+      initialValue: TimeOfDay(hour: 6, minute: 0),
+      enabled: true,
+      //secondaryTextBuilder: (context, value) => Text(value.toIso8601String()),
+      onChanged: (value) => print('value: $value'),
+    ),
+    SettingsMenuItem.date(
+      id: 'SETTINGS_10',
+      leading: Icon(Icons.settings),
+      label: Text('Date'),
+      firstDate: DateTime(2019),
+      lastDate: DateTime(2021),
+      initialValue: DateTime(2020),
+      enabled: true,
+      //secondaryTextBuilder: (context, value) => Text(value.toIso8601String()),
+      onChanged: (value) => print('value: $value'),
+    ),
     SettingsMenuItem.dateTime(
       id: 'SETTINGS_10',
       leading: Icon(Icons.settings),
@@ -247,8 +267,8 @@ class App extends StatelessWidget {
       firstDate: DateTime(2019),
       lastDate: DateTime(2021),
       initialValue: DateTime(2020),
-      enabled: false,
-      //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
+      enabled: true,
+      //secondaryTextBuilder: (context, value) => Text(value.toIso8601String()),
       onChanged: (value) => print('value: $value'),
     ),
     SettingsMenuItem.toggleSwitch(
