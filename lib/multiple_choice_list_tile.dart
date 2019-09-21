@@ -39,7 +39,7 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
     );
   }
 
-  Widget _buildSecondaryText(BuildContext context) {
+  Widget _buildStatusText(BuildContext context) {
     List<Choice<T>> checkedChoices = choices.where(
       (choice) => value.contains(choice.value)
     ).toList();
@@ -59,7 +59,7 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
     return ListTile(
       leading: leading ?? Icon(null),
       title: label,
-      subtitle: _buildSecondaryText(context),
+      subtitle: _buildStatusText(context),
       onTap: () => showDialog(
         context: context,
         builder: _buildDialog

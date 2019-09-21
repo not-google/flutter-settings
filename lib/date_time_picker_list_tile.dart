@@ -108,7 +108,7 @@ class DateTimePickerListTile extends StatelessWidget {
       onChanged(newValue);
   }
 
-  Widget _buildSecondaryText(BuildContext context) {
+  Widget _buildStatusText(BuildContext context) {
     if (statusTextBuilder != null)
       return statusTextBuilder(context, value);
 
@@ -127,7 +127,7 @@ class DateTimePickerListTile extends StatelessWidget {
     return ListTile(
       leading: leading ?? Icon(null),
       title: label,
-      subtitle: _buildSecondaryText(context),
+      subtitle: _buildStatusText(context),
       onTap: () async => _handleChanged(await _showDateTimePicker(context)),
       selected: selected,
       enabled: enabled,

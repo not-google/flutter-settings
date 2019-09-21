@@ -23,7 +23,7 @@ class Dependency extends StatelessWidget {
   final bool selected;
   final ValueChanged<bool> onChanged;
 
-  Widget _buildSecondaryText(BuildContext context) {
+  Widget _buildStatusText(BuildContext context) {
     if (statusTextBuilder == null) return null;
 
     return statusTextBuilder(context, dependencyEnabled);
@@ -36,7 +36,7 @@ class Dependency extends StatelessWidget {
         SwitchListTile(
           secondary: leading ?? Icon(null),
           title: title,
-          subtitle: _buildSecondaryText(context),
+          subtitle: _buildStatusText(context),
           value: dependencyEnabled,
           onChanged: enabled ? onChanged : null,
           selected: selected,

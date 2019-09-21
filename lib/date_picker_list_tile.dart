@@ -68,7 +68,7 @@ class DatePickerListTile extends StatelessWidget {
       onChanged(newValue);
   }
 
-  Widget _buildSecondaryText(BuildContext context) {
+  Widget _buildStatusText(BuildContext context) {
     if (statusTextBuilder != null)
       return statusTextBuilder(context, value);
 
@@ -91,7 +91,7 @@ class DatePickerListTile extends StatelessWidget {
     return ListTile(
       leading: leading ?? Icon(null),
       title: label,
-      subtitle: _buildSecondaryText(context),
+      subtitle: _buildStatusText(context),
       trailing: IconButton(
         icon: Icon(Icons.calendar_today, color: color),
         onPressed: enabled ? () => _handleChanged(context) : null,

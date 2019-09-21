@@ -46,7 +46,7 @@ class MasterSwitchListTile extends StatelessWidget {
     );
   }
 
-  Widget _buildSecondaryText(BuildContext context) {
+  Widget _buildStatusText(BuildContext context) {
     return statusTextBuilder != null
         ? statusTextBuilder(context, value)
         : Text(
@@ -60,7 +60,7 @@ class MasterSwitchListTile extends StatelessWidget {
     return ListTile(
       leading: leading ?? Icon(null),
       title: title,
-      subtitle: _buildSecondaryText(context),
+      subtitle: _buildStatusText(context),
       onTap: onTap,
       selected: selected,
       enabled: enabled,

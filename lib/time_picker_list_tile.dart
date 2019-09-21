@@ -37,7 +37,7 @@ class TimePickerListTile extends StatelessWidget {
       onChanged(newValue);
   }
 
-  Widget _buildSecondaryText(BuildContext context) {
+  Widget _buildStatusText(BuildContext context) {
     if (statusTextBuilder != null)
       return statusTextBuilder(context, value);
 
@@ -56,7 +56,7 @@ class TimePickerListTile extends StatelessWidget {
     return ListTile(
       leading: leading ?? Icon(null),
       title: label,
-      subtitle: _buildSecondaryText(context),
+      subtitle: _buildStatusText(context),
       trailing: IconButton(
         icon: Icon(Icons.access_time, color: color),
         onPressed: enabled ? () => _handleChanged(context) : null,
