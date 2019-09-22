@@ -318,7 +318,7 @@ class App extends StatelessWidget {
         )
       },
       initialRoute: SettingsPage.routeName,
-      theme: ThemeData.light(),
+      theme: ThemeData.dark(),
     );
   }
 }

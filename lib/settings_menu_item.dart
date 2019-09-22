@@ -42,7 +42,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   SettingsPatternBuilder({
     Key key,
     this.id,
-    @required this.label,
+    this.label,
     @required this.builder,
     @required this.value,
     this.enabled = true,
@@ -60,7 +60,9 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     this.showTopDivider,
     this.showBottomDivider,
     @required this.pattern,
-  });
+  }) :
+    assert(builder != null),
+    super(key: key);
 
   final String id;
   final Text label;

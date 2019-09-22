@@ -22,14 +22,16 @@ class Section extends StatelessWidget {
   final bool enabled;
   final bool showTopDivider;
   final bool showBottomDivider;
+
   Widget _buildTitle(BuildContext context) {
     if (title == null) return Container();
-
+    ThemeData theme = Theme.of(context);
+    Color color = title.style?.color ?? theme.accentColor;
     return Container(
       alignment: Alignment.centerLeft,
       child: DefaultTextStyle(
-        style: (title.style ?? Theme.of(context).textTheme.body1).copyWith(
-          color: title.style?.color ?? Theme.of(context).primaryColor
+        style: (title.style ?? theme.textTheme.body1).copyWith(
+          color: color
         ),
         child: title,
       ),
