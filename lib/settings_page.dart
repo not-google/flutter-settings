@@ -32,9 +32,7 @@ class SettingsPage extends StatelessWidget {
       context: context,
       delegate: SettingsSearchDelegate(
         groupBuilder: groupBuilder,
-        itemBuilder: (item) => item.copyWith(
-          onSearch: () => _showSearch(context)
-        )
+        onSearch: () => _showSearch(context)
       )
     );
   }

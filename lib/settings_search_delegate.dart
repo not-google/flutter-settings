@@ -6,34 +6,36 @@ import 'settings_page.dart';
 class SettingsSearchSuggestion {
   SettingsSearchSuggestion({
     @required this.item,
-    this.pageBuilder,
+    this.parentWithPage,
     this.parentsTitles,
   }) :
     assert(item != null);
 
   final SettingsMenuItem item;
-  final WidgetBuilder pageBuilder;
+  final SettingsMenuItem parentWithPage;
   final List<String> parentsTitles;
 }
 
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
     @required this.groupBuilder,
-    this.itemBuilder
+    this.onSearch
   }) :
     assert(groupBuilder != null);
 
   final SettingsGroupBuilder groupBuilder;
-  final SettingsGroupItemBuilder itemBuilder;
+  final VoidCallback onSearch;
   final Iterable<SettingsSearchSuggestion> _history = [];
 
   List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
-    WidgetBuilder pageBuilder,
+    SettingsMenuItem parentWithPage,
     SettingsMenuItem parent,
     List<SettingsSearchSuggestion> suggestions,
     List<String> parentsTitles
   }) {
-    List<SettingsMenuItem> data = parent != null ? parent.groupBuilder(context) : this.groupBuilder(context);
+    List<SettingsMenuItem> data = parent != null
+        ? parent.groupBuilder(context)
+        : this.groupBuilder(context);
     parentsTitles = parentsTitles ?? [];
     suggestions = suggestions ?? [];
 
@@ -44,7 +46,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       if ((item.label?.data ?? '').startsWith(query)) {
         suggestions.add(
             SettingsSearchSuggestion(
-                pageBuilder: pageBuilder,
+                parentWithPage: parentWithPage,
                 item: item,
                 parentsTitles: parentsTitles
             )
@@ -61,7 +63,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         _getSuggestions(
             context,
             parent: item,
-            pageBuilder: isPage ? item.buildPage : pageBuilder,
+            parentWithPage: isPage ? item : parentWithPage,
             suggestions: suggestions,
             parentsTitles: itemParentsTitles
         );
@@ -87,26 +89,25 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 
   Widget _buildPage(BuildContext context, SettingsSearchSuggestion suggestion) {
-    if (suggestion.pageBuilder != null) {
-      return suggestion.pageBuilder(context);
-    }
+    SettingsMenuItem parent = suggestion.parentWithPage;
+    bool hasParentPage = parent?.pageContentBuilder != null;
+    SettingsPageBuilder pageBuilder = hasParentPage
+        ? suggestion.parentWithPage.pageBuilder
+        : SettingsPage.pageBuilder;
 
-    return SettingsPage.pageBuilder(
+    return pageBuilder(
       context,
-      null,
+      hasParentPage ? parent.label : null,
       SettingsMenu(
-        groupBuilder: this.groupBuilder,
-        itemBuilder: (item) {
-          SettingsPatternBuilder widget = item.copyWith(
-            selectedId: suggestion.item.id,
-          );
-
-          return itemBuilder != null
-            ? itemBuilder(widget)
-            : item;
-        }
+        groupBuilder: hasParentPage
+          ? parent.groupBuilder
+          : groupBuilder,
+        itemBuilder: (item) => item.copyWith(
+          selectedId: suggestion.item.id,
+          onSearch: onSearch
+        )
       ),
-      showSearch
+      onSearch
     );
   }
 
