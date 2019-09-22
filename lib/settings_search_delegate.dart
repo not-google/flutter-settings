@@ -18,21 +18,14 @@ class SettingsSearchSuggestion {
 
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
-    @required this.groupBuilder
+    @required this.groupBuilder,
+    this.itemBuilder
   }) :
     assert(groupBuilder != null);
 
   final SettingsGroupBuilder groupBuilder;
+  final SettingsGroupItemBuilder itemBuilder;
   final Iterable<SettingsSearchSuggestion> _history = [];
-
-  void _showSearch(context) {
-    showSearch(
-        context: context,
-        delegate: SettingsSearchDelegate(
-            groupBuilder: groupBuilder
-        )
-    );
-  }
 
   List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
     WidgetBuilder pageBuilder,
@@ -94,8 +87,6 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 
   Widget _buildPage(BuildContext context, SettingsSearchSuggestion suggestion) {
-    VoidCallback showSearch = () => _showSearch(context);
-
     if (suggestion.pageBuilder != null) {
       return suggestion.pageBuilder(context);
     }
@@ -105,8 +96,15 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       null,
       SettingsMenu(
         groupBuilder: this.groupBuilder,
-        selectedId: suggestion.item.id,
-        onSearch: showSearch,
+        itemBuilder: (item) {
+          SettingsPatternBuilder widget = item.copyWith(
+            selectedId: suggestion.item.id,
+          );
+
+          return itemBuilder != null
+            ? itemBuilder(widget)
+            : item;
+        }
       ),
       showSearch
     );

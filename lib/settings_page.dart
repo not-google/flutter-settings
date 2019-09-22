@@ -31,7 +31,10 @@ class SettingsPage extends StatelessWidget {
     showSearch(
       context: context,
       delegate: SettingsSearchDelegate(
-        groupBuilder: groupBuilder
+        groupBuilder: groupBuilder,
+        itemBuilder: (item) => item.copyWith(
+          onSearch: () => _showSearch(context)
+        )
       )
     );
   }
@@ -39,7 +42,9 @@ class SettingsPage extends StatelessWidget {
   Widget _buildBody(BuildContext context) {
     return SettingsMenu(
       groupBuilder: groupBuilder,
-      onSearch: () => _showSearch(context),
+      itemBuilder: (item) => item.copyWith(
+        onSearch: () => _showSearch(context)
+      )
     );
   }
 

@@ -18,9 +18,11 @@ import 'master_switch_list_tile.dart';
 import 'individual_switch.dart';
 import 'dependency.dart';
 
-typedef SettingsGroupBuilder<T> = List<SettingsMenuItem<T>> Function(BuildContext context);
+typedef SettingsGroupBuilder<T> = List<SettingsPatternBuilder<T>> Function(BuildContext context);
+typedef SettingsGroupItemBuilder<T> = SettingsPatternBuilder Function(SettingsPatternBuilder item);
+typedef WidgetDetailBuilder<T> = Widget Function(BuildContext context, T widget);
 
-enum SettingsMenuItemPattern {
+enum SettingsPattern {
   simpleSwitch,
   section,
   // Selection Patterns
@@ -36,8 +38,8 @@ enum SettingsMenuItemPattern {
   dependency
 }
 
-class SettingsMenuItemBuilder<T> extends StatelessWidget {
-  SettingsMenuItemBuilder({
+class SettingsPatternBuilder<T> extends StatelessWidget {
+  SettingsPatternBuilder({
     Key key,
     this.id,
     @required this.label,
@@ -68,9 +70,9 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
   final onChanged;
   final onChangeStart;
   final onChangeEnd;
-  final StateBuilder<SettingsMenuItemBuilder> builder;
-  final StateBuilder<SettingsMenuItemBuilder> controlBuilder;
-  final StateBuilder<SettingsMenuItemBuilder> pageContentBuilder;
+  final WidgetDetailBuilder<SettingsPatternBuilder> builder;
+  final WidgetDetailBuilder<SettingsPatternBuilder> controlBuilder;
+  final WidgetDetailBuilder<SettingsPatternBuilder> pageContentBuilder;
   final SettingsPageBuilder pageBuilder;
   final SettingsGroupBuilder groupBuilder;
   final bool controlSeparated;
@@ -78,12 +80,12 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
   final VoidCallback onSearch;
   final bool showTopDivider;
   final bool showBottomDivider;
-  final SettingsMenuItemPattern pattern;
+  final SettingsPattern pattern;
 
   bool get selected => selectedId == id;
   bool get isEnabled => enabled == false ? false : dependencyEnabled;
 
-  SettingsMenuItemBuilder copyWith({
+  SettingsPatternBuilder copyWith({
     String id,
     Text label,
     bool enabled,
@@ -92,9 +94,9 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
     onChanged,
     onChangeStart,
     onChangeEnd,
-    StateBuilder<SettingsMenuItemBuilder> builder,
-    StateBuilder<SettingsMenuItemBuilder> controlBuilder,
-    StateBuilder<SettingsMenuItemBuilder> pageContentBuilder,
+    WidgetDetailBuilder<SettingsPatternBuilder> builder,
+    WidgetDetailBuilder<SettingsPatternBuilder> controlBuilder,
+    WidgetDetailBuilder<SettingsPatternBuilder> pageContentBuilder,
     SettingsPageBuilder pageBuilder,
     SettingsGroupBuilder groupBuilder,
     bool controlSeparated,
@@ -102,8 +104,8 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
     VoidCallback onSearch,
     bool showTopDivider,
     bool showBottomDivider,
-    SettingsMenuItemPattern pattern
-  }) => SettingsMenuItemBuilder(
+    SettingsPattern pattern
+  }) => SettingsPatternBuilder(
       id: id ?? this.id,
       label: label ?? this.label,
       enabled: enabled ?? this.enabled,
@@ -125,28 +127,6 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
       pattern: pattern ?? this.pattern
   );
 
-  SettingsMenuItemBuilder copyFrom(SettingsMenuItemBuilder widget) => SettingsMenuItemBuilder(
-      id: widget.id ?? this.id,
-      label: widget.label ?? this.label,
-      enabled: widget.enabled ?? this.enabled,
-      dependencyEnabled: widget.dependencyEnabled ?? this.dependencyEnabled,
-      value: widget.value ?? this.value,
-      onChanged: widget.onChanged ?? this.onChanged,
-      onChangeStart: widget.onChangeStart ?? this.onChangeStart,
-      onChangeEnd: widget.onChangeEnd ?? this.onChangeEnd,
-      builder: widget.builder ?? this.builder,
-      controlBuilder: widget.controlBuilder ?? this.controlBuilder,
-      pageContentBuilder: widget.pageContentBuilder ?? this.pageContentBuilder,
-      pageBuilder: widget.pageBuilder ?? this.pageBuilder,
-      groupBuilder: widget.groupBuilder ?? this.groupBuilder,
-      controlSeparated: widget.controlSeparated ?? this.controlSeparated,
-      selectedId: widget.selectedId ?? this.selectedId,
-      onSearch: widget.onSearch ?? this.onSearch,
-      showTopDivider: widget.showTopDivider ?? this.showTopDivider,
-      showBottomDivider: widget.showBottomDivider ?? this.showBottomDivider,
-      pattern: widget.pattern ?? this.pattern
-  );
-
   Widget buildPage(BuildContext context) {
     Widget title = label;
     Widget body = pageContentBuilder(context, this);
@@ -166,7 +146,7 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
       _notifier.value = newValue;
     }
 
-    statefulBuilder(StateBuilder<SettingsMenuItemBuilder> builder)
+    statefulBuilder(WidgetDetailBuilder<SettingsPatternBuilder> builder)
       => (context, widget)
       => ValueListenableBuilder(
           valueListenable: _notifier,
@@ -176,7 +156,7 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
           )
       );
 
-    SettingsMenuItemBuilder widget = this.copyWith(
+    SettingsPatternBuilder widget = this.copyWith(
       builder: statefulBuilder(builder),
       controlBuilder: statefulBuilder(controlBuilder),
       onChanged: handleChanged
@@ -189,7 +169,7 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
   Widget build(BuildContext context) => builder(context, this);
 }
 
-class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
+class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
   SettingsMenuItem.simpleSwitch({
     Key key,
     @required String id,
@@ -208,7 +188,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       subtitle: secondaryText,
       value: widget.value,
       selected: widget.selected,
-      onChanged: widget.enabled
+      onChanged: widget.isEnabled
         ? (widget.onChanged ?? (value) => null)
         : null
     ),
@@ -217,7 +197,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     enabled: enabled,
     value: initialValue,
     onChanged: onChanged,
-    pattern: SettingsMenuItemPattern.simpleSwitch
+    pattern: SettingsPattern.simpleSwitch
   );
 
   SettingsMenuItem.section({
@@ -229,12 +209,13 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     key: key,
     builder: (context, widget) => Section(
       title: title,
-      content: SettingsMenu(
+      content: SettingsMenu.column(
         groupBuilder: groupBuilder,
-        enabled: widget.isEnabled,
-        selectedId: widget.selectedId,
-        onSearch: widget.onSearch,
-        scrolled: false,
+        itemBuilder: (item) => item.copyWith(
+          onSearch: widget.onSearch,
+          selectedId: widget.selectedId,
+          enabled: widget.isEnabled
+        )
       ),
       enabled: widget.isEnabled,
       showTopDivider: widget.showTopDivider ?? true,
@@ -242,7 +223,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     ),
     enabled: enabled,
     groupBuilder: groupBuilder,
-    pattern: SettingsMenuItemPattern.section
+    pattern: SettingsPattern.section
   );
 
   SettingsMenuItem.singleChoice({
@@ -290,7 +271,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     value: initialValue,
     onChanged: onChanged,
     controlSeparated: true,
-    pattern: SettingsMenuItemPattern.singleChoice
+    pattern: SettingsPattern.singleChoice
   );
 
   SettingsMenuItem.multipleChoice({
@@ -326,7 +307,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     value: initialValue,
     onChanged: onChanged,
     controlSeparated: true,
-    pattern: SettingsMenuItemPattern.multipleChoice
+    pattern: SettingsPattern.multipleChoice
   );
 
   SettingsMenuItem.slider({
@@ -360,9 +341,9 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       activeColor: activeColor,
       inactiveColor: inactiveColor,
       semanticFormatterCallback: semanticFormatterCallback,
-      onChanged: widget.enabled ? widget.onChanged : null,
-      onChangeStart: widget.enabled ? widget.onChangeStart : null,
-      onChangeEnd: widget.enabled ? widget.onChangeEnd : null,
+      onChanged: widget.isEnabled ? widget.onChanged : null,
+      onChangeStart: widget.isEnabled ? widget.onChangeStart : null,
+      onChangeEnd: widget.isEnabled ? widget.onChangeEnd : null,
     ),
     id: id,
     label: label,
@@ -371,7 +352,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     onChanged: onChanged,
     onChangeStart: onChangeStart,
     onChangeEnd: onChangeEnd,
-    pattern: SettingsMenuItemPattern.slider
+    pattern: SettingsPattern.slider
   );
 
   SettingsMenuItem.date({
@@ -414,7 +395,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     enabled: enabled,
     value: initialValue,
     onChanged: onChanged,
-    pattern: SettingsMenuItemPattern.date
+    pattern: SettingsPattern.date
   );
 
   SettingsMenuItem.time({
@@ -445,7 +426,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     enabled: enabled,
     value: initialValue,
     onChanged: onChanged,
-    pattern: SettingsMenuItemPattern.time
+    pattern: SettingsPattern.time
   );
 
   SettingsMenuItem.dateTime({
@@ -488,7 +469,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     enabled: enabled,
     value: initialValue,
     onChanged: onChanged,
-    pattern: SettingsMenuItemPattern.dateTime
+    pattern: SettingsPattern.dateTime
   );
 
   SettingsMenuItem.listSubpage({
@@ -517,15 +498,17 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     ),
     pageContentBuilder: (context, widget) => SettingsMenu(
       groupBuilder: groupBuilder,
-      onSearch: widget.onSearch,
-      selectedId: widget.selectedId,
+      itemBuilder: (item) => item.copyWith(
+        onSearch: widget.onSearch,
+        selectedId: widget.selectedId
+      )
     ),
     pageBuilder: pageBuilder,
     id: id,
     label: label,
     enabled: enabled,
     groupBuilder: groupBuilder,
-    pattern: SettingsMenuItemPattern.listSubpage
+    pattern: SettingsPattern.listSubpage
   );
 
   SettingsMenuItem.masterSwitch({
@@ -565,8 +548,10 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       onChanged: widget.onChanged,
       activeContentBuilder: (context) => SettingsMenu(
         groupBuilder: groupBuilder,
-        onSearch: widget.onSearch,
-        selectedId: widget.selectedId
+        itemBuilder: (item) => item.copyWith(
+          onSearch: widget.onSearch,
+          selectedId: widget.selectedId
+        ),
       ),
       inactiveContentBuilder: (context) => Container(
         alignment: Alignment.topLeft,
@@ -584,7 +569,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     onChanged: onChanged,
     groupBuilder: groupBuilder,
     controlSeparated: true,
-    pattern: SettingsMenuItemPattern.masterSwitch
+    pattern: SettingsPattern.masterSwitch
   );
 
   SettingsMenuItem.individualSwitch({
@@ -629,7 +614,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     value: initialValue,
     onChanged: onChanged,
     controlSeparated: true,
-    pattern: SettingsMenuItemPattern.individualSwitch
+    pattern: SettingsPattern.individualSwitch
   );
 
   SettingsMenuItem.dependency({
@@ -649,12 +634,13 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       leading: leading ?? Icon(null),
       title: label,
       statusTextBuilder: statusTextBuilder,
-      dependentBuilder: (context, dependencyEnabled) => SettingsMenu(
+      dependentBuilder: (context, dependencyEnabled) => SettingsMenu.column(
         groupBuilder: groupBuilder,
-        enabled: dependencyEnabled,
-        selectedId: widget.selectedId,
-        onSearch: widget.onSearch,
-        scrolled: false
+        itemBuilder: (item) => item.copyWith(
+          enabled: dependencyEnabled,
+          selectedId: widget.selectedId,
+          onSearch: widget.onSearch,
+        )
       ),
       dependencyEnabled: widget.value,
       enabled: widget.isEnabled,
@@ -667,41 +653,6 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     value: initialValue,
     onChanged: onChanged,
     groupBuilder: groupBuilder,
-    pattern: SettingsMenuItemPattern.dependency
+    pattern: SettingsPattern.dependency
   );
-
-//  final ValueNotifier _valueNotifier = ValueNotifier(null);
-//  void _handleChanged(newValue) {
-//    if (onChanged != null) onChanged(newValue);
-//    _valueNotifier.value = newValue;
-//  }
-//
-//  Widget _buildValueListenable(
-//      BuildContext context,
-//      SettingsStateBuilder builder
-//      ) => ValueListenableBuilder(
-//      valueListenable: _valueNotifier,
-//      builder: (context, value, _) => builder(
-//          context,
-//          this.copyWith(
-//            value: value,
-//            onChanged: _handleChanged,
-//          )
-//      )
-//  );
-//
-//  Widget buildControl(BuildContext context)
-//  => _buildValueListenable(context, controlBuilder);
-
-//  Widget _build(BuildContext context) {
-//    return controlSeparated
-//        ? _buildValueListenable(context, this.builder)
-//        : this.builder(context, this);
-//  }
-//
-//  @override
-//  Widget build(BuildContext context) => _build(context);
-
-  //@override
-  //Widget build(BuildContext context) => builder(context, this);
 }
