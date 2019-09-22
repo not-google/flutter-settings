@@ -12,7 +12,7 @@ class SettingsSearchSuggestion {
     assert(item != null);
 
   final SettingsMenuItem item;
-  final SettingsStateBuilder pageBuilder;
+  final WidgetBuilder pageBuilder;
   final List<String> parentsTitles;
 }
 
@@ -35,7 +35,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 
   List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
-    SettingsStateBuilder pageBuilder,
+    WidgetBuilder pageBuilder,
     SettingsMenuItem parent,
     List<SettingsSearchSuggestion> suggestions,
     List<String> parentsTitles
@@ -97,13 +97,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     VoidCallback showSearch = () => _showSearch(context);
 
     if (suggestion.pageBuilder != null) {
-      return suggestion.pageBuilder(
-          context,
-          SettingsMenuItemState(
-              selectedId: suggestion.item.id,
-              onSearch: showSearch
-          )
-      );
+      return suggestion.pageBuilder(context);
     }
 
     return SettingsPage.pageBuilder(

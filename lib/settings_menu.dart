@@ -21,44 +21,41 @@ class SettingsMenu extends StatelessWidget {
   final bool scrolled;
   final VoidCallback onSearch;
 
-  Widget _buildItem(
-      BuildContext context,
-      SettingsMenuItem item,
-      List<SettingsMenuItem> group
-      ) {
-    return item.buildWith(
-        context,
-        dependencyEnabled: enabled,
-        onSearch: onSearch,
-        selectedId: selectedId,
-        showTopDivider: needShowTopDivider(
-            context: context,
-            item: item,
-            group: group,
-            hideWhenFirst: scrolled
-        ),
-        showBottomDivider: needShowBottomDivider(
-            context: context,
-            item: item,
-            group: group,
-            hideWhenLast: scrolled
-        )
-    );
-  }
+  Widget _buildMenuItem(
+    BuildContext context,
+    SettingsMenuItem widget,
+    List<SettingsMenuItem> group
+  ) => widget.copyWith(
+      dependencyEnabled: enabled,
+      onSearch: onSearch,
+      selectedId: selectedId,
+      showTopDivider: needShowTopDivider(
+          context: context,
+          widget: widget,
+          group: group,
+          hideWhenFirst: scrolled
+      ),
+      showBottomDivider: needShowBottomDivider(
+          context: context,
+          widget: widget,
+          group: group,
+          hideWhenLast: scrolled
+      )
+  ).buildStateful(context);
 
   static bool needShowTopDivider({
     @required BuildContext context,
-    @required SettingsMenuItem item,
+    @required SettingsMenuItem widget,
     @required List<SettingsMenuItem> group,
     bool hideWhenFirst = false
   }) {
-    bool isNotSection = item.pattern != SettingsMenuItemPattern.section;
+    bool isNotSection = widget.pattern != SettingsMenuItemPattern.section;
     if (isNotSection) return false;
 
-    bool isFirst = item == group.first;
+    bool isFirst = widget == group.first;
     if (hideWhenFirst && isFirst) return false;
 
-    int itemIndex = group.indexOf(item);
+    int itemIndex = group.indexOf(widget);
     SettingsMenuItem previous = itemIndex > 0 ? group[itemIndex - 1] : null;
 
     bool isSectionPrevious = previous?.pattern == SettingsMenuItemPattern.section;
@@ -79,14 +76,14 @@ class SettingsMenu extends StatelessWidget {
 
   static bool needShowBottomDivider({
     @required BuildContext context,
-    @required SettingsMenuItem item,
+    @required SettingsMenuItem widget,
     @required List<SettingsMenuItem> group,
     bool hideWhenLast = false
   }) {
-    bool isNotSection = item.pattern != SettingsMenuItemPattern.section;
+    bool isNotSection = widget.pattern != SettingsMenuItemPattern.section;
     if (isNotSection) return false;
 
-    bool isLast = item == group.last;
+    bool isLast = widget == group.last;
     if (hideWhenLast && isLast) return false;
 
     return true;
@@ -95,7 +92,7 @@ class SettingsMenu extends StatelessWidget {
   Widget _buildList(BuildContext context) {
     List<SettingsMenuItem> group = groupBuilder(context);
     return Column(
-      children: group.map((item) => _buildItem(context, item, group)).toList(),
+      children: group.map((widget) => _buildMenuItem(context, widget, group)).toList(),
     );
   }
 
@@ -105,7 +102,7 @@ class SettingsMenu extends StatelessWidget {
         itemCount: group.length,
         itemBuilder: (context, index) {
           SettingsMenuItem item = group[index];
-          return _buildItem(context, item, group);
+          return _buildMenuItem(context, item, group);
         }
     );
   }

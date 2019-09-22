@@ -276,7 +276,7 @@ class App extends StatelessWidget {
       leading: Icon(Icons.settings),
       label: Text('Simple Switch 16'),
       initialValue: true,
-      enabled: false,
+      enabled: true,
       secondaryText: Text('Описание настройки'),
       onChanged: (value) => print('value: $value'),
     ),
