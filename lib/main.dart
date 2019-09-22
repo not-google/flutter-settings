@@ -313,7 +313,9 @@ class App extends StatelessWidget {
         Home.routeName: (context) => Home(),
         SettingsPage.routeName: (context) => SettingsPage(
           title: Text('Settings'),
-          groupBuilder: _groupBuilder,
+          body: SettingsMenu(
+            groupBuilder: _groupBuilder,
+          ),
           //builder: _buildPage,
         )
       },

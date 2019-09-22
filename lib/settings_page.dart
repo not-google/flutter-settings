@@ -14,18 +14,20 @@ class SettingsPage extends StatelessWidget {
   SettingsPage({
     Key key,
     @required this.title,
-    @required this.groupBuilder,
+    @required this.body,
     this.builder,
   }) :
-    assert(groupBuilder != null),
+    assert(body != null),
     super(key: key);
 
   static String routeName = '/settings';
   static String routeTitle = 'Settings';
 
   final Widget title;
+  final SettingsMenu body;
   final SettingsPageBuilder builder;
-  final SettingsGroupBuilder groupBuilder;
+
+  SettingsGroupBuilder get groupBuilder => body.groupBuilder;
 
   void _showSearch(context) {
     showSearch(

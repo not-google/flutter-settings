@@ -3,7 +3,7 @@ export 'types.dart';
 export 'choice.dart';
 export 'settings_page.dart';
 export 'settings_menu_item.dart';
-//export 'settings_menu.dart';
+export 'settings_menu.dart';
 //export 'settings_search_delegate.dart';
 //export 'single_choice.dart';
 //export 'slider_list_tile.dart';
