@@ -6,13 +6,13 @@ import 'settings_page.dart';
 class SettingsSearchSuggestion {
   SettingsSearchSuggestion({
     @required this.item,
-    this.parentWithPage,
+    this.page,
     this.parentsTitles,
   }) :
     assert(item != null);
 
   final SettingsMenuItem item;
-  final SettingsMenuItem parentWithPage;
+  final SettingsMenuItem page;
   final List<String> parentsTitles;
 }
 
@@ -28,7 +28,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   final Iterable<SettingsSearchSuggestion> _history = [];
 
   List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
-    SettingsMenuItem parentWithPage,
+    SettingsMenuItem page,
     SettingsMenuItem parent,
     List<SettingsSearchSuggestion> suggestions,
     List<String> parentsTitles
@@ -46,7 +46,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       if ((item.label?.data ?? '').startsWith(query)) {
         suggestions.add(
             SettingsSearchSuggestion(
-                parentWithPage: parentWithPage,
+                page: page,
                 item: item,
                 parentsTitles: parentsTitles
             )
@@ -63,7 +63,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         _getSuggestions(
             context,
             parent: item,
-            parentWithPage: isPage ? item : parentWithPage,
+            page: isPage ? item : page,
             suggestions: suggestions,
             parentsTitles: itemParentsTitles
         );
@@ -89,26 +89,30 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 
   Widget _buildPage(BuildContext context, SettingsSearchSuggestion suggestion) {
-    SettingsMenuItem parent = suggestion.parentWithPage;
-    bool hasParentPage = parent?.pageContentBuilder != null;
-    SettingsPageBuilder pageBuilder = hasParentPage
-        ? suggestion.parentWithPage.pageBuilder
-        : SettingsPage.pageBuilder;
+    bool hasPage = suggestion.page != null;
 
-    return pageBuilder(
-      context,
-      hasParentPage ? parent.label : null,
-      SettingsMenu(
-        groupBuilder: hasParentPage
-          ? parent.groupBuilder
-          : groupBuilder,
-        itemBuilder: (item) => item.copyWith(
+    if (hasPage) {
+      return suggestion.page
+        .copyWith(
           selectedId: suggestion.item.id,
           onSearch: onSearch
         )
-      ),
-      onSearch
-    );
+        .makeStateful(context)
+        .buildPage(context);
+    } else {
+      return SettingsPage.pageBuilder(
+        context,
+        null,
+        SettingsMenu(
+          groupBuilder: groupBuilder,
+          itemBuilder: (item) => item.copyWith(
+            selectedId: suggestion.item.id,
+            onSearch: onSearch
+          )
+        ),
+        onSearch
+      );
+    }
   }
 
   @override

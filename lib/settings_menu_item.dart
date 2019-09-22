@@ -128,17 +128,15 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   );
 
   Widget buildPage(BuildContext context) {
-    Widget title = label;
-    Widget body = pageContentBuilder(context, this);
     return (this.pageBuilder ?? SettingsPage.pageBuilder)(
         context,
-        title,
-        body,
+        label,
+        pageContentBuilder(context, this),
         onSearch
     );
   }
 
-  Widget buildStateful(BuildContext context) {
+  SettingsPatternBuilder makeStateful(BuildContext context) {
     ValueNotifier _notifier = ValueNotifier(value);
 
     void handleChanged(newValue) {
@@ -147,21 +145,24 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     }
 
     statefulBuilder(WidgetDetailBuilder<SettingsPatternBuilder> builder)
-      => (context, widget)
-      => ValueListenableBuilder(
-          valueListenable: _notifier,
-          builder: (context, newValue, _) => builder(
+    => (context, widget)
+    => ValueListenableBuilder(
+        valueListenable: _notifier,
+        builder: (context, newValue, _) => builder(
             context,
             widget.copyWith(value: newValue)
-          )
-      );
-
-    SettingsPatternBuilder widget = this.copyWith(
-      builder: statefulBuilder(builder),
-      controlBuilder: statefulBuilder(controlBuilder),
-      onChanged: handleChanged
+        )
     );
 
+    return this.copyWith(
+        builder: statefulBuilder(builder),
+        controlBuilder: statefulBuilder(controlBuilder),
+        onChanged: handleChanged
+    );
+  }
+
+  Widget buildStateful(BuildContext context) {
+    SettingsPatternBuilder widget = this.makeStateful(context);
     return widget.builder(context, widget);
   }
 
