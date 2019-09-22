@@ -47,39 +47,39 @@ class SettingsMenu extends SettingsMenuEntry {
     SettingsMenuItem item,
     List<SettingsMenuItem> group
   ) {
-    SettingsPatternBuilder widget = item.copyWith(
+    SettingsPatternBuilder menuItem = item.copyWith(
         showTopDivider: needShowTopDivider(
             context: context,
-            widget: item,
+            item: item,
             group: group,
             hideWhenFirst: isListView
         ),
         showBottomDivider: needShowBottomDivider(
             context: context,
-            widget: item,
+            item: item,
             group: group,
             hideWhenLast: isListView
         )
     );
 
     return itemBuilder != null
-        ? itemBuilder(widget).buildStateful(context)
-        : widget.buildStateful(context);
+        ? itemBuilder(menuItem).buildStateful(context)
+        : menuItem.buildStateful(context);
   }
 
   static bool needShowTopDivider({
     @required BuildContext context,
-    @required SettingsMenuItem widget,
+    @required SettingsMenuItem item,
     @required List<SettingsMenuItem> group,
     bool hideWhenFirst = false
   }) {
-    bool isNotSection = widget.pattern != SettingsPattern.section;
+    bool isNotSection = item.pattern != SettingsPattern.section;
     if (isNotSection) return false;
 
-    bool isFirst = widget == group.first;
+    bool isFirst = item == group.first;
     if (hideWhenFirst && isFirst) return false;
 
-    int itemIndex = group.indexOf(widget);
+    int itemIndex = group.indexOf(item);
     SettingsMenuItem previous = itemIndex > 0 ? group[itemIndex - 1] : null;
 
     bool isSectionPrevious = previous?.pattern == SettingsPattern.section;
@@ -100,14 +100,14 @@ class SettingsMenu extends SettingsMenuEntry {
 
   static bool needShowBottomDivider({
     @required BuildContext context,
-    @required SettingsMenuItem widget,
+    @required SettingsMenuItem item,
     @required List<SettingsMenuItem> group,
     bool hideWhenLast = false
   }) {
-    bool isNotSection = widget.pattern != SettingsPattern.section;
+    bool isNotSection = item.pattern != SettingsPattern.section;
     if (isNotSection) return false;
 
-    bool isLast = widget == group.last;
+    bool isLast = item == group.last;
     if (hideWhenLast && isLast) return false;
 
     return true;
@@ -116,7 +116,7 @@ class SettingsMenu extends SettingsMenuEntry {
   Widget _buildColumn(BuildContext context) {
     List<SettingsMenuItem> group = groupBuilder(context);
     return Column(
-      children: group.map((widget) => _buildMenuItem(context, widget, group)).toList(),
+      children: group.map((item) => _buildMenuItem(context, item, group)).toList(),
     );
   }
 

@@ -7,13 +7,13 @@ class SettingsSearchSuggestion {
   SettingsSearchSuggestion({
     @required this.item,
     this.page,
-    this.parentsTitles,
+    this.pathSegments,
   }) :
     assert(item != null);
 
   final SettingsMenuItem item;
   final SettingsMenuItem page;
-  final List<String> parentsTitles;
+  final List<String> pathSegments;
 }
 
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
@@ -31,16 +31,16 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     SettingsMenuItem page,
     SettingsMenuItem parent,
     List<SettingsSearchSuggestion> suggestions,
-    List<String> parentsTitles
+    List<String> pathSegments
   }) {
     List<SettingsMenuItem> data = parent != null
         ? parent.groupBuilder(context)
         : this.groupBuilder(context);
-    parentsTitles = parentsTitles ?? [];
+    pathSegments = pathSegments ?? [];
     suggestions = suggestions ?? [];
 
     data.forEach((item) {
-      List<String> itemParentsTitles;
+      List<String> itemPathSegments;
       bool isPage = item.pageContentBuilder != null;
 
       if ((item.label?.data ?? '').startsWith(query)) {
@@ -48,15 +48,15 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
             SettingsSearchSuggestion(
                 page: page,
                 item: item,
-                parentsTitles: parentsTitles
+                pathSegments: pathSegments
             )
         );
       }
 
       if (item.groupBuilder != null) {
         if (isPage) {
-          itemParentsTitles = []
-            ..addAll(parentsTitles)
+          itemPathSegments = []
+            ..addAll(pathSegments)
             ..add(item.label.data);
         }
 
@@ -65,7 +65,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
             parent: item,
             page: isPage ? item : page,
             suggestions: suggestions,
-            parentsTitles: itemParentsTitles
+            pathSegments: itemPathSegments
         );
       }
     });
@@ -97,7 +97,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
           selectedId: suggestion.item.id,
           onSearch: onSearch
         )
-        .makeStateful(context)
+        .makeStateful()
         .buildPage(context);
     } else {
       return SettingsPage.pageBuilder(
@@ -197,7 +197,7 @@ class _SettingsSearchSuggestionList extends StatelessWidget {
           ],
         ),
       ),
-      subtitle: Text(suggestion.parentsTitles.join(' > ')),
+      subtitle: Text(suggestion.pathSegments.join(' > ')),
       onTap: () => onSelected(suggestion),
     );
   }
