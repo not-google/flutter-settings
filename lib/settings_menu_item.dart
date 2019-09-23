@@ -18,9 +18,12 @@ import 'master_switch_list_tile.dart';
 import 'individual_switch.dart';
 import 'dependency.dart';
 
-typedef SettingsGroupBuilder<T> = List<SettingsPatternBuilder<T>> Function(BuildContext context);
-typedef SettingsGroupItemBuilder<T> = SettingsPatternBuilder Function(SettingsPatternBuilder item);
-typedef WidgetDetailBuilder<T> = Widget Function(BuildContext context, T widget);
+typedef SettingsGroupBuilder<T> = List<SettingsMenuItemState<T>> Function(BuildContext context);
+typedef SettingsGroupItemBuilder<T> = SettingsMenuItemState Function(SettingsMenuItemState item);
+typedef SettingsMenuItemStateBuilder = Widget Function(
+    BuildContext context,
+    SettingsMenuItemState widget
+);
 
 enum SettingsPattern {
   simpleSwitch,
@@ -38,8 +41,8 @@ enum SettingsPattern {
   dependency
 }
 
-class SettingsPatternBuilder<T> extends StatelessWidget {
-  SettingsPatternBuilder({
+class SettingsMenuItemState<T> extends StatelessWidget {
+  SettingsMenuItemState({
     Key key,
     this.id,
     this.label,
@@ -47,7 +50,6 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     @required this.initialValue,
     this.value,
     this.enabled = true,
-    this.dependencyEnabled = true,
     this.onChanged,
     this.onChangeStart,
     this.onChangeEnd,
@@ -69,15 +71,14 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   final String id;
   final Text label;
   final bool enabled;
-  final bool dependencyEnabled;
   final initialValue;
   final value;
   final onChanged;
   final onChangeStart;
   final onChangeEnd;
-  final WidgetDetailBuilder<SettingsPatternBuilder> builder;
-  final WidgetDetailBuilder<SettingsPatternBuilder> controlBuilder;
-  final WidgetDetailBuilder<SettingsPatternBuilder> pageContentBuilder;
+  final SettingsMenuItemStateBuilder builder;
+  final SettingsMenuItemStateBuilder controlBuilder;
+  final SettingsMenuItemStateBuilder pageContentBuilder;
   final SettingsPageRouteBuilder pageBuilder;
   final SettingsGroupBuilder groupBuilder;
   final bool controlSeparated;
@@ -88,21 +89,20 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   final SettingsPattern pattern;
 
   bool get selected => selectedId == id;
-  bool get isEnabled => enabled == false ? false : dependencyEnabled;
+  bool get isEnabled => enabled;
 
-  SettingsPatternBuilder copyWith({
+  SettingsMenuItemState copyWith({
     String id,
     Text label,
     bool enabled,
-    bool dependencyEnabled,
     initialValue,
     value,
     onChanged,
     onChangeStart,
     onChangeEnd,
-    WidgetDetailBuilder<SettingsPatternBuilder> builder,
-    WidgetDetailBuilder<SettingsPatternBuilder> controlBuilder,
-    WidgetDetailBuilder<SettingsPatternBuilder> pageContentBuilder,
+    SettingsMenuItemStateBuilder builder,
+    SettingsMenuItemStateBuilder controlBuilder,
+    SettingsMenuItemStateBuilder pageContentBuilder,
     SettingsPageRouteBuilder pageBuilder,
     SettingsGroupBuilder groupBuilder,
     bool controlSeparated,
@@ -111,11 +111,10 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     bool showTopDivider,
     bool showBottomDivider,
     SettingsPattern pattern
-  }) => SettingsPatternBuilder(
+  }) => SettingsMenuItemState(
       id: id ?? this.id,
       label: label ?? this.label,
       enabled: enabled ?? this.enabled,
-      dependencyEnabled: dependencyEnabled ?? this.dependencyEnabled,
       initialValue: initialValue ?? this.initialValue,
       value: value ?? this.value,
       onChanged: onChanged ?? this.onChanged,
@@ -134,7 +133,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
       pattern: pattern ?? this.pattern
   );
 
-  SettingsPatternBuilder makeStateful() {
+  SettingsMenuItemState makeStateful() {
     ValueNotifier _notifier = ValueNotifier(initialValue);
 
     void handleChanged(newValue) {
@@ -142,7 +141,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
       _notifier.value = newValue;
     }
 
-    statefulBuilder(WidgetDetailBuilder<SettingsPatternBuilder> builder)
+    statefulBuilder(SettingsMenuItemStateBuilder builder)
       => (context, widget)
       => ValueListenableBuilder(
         valueListenable: _notifier,
@@ -173,7 +172,23 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   Widget build(BuildContext context) => builder(context, this);
 }
 
-class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
+class SettingsMenuItem<T> extends SettingsMenuItemState<T> {
+  SettingsMenuItem.builder({
+    Key key,
+    @required String id,
+    @required T initialValue,
+    bool enabled = true,
+    ValueChanged<T> onChanged,
+    @required SettingsMenuItemStateBuilder builder
+  }) : super(
+    key: key,
+    id: id,
+    initialValue: initialValue,
+    enabled: enabled,
+    onChanged: onChanged,
+    builder: builder
+  );
+
   SettingsMenuItem.simpleSwitch({
     Key key,
     @required String id,
@@ -192,7 +207,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       subtitle: secondaryText,
       value: widget.value,
       selected: widget.selected,
-      onChanged: widget.isEnabled
+      onChanged: widget.enabled
         ? (widget.onChanged ?? (value) => null)
         : null
     ),
@@ -218,10 +233,10 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
         itemBuilder: (item) => item.copyWith(
           onShowSearch: widget.onShowSearch,
           selectedId: widget.selectedId,
-          enabled: widget.isEnabled
+          enabled: widget.enabled
         )
       ),
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
       showTopDivider: widget.showTopDivider ?? true,
       showBottomDivider: widget.showBottomDivider ?? true
     ),
@@ -259,7 +274,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
           )
         ),
         selected: widget.selected,
-        enabled: widget.isEnabled,
+        enabled: widget.enabled,
       );
     },
     controlBuilder: (context, widget) => SingleChoice<T>(
@@ -297,7 +312,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       controlBuilder: (context) => widget.controlBuilder(context, widget),
       choices: choices,
       value: widget.value,
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
       selected: widget.selected,
     ),
     controlBuilder: (context, widget) =>  MultipleChoice<T>(
@@ -345,9 +360,9 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       activeColor: activeColor,
       inactiveColor: inactiveColor,
       semanticFormatterCallback: semanticFormatterCallback,
-      onChanged: widget.isEnabled ? widget.onChanged : null,
-      onChangeStart: widget.isEnabled ? widget.onChangeStart : null,
-      onChangeEnd: widget.isEnabled ? widget.onChangeEnd : null,
+      onChanged: widget.enabled ? widget.onChanged : null,
+      onChangeStart: widget.enabled ? widget.onChangeStart : null,
+      onChangeEnd: widget.enabled ? widget.onChangeEnd : null,
     ),
     id: id,
     label: label,
@@ -390,7 +405,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       locale: locale,
       textDirection: textDirection,
       builder: builder,
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
       selected: widget.selected,
       onChanged: widget.onChanged,
     ),
@@ -421,7 +436,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       statusTextBuilder: statusTextBuilder,
       value: widget.value,
       builder: builder,
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
       selected: widget.selected,
       onChanged: widget.onChanged,
     ),
@@ -464,7 +479,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       locale: locale,
       textDirection: textDirection,
       builder: builder,
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
       selected: widget.selected,
       onChanged: widget.onChanged,
     ),
@@ -498,7 +513,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
         )
       ),
       selected: widget.selected,
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
     ),
     pageContentBuilder: (context, widget) => SettingsMenu(
       groupBuilder: groupBuilder,
@@ -537,7 +552,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       statusTextBuilder: statusTextBuilder,
       showSwitch: duplicateSwitch,
       value: widget.value,
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
       selected: widget.selected,
       onChanged: widget.onChanged,
       onTap: () => Navigator.of(context).push(
@@ -603,7 +618,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
         )
       ),
       selected: widget.selected,
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
     ),
     controlBuilder: (context, widget) => IndividualSwitch(
       value: widget.value,
@@ -647,7 +662,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
         )
       ),
       dependencyEnabled: widget.value,
-      enabled: widget.isEnabled,
+      enabled: widget.enabled,
       selected: widget.selected,
       onChanged: widget.onChanged,
     ),

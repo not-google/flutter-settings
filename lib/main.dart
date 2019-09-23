@@ -76,6 +76,15 @@ class App extends StatelessWidget {
       initialValue: true,
       onChanged: (value) => print('value: $value'),
       groupBuilder: (context) => <SettingsMenuItem>[
+        SettingsMenuItem.builder(
+          id: 'SETTINGS_BUILDER',
+          initialValue: 5,
+          builder: (context, widget) {
+            return ListTile(
+              title: Text(widget.enabled ? 'Enabled' : 'Disabled'),
+            );
+          }
+        ),
         SettingsMenuItem.simpleSwitch(
           id: 'SETTING_3.1',
           leading: Icon(Icons.settings),

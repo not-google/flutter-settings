@@ -47,7 +47,7 @@ class SettingsMenu extends SettingsMenuEntry {
     SettingsMenuItem item,
     List<SettingsMenuItem> group
   ) {
-    SettingsPatternBuilder menuItem = item.copyWith(
+    SettingsMenuItemState menuItem = item.copyWith(
         showTopDivider: needShowTopDivider(
             context: context,
             item: item,
