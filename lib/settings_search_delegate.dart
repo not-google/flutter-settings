@@ -19,11 +19,15 @@ class SettingsSearchSuggestion {
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
     @required this.groupBuilder,
+    @required this.title,
+    this.pageBuilder = SettingsPageRoute.pageBuilder,
     @required this.onShowSearch
   }) :
     assert(groupBuilder != null);
 
   final SettingsGroupBuilder groupBuilder;
+  final SettingsPageRouteBuilder pageBuilder;
+  final Widget title;
   final VoidCallback onShowSearch;
   final Iterable<SettingsSearchSuggestion> _history = [];
 
@@ -99,9 +103,9 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         .makeStateful()
         .buildPage(context);
     } else {
-      return SettingsPage.pageBuilder(
+      return pageBuilder(
         context,
-        null,
+        title,
         SettingsMenu(
           groupBuilder: groupBuilder,
           itemBuilder: (item) => item.copyWith(

@@ -311,15 +311,15 @@ class App extends StatelessWidget {
     return MaterialApp(
       routes: {
         Home.routeName: (context) => Home(),
-        SettingsPage.routeName: (context) => SettingsPage(
-          title: Text('Settings'),
+        SettingsPageRoute.routeName: (context) => SettingsPageRoute(
+          title: Text('Settings 1'),
           body: SettingsMenu(
             groupBuilder: _groupBuilder,
           ),
           //builder: _buildPage,
         )
       },
-      initialRoute: SettingsPage.routeName,
+      initialRoute: SettingsPageRoute.routeName,
       //theme: ThemeData.dark(),
     );
   }
@@ -334,7 +334,7 @@ class Home extends StatelessWidget {
       body: Center(
         child: FlatButton(
           child: Text('SHOW SETTINGS'),
-          onPressed: () => Navigator.pushNamed(context, SettingsPage.routeName),
+          onPressed: () => Navigator.pushNamed(context, SettingsPageRoute.routeName),
         ),
       ),
     );

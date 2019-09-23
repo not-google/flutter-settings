@@ -52,7 +52,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     this.onChangeStart,
     this.onChangeEnd,
     this.controlBuilder,
-    this.pageBuilder,
+    this.pageBuilder = SettingsPageRoute.pageBuilder,
     this.pageContentBuilder,
     this.groupBuilder,
     this.controlSeparated = false,
@@ -62,6 +62,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     this.showBottomDivider,
     @required this.pattern,
   }) :
+    assert(pageBuilder != null),
     assert(builder != null),
     super(key: key);
 
@@ -77,7 +78,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   final WidgetDetailBuilder<SettingsPatternBuilder> builder;
   final WidgetDetailBuilder<SettingsPatternBuilder> controlBuilder;
   final WidgetDetailBuilder<SettingsPatternBuilder> pageContentBuilder;
-  final SettingsPageBuilder pageBuilder;
+  final SettingsPageRouteBuilder pageBuilder;
   final SettingsGroupBuilder groupBuilder;
   final bool controlSeparated;
   final String selectedId;
@@ -102,7 +103,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     WidgetDetailBuilder<SettingsPatternBuilder> builder,
     WidgetDetailBuilder<SettingsPatternBuilder> controlBuilder,
     WidgetDetailBuilder<SettingsPatternBuilder> pageContentBuilder,
-    SettingsPageBuilder pageBuilder,
+    SettingsPageRouteBuilder pageBuilder,
     SettingsGroupBuilder groupBuilder,
     bool controlSeparated,
     String selectedId,
@@ -160,7 +161,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   }
 
   Widget buildPage(BuildContext context) {
-    return (this.pageBuilder ?? SettingsPage.pageBuilder)(
+    return pageBuilder(
         context,
         label,
         pageContentBuilder(context, this),
@@ -237,7 +238,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     ValueBuilder<Choice<T>> statusTextBuilder,
     @required List<Choice<T>> choices,
     @required T initialValue,
-    SettingsPageBuilder pageBuilder,
+    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
     bool enabled = true,
     ValueChanged<T> onChanged
   }) : super(
@@ -482,7 +483,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     Widget leading,
     Widget secondaryText,
     @required SettingsGroupBuilder groupBuilder,
-    @required SettingsPageBuilder pageBuilder,
+    SettingsPageRouteBuilder pageBuilder  = SettingsPageRoute.pageBuilder,
     bool enabled = true,
   }) : super(
     key: key,
@@ -527,7 +528,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     @required bool initialValue,
     bool enabled = true,
     ValueChanged<bool> onChanged,
-    @required SettingsPageBuilder pageBuilder
+    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder
   }) : super(
     key: key,
     builder: (context, widget) => MasterSwitchListTile(
@@ -583,7 +584,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     @required Widget description,
     @required bool initialValue,
     bool enabled = true,
-    @required SettingsPageBuilder pageBuilder,
+    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
     ValueChanged<bool> onChanged
   }) : super(
     key: key,

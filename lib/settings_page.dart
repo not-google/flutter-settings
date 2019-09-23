@@ -3,19 +3,19 @@ import 'settings_menu.dart';
 import 'settings_menu_item.dart';
 import 'settings_search_delegate.dart';
 
-typedef SettingsPageBuilder<T> = Widget Function(
+typedef SettingsPageRouteBuilder<T> = Widget Function(
     BuildContext context,
     Widget title,
     Widget body,
     VoidCallback onShowSearch,
 );
 
-class SettingsPage extends StatelessWidget {
-  SettingsPage({
+class SettingsPageRoute extends StatelessWidget {
+  SettingsPageRoute({
     Key key,
     @required this.title,
     @required this.body,
-    this.builder,
+    this.builder = SettingsPageRoute.pageBuilder,
     this.searchDelegate
   }) :
     assert(body != null),
@@ -26,9 +26,10 @@ class SettingsPage extends StatelessWidget {
 
   final Widget title;
   final SettingsMenu body;
-  final SettingsPageBuilder builder;
+  final SettingsPageRouteBuilder builder;
   final SettingsSearchDelegate searchDelegate;
 
+  Widget get _title => title ?? Text(routeTitle);
   SettingsMenu get _settingsMenu => body;
   SettingsGroupBuilder get _groupBuilder => _settingsMenu.groupBuilder;
 
@@ -37,6 +38,8 @@ class SettingsPage extends StatelessWidget {
       context: context,
       delegate: searchDelegate ?? SettingsSearchDelegate(
         groupBuilder: _groupBuilder,
+        pageBuilder: pageBuilder,
+        title: _title,
         onShowSearch: () => _showSearch(context)
       )
     );
@@ -77,9 +80,9 @@ class SettingsPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => (builder ?? pageBuilder)(
+  Widget build(BuildContext context) => builder(
       context,
-      title ?? Text(routeTitle),
+      _title,
       _buildBody(context),
       () => _showSearch(context)
   );
