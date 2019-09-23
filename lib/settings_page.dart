@@ -49,7 +49,7 @@ class SettingsPageRoute extends StatelessWidget {
     return SettingsMenu(
       groupBuilder: _groupBuilder,
       itemBuilder: (item) {
-        SettingsMenuItemState _item = _settingsMenu.itemBuilder != null
+        SettingsMenuItemBuilder _item = _settingsMenu.itemBuilder != null
           ? _settingsMenu.itemBuilder(item) : item;
 
         return _item.copyWith(

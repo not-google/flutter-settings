@@ -18,11 +18,12 @@ import 'master_switch_list_tile.dart';
 import 'individual_switch.dart';
 import 'dependency.dart';
 
-typedef SettingsGroupBuilder<T> = List<SettingsMenuItemState<T>> Function(BuildContext context);
-typedef SettingsGroupItemBuilder<T> = SettingsMenuItemState Function(SettingsMenuItemState item);
+typedef SettingsGroupBuilder<T> = List<SettingsMenuItemBuilder<T>> Function(BuildContext context);
+typedef SettingsGroupItemBuilder<T> = SettingsMenuItemBuilder Function(SettingsMenuItemBuilder item);
+typedef WidgetStateBuilder<T> = Widget Function(BuildContext context, T widget);
 typedef SettingsMenuItemStateBuilder = Widget Function(
     BuildContext context,
-    SettingsMenuItemState widget
+    SettingsMenuItemBuilder widget
 );
 
 enum SettingsPattern {
@@ -41,8 +42,8 @@ enum SettingsPattern {
   dependency
 }
 
-class SettingsMenuItemState<T> extends StatelessWidget {
-  SettingsMenuItemState({
+class SettingsMenuItemBuilder<T> extends StatelessWidget {
+  SettingsMenuItemBuilder({
     Key key,
     this.id,
     this.label,
@@ -51,8 +52,6 @@ class SettingsMenuItemState<T> extends StatelessWidget {
     this.value,
     this.enabled = true,
     this.onChanged,
-    this.onChangeStart,
-    this.onChangeEnd,
     this.controlBuilder,
     this.pageBuilder = SettingsPageRoute.pageBuilder,
     this.pageContentBuilder,
@@ -74,8 +73,6 @@ class SettingsMenuItemState<T> extends StatelessWidget {
   final initialValue;
   final value;
   final onChanged;
-  final onChangeStart;
-  final onChangeEnd;
   final SettingsMenuItemStateBuilder builder;
   final SettingsMenuItemStateBuilder controlBuilder;
   final SettingsMenuItemStateBuilder pageContentBuilder;
@@ -89,17 +86,14 @@ class SettingsMenuItemState<T> extends StatelessWidget {
   final SettingsPattern pattern;
 
   bool get selected => selectedId == id;
-  bool get isEnabled => enabled;
 
-  SettingsMenuItemState copyWith({
+  SettingsMenuItemBuilder copyWith({
     String id,
     Text label,
     bool enabled,
     initialValue,
     value,
     onChanged,
-    onChangeStart,
-    onChangeEnd,
     SettingsMenuItemStateBuilder builder,
     SettingsMenuItemStateBuilder controlBuilder,
     SettingsMenuItemStateBuilder pageContentBuilder,
@@ -111,15 +105,13 @@ class SettingsMenuItemState<T> extends StatelessWidget {
     bool showTopDivider,
     bool showBottomDivider,
     SettingsPattern pattern
-  }) => SettingsMenuItemState(
+  }) => SettingsMenuItemBuilder(
       id: id ?? this.id,
       label: label ?? this.label,
       enabled: enabled ?? this.enabled,
       initialValue: initialValue ?? this.initialValue,
       value: value ?? this.value,
       onChanged: onChanged ?? this.onChanged,
-      onChangeStart: onChangeStart ?? this.onChangeStart,
-      onChangeEnd: onChangeEnd ?? this.onChangeEnd,
       builder: builder ?? this.builder,
       controlBuilder: controlBuilder ?? this.controlBuilder,
       pageContentBuilder: pageContentBuilder ?? this.pageContentBuilder,
@@ -133,7 +125,7 @@ class SettingsMenuItemState<T> extends StatelessWidget {
       pattern: pattern ?? this.pattern
   );
 
-  SettingsMenuItemState makeStateful() {
+  SettingsMenuItemBuilder makeStateful() {
     ValueNotifier _notifier = ValueNotifier(initialValue);
 
     void handleChanged(newValue) {
@@ -172,17 +164,23 @@ class SettingsMenuItemState<T> extends StatelessWidget {
   Widget build(BuildContext context) => builder(context, this);
 }
 
-class SettingsMenuItem<T> extends SettingsMenuItemState<T> {
+class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
   SettingsMenuItem.builder({
     Key key,
     @required String id,
+    @required SettingsMenuItemStateBuilder builder,
+    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
+    SettingsMenuItemStateBuilder controlBuilder,
+    SettingsMenuItemStateBuilder pageContentBuilder,
+    SettingsGroupBuilder groupBuilder,
+    Text label,
     @required T initialValue,
     bool enabled = true,
     ValueChanged<T> onChanged,
-    @required SettingsMenuItemStateBuilder builder
   }) : super(
     key: key,
     id: id,
+    label: label,
     initialValue: initialValue,
     enabled: enabled,
     onChanged: onChanged,
@@ -361,16 +359,14 @@ class SettingsMenuItem<T> extends SettingsMenuItemState<T> {
       inactiveColor: inactiveColor,
       semanticFormatterCallback: semanticFormatterCallback,
       onChanged: widget.enabled ? widget.onChanged : null,
-      onChangeStart: widget.enabled ? widget.onChangeStart : null,
-      onChangeEnd: widget.enabled ? widget.onChangeEnd : null,
+      onChangeStart: widget.enabled ? onChangeStart : null,
+      onChangeEnd: widget.enabled ? onChangeEnd : null,
     ),
     id: id,
     label: label,
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    onChangeStart: onChangeStart,
-    onChangeEnd: onChangeEnd,
     pattern: SettingsPattern.slider
   );
 
@@ -656,7 +652,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemState<T> {
       dependentBuilder: (context, dependencyEnabled) => SettingsMenu.column(
         groupBuilder: groupBuilder,
         itemBuilder: (item) => item.copyWith(
-          enabled: dependencyEnabled,
+          enabled: item.enabled == false ? false : dependencyEnabled,
           selectedId: widget.selectedId,
           onShowSearch: widget.onShowSearch,
         )

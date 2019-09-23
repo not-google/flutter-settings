@@ -78,10 +78,13 @@ class App extends StatelessWidget {
       groupBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.builder(
           id: 'SETTINGS_BUILDER',
+          label: Text('Builder'),
           initialValue: 5,
           builder: (context, widget) {
             return ListTile(
-              title: Text(widget.enabled ? 'Enabled' : 'Disabled'),
+              title: widget.label,
+              subtitle: Text(widget.enabled ? 'Enabled' : 'Disabled'),
+              selected: widget.selected,
             );
           }
         ),
