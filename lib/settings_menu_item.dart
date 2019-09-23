@@ -56,11 +56,10 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
     this.pageBuilder = SettingsPageRoute.pageBuilder,
     this.pageContentBuilder,
     this.groupBuilder,
-    this.controlSeparated = false,
     this.selectedId,
     this.onShowSearch,
-    this.showTopDivider,
-    this.showBottomDivider,
+    this.showTopDivider = true,
+    this.showBottomDivider = true,
     @required this.pattern,
   }) :
     assert(pageBuilder != null),
@@ -78,7 +77,6 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
   final SettingsMenuItemStateBuilder pageContentBuilder;
   final SettingsPageRouteBuilder pageBuilder;
   final SettingsGroupBuilder groupBuilder;
-  final bool controlSeparated;
   final String selectedId;
   final VoidCallback onShowSearch;
   final bool showTopDivider;
@@ -99,7 +97,6 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
     SettingsMenuItemStateBuilder pageContentBuilder,
     SettingsPageRouteBuilder pageBuilder,
     SettingsGroupBuilder groupBuilder,
-    bool controlSeparated,
     String selectedId,
     VoidCallback onShowSearch,
     bool showTopDivider,
@@ -117,7 +114,6 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
       pageContentBuilder: pageContentBuilder ?? this.pageContentBuilder,
       pageBuilder: pageBuilder ?? this.pageBuilder,
       groupBuilder: groupBuilder ?? this.groupBuilder,
-      controlSeparated: controlSeparated ?? this.controlSeparated,
       selectedId: selectedId ?? this.selectedId,
       onShowSearch: onShowSearch ?? this.onShowSearch,
       showTopDivider: showTopDivider ?? this.showTopDivider,
@@ -235,8 +231,8 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
         )
       ),
       enabled: widget.enabled,
-      showTopDivider: widget.showTopDivider ?? true,
-      showBottomDivider: widget.showBottomDivider ?? true
+      showTopDivider: widget.showTopDivider,
+      showBottomDivider: widget.showBottomDivider
     ),
     enabled: enabled,
     groupBuilder: groupBuilder,
@@ -287,7 +283,6 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    controlSeparated: true,
     pattern: SettingsPattern.singleChoice
   );
 
@@ -323,7 +318,6 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    controlSeparated: true,
     pattern: SettingsPattern.multipleChoice
   );
 
@@ -583,7 +577,6 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     initialValue: initialValue,
     onChanged: onChanged,
     groupBuilder: groupBuilder,
-    controlSeparated: true,
     pattern: SettingsPattern.masterSwitch
   );
 
@@ -628,7 +621,6 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     enabled: enabled,
     initialValue: initialValue,
     onChanged: onChanged,
-    controlSeparated: true,
     pattern: SettingsPattern.individualSwitch
   );
 

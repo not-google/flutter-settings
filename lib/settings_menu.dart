@@ -85,13 +85,14 @@ class SettingsMenu extends SettingsMenuEntry {
     bool isSectionPrevious = previous?.pattern == SettingsPattern.section;
     if (isSectionPrevious) return false;
 
-    bool isPageLinkPrevious = previous?.pageBuilder != null;
+    bool isPageLinkPrevious = previous?.pageContentBuilder != null;
     if (isPageLinkPrevious) return true;
 
     bool isNotEmptyPrevious = previous?.groupBuilder != null;
     if (isNotEmptyPrevious) {
       List<SettingsMenuItem> previousGroup = previous.groupBuilder(context);
       bool isSectionLastPreviousItem = previousGroup?.last?.pattern == SettingsPattern.section;
+
       if (isSectionLastPreviousItem) return false;
     }
 
