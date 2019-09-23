@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'settings_menu.dart';
-import 'settings_menu_item.dart' show SettingsGroupBuilder;
+import 'settings_menu_item.dart';
 import 'settings_search_delegate.dart';
 
 typedef SettingsPageBuilder<T> = Widget Function(
     BuildContext context,
     Widget title,
     Widget body,
-    VoidCallback onSearch,
+    VoidCallback onShowSearch,
 );
 
 class SettingsPage extends StatelessWidget {
@@ -16,6 +16,7 @@ class SettingsPage extends StatelessWidget {
     @required this.title,
     @required this.body,
     this.builder,
+    this.searchDelegate
   }) :
     assert(body != null),
     super(key: key);
@@ -26,25 +27,32 @@ class SettingsPage extends StatelessWidget {
   final Widget title;
   final SettingsMenu body;
   final SettingsPageBuilder builder;
+  final SettingsSearchDelegate searchDelegate;
 
-  SettingsGroupBuilder get groupBuilder => body.groupBuilder;
+  SettingsMenu get _settingsMenu => body;
+  SettingsGroupBuilder get _groupBuilder => _settingsMenu.groupBuilder;
 
   void _showSearch(context) {
     showSearch(
       context: context,
-      delegate: SettingsSearchDelegate(
-        groupBuilder: groupBuilder,
-        onSearch: () => _showSearch(context)
+      delegate: searchDelegate ?? SettingsSearchDelegate(
+        groupBuilder: _groupBuilder,
+        onShowSearch: () => _showSearch(context)
       )
     );
   }
 
   Widget _buildBody(BuildContext context) {
     return SettingsMenu(
-      groupBuilder: groupBuilder,
-      itemBuilder: (item) => item.copyWith(
-        onSearch: () => _showSearch(context)
-      )
+      groupBuilder: _groupBuilder,
+      itemBuilder: (item) {
+        SettingsPatternBuilder _item = _settingsMenu.itemBuilder != null
+          ? _settingsMenu.itemBuilder(item) : item;
+
+        return _item.copyWith(
+          onShowSearch: () => _showSearch(context)
+        );
+      }
     );
   }
 
@@ -52,7 +60,7 @@ class SettingsPage extends StatelessWidget {
     BuildContext context,
     Widget title,
     Widget body,
-    VoidCallback onSearch
+    VoidCallback onShowSearch
   ) {
     return Scaffold(
       appBar: AppBar(
@@ -60,7 +68,7 @@ class SettingsPage extends StatelessWidget {
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: onSearch
+            onPressed: onShowSearch
           ),
         ],
       ),
@@ -73,6 +81,6 @@ class SettingsPage extends StatelessWidget {
       context,
       title ?? Text(routeTitle),
       _buildBody(context),
-          () => _showSearch(context)
+      () => _showSearch(context)
   );
 }

@@ -44,7 +44,8 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     this.id,
     this.label,
     @required this.builder,
-    @required this.value,
+    @required this.initialValue,
+    this.value,
     this.enabled = true,
     this.dependencyEnabled = true,
     this.onChanged,
@@ -56,7 +57,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     this.groupBuilder,
     this.controlSeparated = false,
     this.selectedId,
-    this.onSearch,
+    this.onShowSearch,
     this.showTopDivider,
     this.showBottomDivider,
     @required this.pattern,
@@ -68,6 +69,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   final Text label;
   final bool enabled;
   final bool dependencyEnabled;
+  final initialValue;
   final value;
   final onChanged;
   final onChangeStart;
@@ -79,7 +81,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
   final SettingsGroupBuilder groupBuilder;
   final bool controlSeparated;
   final String selectedId;
-  final VoidCallback onSearch;
+  final VoidCallback onShowSearch;
   final bool showTopDivider;
   final bool showBottomDivider;
   final SettingsPattern pattern;
@@ -92,6 +94,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     Text label,
     bool enabled,
     bool dependencyEnabled,
+    initialValue,
     value,
     onChanged,
     onChangeStart,
@@ -103,7 +106,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
     SettingsGroupBuilder groupBuilder,
     bool controlSeparated,
     String selectedId,
-    VoidCallback onSearch,
+    VoidCallback onShowSearch,
     bool showTopDivider,
     bool showBottomDivider,
     SettingsPattern pattern
@@ -112,6 +115,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
       label: label ?? this.label,
       enabled: enabled ?? this.enabled,
       dependencyEnabled: dependencyEnabled ?? this.dependencyEnabled,
+      initialValue: initialValue ?? this.initialValue,
       value: value ?? this.value,
       onChanged: onChanged ?? this.onChanged,
       onChangeStart: onChangeStart ?? this.onChangeStart,
@@ -123,14 +127,14 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
       groupBuilder: groupBuilder ?? this.groupBuilder,
       controlSeparated: controlSeparated ?? this.controlSeparated,
       selectedId: selectedId ?? this.selectedId,
-      onSearch: onSearch ?? this.onSearch,
+      onShowSearch: onShowSearch ?? this.onShowSearch,
       showTopDivider: showTopDivider ?? this.showTopDivider,
       showBottomDivider: showBottomDivider ?? this.showBottomDivider,
       pattern: pattern ?? this.pattern
   );
 
   SettingsPatternBuilder makeStateful() {
-    ValueNotifier _notifier = ValueNotifier(value);
+    ValueNotifier _notifier = ValueNotifier(initialValue);
 
     void handleChanged(newValue) {
       if (onChanged != null) onChanged(newValue);
@@ -160,7 +164,7 @@ class SettingsPatternBuilder<T> extends StatelessWidget {
         context,
         label,
         pageContentBuilder(context, this),
-        onSearch
+        onShowSearch
     );
   }
 
@@ -194,7 +198,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     pattern: SettingsPattern.simpleSwitch
   );
@@ -211,7 +215,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       content: SettingsMenu.column(
         groupBuilder: groupBuilder,
         itemBuilder: (item) => item.copyWith(
-          onSearch: widget.onSearch,
+          onShowSearch: widget.onShowSearch,
           selectedId: widget.selectedId,
           enabled: widget.isEnabled
         )
@@ -267,7 +271,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     controlSeparated: true,
     pattern: SettingsPattern.singleChoice
@@ -303,7 +307,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     controlSeparated: true,
     pattern: SettingsPattern.multipleChoice
@@ -347,7 +351,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     onChangeStart: onChangeStart,
     onChangeEnd: onChangeEnd,
@@ -392,7 +396,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     pattern: SettingsPattern.date
   );
@@ -423,7 +427,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     pattern: SettingsPattern.time
   );
@@ -466,7 +470,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     pattern: SettingsPattern.dateTime
   );
@@ -498,7 +502,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     pageContentBuilder: (context, widget) => SettingsMenu(
       groupBuilder: groupBuilder,
       itemBuilder: (item) => item.copyWith(
-        onSearch: widget.onSearch,
+        onShowSearch: widget.onShowSearch,
         selectedId: widget.selectedId
       )
     ),
@@ -548,7 +552,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
       activeContentBuilder: (context) => SettingsMenu(
         groupBuilder: groupBuilder,
         itemBuilder: (item) => item.copyWith(
-          onSearch: widget.onSearch,
+          onShowSearch: widget.onShowSearch,
           selectedId: widget.selectedId
         ),
       ),
@@ -564,7 +568,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     groupBuilder: groupBuilder,
     controlSeparated: true,
@@ -610,7 +614,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     controlSeparated: true,
     pattern: SettingsPattern.individualSwitch
@@ -638,7 +642,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
         itemBuilder: (item) => item.copyWith(
           enabled: dependencyEnabled,
           selectedId: widget.selectedId,
-          onSearch: widget.onSearch,
+          onShowSearch: widget.onShowSearch,
         )
       ),
       dependencyEnabled: widget.value,
@@ -649,7 +653,7 @@ class SettingsMenuItem<T> extends SettingsPatternBuilder<T> {
     id: id,
     label: label,
     enabled: enabled,
-    value: initialValue,
+    initialValue: initialValue,
     onChanged: onChanged,
     groupBuilder: groupBuilder,
     pattern: SettingsPattern.dependency

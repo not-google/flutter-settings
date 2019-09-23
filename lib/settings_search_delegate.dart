@@ -19,12 +19,12 @@ class SettingsSearchSuggestion {
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
     @required this.groupBuilder,
-    this.onSearch
+    @required this.onShowSearch
   }) :
     assert(groupBuilder != null);
 
   final SettingsGroupBuilder groupBuilder;
-  final VoidCallback onSearch;
+  final VoidCallback onShowSearch;
   final Iterable<SettingsSearchSuggestion> _history = [];
 
   List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
@@ -42,8 +42,8 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     data.forEach((item) {
       List<String> itemPathSegments;
       bool isPage = item.pageContentBuilder != null;
-
-      if ((item.label?.data ?? '').startsWith(query)) {
+      bool hasMatch = _HighlightedText.hasMatch(item.label?.data, query);
+      if (hasMatch) {
         suggestions.add(
             SettingsSearchSuggestion(
                 page: page,
@@ -73,7 +73,6 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     return suggestions;
   }
 
-
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
@@ -95,7 +94,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       return suggestion.page
         .copyWith(
           selectedId: suggestion.item.id,
-          onSearch: onSearch
+          onShowSearch: onShowSearch
         )
         .makeStateful()
         .buildPage(context);
@@ -107,10 +106,10 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
           groupBuilder: groupBuilder,
           itemBuilder: (item) => item.copyWith(
             selectedId: suggestion.item.id,
-            onSearch: onSearch
+            onShowSearch: onShowSearch
           )
         ),
-        onSearch
+        onShowSearch
       );
     }
   }
@@ -137,7 +136,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 
   @override
-  Widget buildResults(BuildContext context) => null;
+  Widget buildResults(BuildContext context) => buildSuggestions(context);
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -180,22 +179,11 @@ class _SettingsSearchSuggestionList extends StatelessWidget {
   Widget _buildItem(BuildContext context, int index) {
     final SettingsSearchSuggestion suggestion = suggestions.elementAt(index);
     final String label = suggestion.item.label.data;
-    final ThemeData theme = Theme.of(context);
     return ListTile(
       leading: query.isEmpty ? const Icon(Icons.history) : const Icon(null),
-      title: RichText(
-        text: TextSpan(
-          text: label.substring(0, query.length),
-          style: theme.textTheme.subhead.copyWith(
-              fontWeight: FontWeight.bold
-          ),
-          children: <TextSpan>[
-            TextSpan(
-              text: label.substring(query.length),
-              style: theme.textTheme.subhead,
-            ),
-          ],
-        ),
+      title: _HighlightedText(
+        text: label,
+        highlight: query,
       ),
       subtitle: Text(suggestion.pathSegments.join(' > ')),
       onTap: () => onSelected(suggestion),
@@ -207,6 +195,97 @@ class _SettingsSearchSuggestionList extends StatelessWidget {
     return ListView.builder(
       itemCount: suggestions.length,
       itemBuilder: _buildItem,
+    );
+  }
+}
+
+class _HighlightedText extends StatelessWidget {
+  _HighlightedText({
+    Key key,
+    this.text,
+    this.highlight,
+    this.style,
+    this.highlightStyle
+  }) :
+    super(key: key);
+
+  final String text;
+  final TextStyle style;
+  final String highlight;
+  final TextStyle highlightStyle;
+
+  TextSpan _buildMatch(BuildContext context, String text) {
+    return TextSpan(
+      text: text,
+      style: highlightStyle ?? TextStyle(
+        fontWeight: FontWeight.bold
+      )
+    );
+  }
+
+  TextSpan _buildNonMatch(BuildContext context, String text) {
+    return TextSpan(text: text);
+  }
+
+  TextStyle _getStyle(context) {
+    return style ?? Theme.of(context).textTheme.subhead;
+  }
+
+  static bool get _caseSensitive => false;
+  static bool get _multiLine => true;
+
+  RegExp get _regExp => RegExp(
+      highlight,
+      caseSensitive: _caseSensitive,
+      multiLine: _multiLine
+  );
+
+  static bool hasMatch(String text, String query) {
+    if (text == null || query == null) return false;
+
+    return RegExp(
+        query,
+        caseSensitive: _caseSensitive,
+        multiLine: _multiLine
+    ).hasMatch(text);
+  }
+
+  TextSpan _buildHighlighted(BuildContext context) {
+    if (highlight == null) return TextSpan(
+      text: text,
+      style: _getStyle(context)
+    );
+
+    RegExp splitter = _regExp;
+    List<TextSpan> children = [];
+
+    text.splitMapJoin(
+        splitter,
+        onMatch: (match) {
+          String matchText = match.group(0);
+          children.add(
+              _buildMatch(context, matchText)
+          );
+          return matchText;
+        },
+        onNonMatch: (nonMatchText) {
+          children.add(
+              _buildNonMatch(context, nonMatchText)
+          );
+          return nonMatchText;
+        }
+    );
+
+    return TextSpan(
+      children: children,
+      style: _getStyle(context)
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: _buildHighlighted(context),
     );
   }
 }

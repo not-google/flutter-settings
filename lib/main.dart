@@ -286,7 +286,7 @@ class App extends StatelessWidget {
     BuildContext context,
     Widget title,
     Widget body,
-    VoidCallback onSearch
+    VoidCallback onShowSearch
   ) {
     return Scaffold(
       appBar: AppBar(
@@ -294,7 +294,7 @@ class App extends StatelessWidget {
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: onSearch
+            onPressed: onShowSearch
           ),
           IconButton(
             icon: Icon(Icons.help),
@@ -320,7 +320,7 @@ class App extends StatelessWidget {
         )
       },
       initialRoute: SettingsPage.routeName,
-      theme: ThemeData.dark(),
+      //theme: ThemeData.dark(),
     );
   }
 }
