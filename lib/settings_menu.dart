@@ -60,11 +60,11 @@ class SettingsMenu extends SettingsMenuEntry {
             group: group,
             hideWhenLast: isListView
         )
-    );
+    ).makeStateful();
 
     return itemBuilder != null
-        ? itemBuilder(menuItem).buildStateful(context)
-        : menuItem.buildStateful(context);
+        ? itemBuilder(menuItem)
+        : menuItem;
   }
 
   static bool needShowTopDivider({
