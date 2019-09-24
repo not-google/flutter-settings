@@ -5,7 +5,7 @@ import 'choice.dart';
 
 const double _kListTileHeight = 56.0;
 
-class MultipleChoiceListTile<T> extends StatelessWidget {
+class MultipleChoiceListTile extends StatelessWidget {
   MultipleChoiceListTile({
     Key key,
     this.leading,
@@ -20,16 +20,17 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
     assert(title != null),
     assert(controlBuilder != null),
     assert(choices != null),
+    assert(value != null),
     assert(enabled != null),
     assert(selected != null),
     super(key: key);
 
   final Widget leading;
   final Widget title;
-  final ValueBuilder<List<Choice<T>>> statusTextBuilder;
+  final ValueBuilder<List<Choice>> statusTextBuilder;
   final WidgetBuilder controlBuilder;
-  final List<Choice<T>> choices;
-  final List<T> value;
+  final List<Choice> choices;
+  final List<String> value;
   final bool enabled;
   final bool selected;
 
@@ -45,7 +46,7 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
   }
 
   Widget _buildStatusText(BuildContext context) {
-    List<Choice<T>> checkedChoices = choices.where(
+    List<Choice> checkedChoices = choices.where(
       (choice) => value.contains(choice.value)
     ).toList();
 
@@ -53,7 +54,7 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
       return statusTextBuilder(context, checkedChoices);
     } else {
       String subtitle = checkedChoices.map(
-              (choice) => choice.title.data
+        (choice) => choice.title.data
       ).join(', ');
       return Text(subtitle);
     }

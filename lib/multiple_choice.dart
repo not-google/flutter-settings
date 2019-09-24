@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'choice.dart';
 
-class MultipleChoice<T> extends StatelessWidget {
+class MultipleChoice extends StatelessWidget {
   MultipleChoice({
     Key key,
     @required this.choices,
@@ -11,9 +11,9 @@ class MultipleChoice<T> extends StatelessWidget {
     assert(choices != null),
     super(key: key);
 
-  final List<Choice<T>> choices;
-  final List<T> value;
-  final ValueChanged<List<T>> onChanged;
+  final List<Choice> choices;
+  final List<String> value;
+  final ValueChanged<List<String>> onChanged;
 
   Widget _buildCheckboxListTile(BuildContext context, int index) {
     Choice option = choices[index];
@@ -23,7 +23,7 @@ class MultipleChoice<T> extends StatelessWidget {
         subtitle: option.subtitle,
         value: checked,
         onChanged: (bool checked) {
-          List<T> _value = []..addAll(value);
+          List<String> _value = []..addAll(value);
           checked ? _value.add(option.value) : _value.remove(option.value);
           if (onChanged != null) onChanged(_value);
         }

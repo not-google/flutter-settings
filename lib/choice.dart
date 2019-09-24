@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Choice<T> {
+class Choice {
   Choice({
     @required this.title,
     this.subtitle,
@@ -9,5 +9,5 @@ class Choice<T> {
 
   final Text title;
   final Widget subtitle;
-  final T value;
+  final String value;
 }

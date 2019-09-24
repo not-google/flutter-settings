@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'choice.dart';
 
-class SingleChoice<T> extends StatelessWidget {
+class SingleChoice extends StatelessWidget {
   SingleChoice({
     Key key,
     @required this.choices,
@@ -12,13 +12,13 @@ class SingleChoice<T> extends StatelessWidget {
     assert(choices != null),
     super(key: key);
 
-  final List<Choice<T>> choices;
-  final T value;
-  final ValueChanged<T> onChanged;
+  final List<Choice> choices;
+  final String value;
+  final ValueChanged<String> onChanged;
 
   Widget _buildRadioListTile(BuildContext context, int index) {
     Choice option = choices[index];
-    return RadioListTile<T>(
+    return RadioListTile<String>(
       secondary: Visibility(
         visible: false,
         child: CircleAvatar()

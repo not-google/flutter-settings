@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_menu_item.dart';
+import 'settings.dart';
 
 enum SettingsMenuType {
   column,
   listView
 }
 
-abstract class SettingsMenuEntry extends StatelessWidget {
+abstract class SettingsMenuEntry extends StatefulWidget {
   SettingsMenuEntry({
     Key key,
     @required this.type
@@ -14,6 +16,7 @@ abstract class SettingsMenuEntry extends StatelessWidget {
 
   final SettingsMenuType type;
 }
+
 class SettingsMenu extends SettingsMenuEntry {
   SettingsMenu({
     Key key,
@@ -41,31 +44,6 @@ class SettingsMenu extends SettingsMenuEntry {
   final SettingsGroupItemBuilder itemBuilder;
 
   bool get isListView => type == SettingsMenuType.listView;
-
-  Widget _buildMenuItem(
-    BuildContext context,
-    SettingsMenuItem item,
-    List<SettingsMenuItem> group
-  ) {
-    SettingsMenuItemBuilder menuItem = item.copyWith(
-        showTopDivider: needShowTopDivider(
-            context: context,
-            item: item,
-            group: group,
-            hideWhenFirst: isListView
-        ),
-        showBottomDivider: needShowBottomDivider(
-            context: context,
-            item: item,
-            group: group,
-            hideWhenLast: isListView
-        )
-    ).makeStateful();
-
-    return itemBuilder != null
-        ? itemBuilder(menuItem)
-        : menuItem;
-  }
 
   static bool needShowTopDivider({
     @required BuildContext context,
@@ -114,15 +92,73 @@ class SettingsMenu extends SettingsMenuEntry {
     return true;
   }
 
+  @override
+  _SettingsMenuState createState() => _SettingsMenuState();
+}
+class _SettingsMenuState extends State<SettingsMenu> {
+
+  SharedPreferences _preferences;
+  bool _loadedPreferences = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getInstance();
+  }
+
+  void getInstance() async {
+    _preferences = await SharedPreferences.getInstance();
+    setState(() => _loadedPreferences = true);
+  }
+
+  dynamic getPreferenceValue(Key key) {
+    return Settings.getWithInstance(key.toString(), _preferences);
+  }
+
+  Widget _buildMenuItem(
+      BuildContext context,
+      SettingsMenuItem item,
+      List<SettingsMenuItem> group
+  ) {
+    SettingsMenuItemBuilder menuItem = item.copyWith(
+        value: getPreferenceValue(item.key),
+        onChanged: (newValue) {
+          Settings.setWithInstance(item.key.toString(), newValue, _preferences).then(
+              (saved) {
+                if (saved) {
+                  if (item.onChanged != null) item.onChanged(newValue);
+                }
+              }
+          );
+        },
+        showTopDivider: SettingsMenu.needShowTopDivider(
+            context: context,
+            item: item,
+            group: group,
+            hideWhenFirst: widget.isListView
+        ),
+        showBottomDivider: SettingsMenu.needShowBottomDivider(
+            context: context,
+            item: item,
+            group: group,
+            hideWhenLast: widget.isListView
+        )
+    ).makeStateful();
+
+    return widget.itemBuilder != null
+        ? widget.itemBuilder(menuItem)
+        : menuItem;
+  }
+
   Widget _buildColumn(BuildContext context) {
-    List<SettingsMenuItem> group = groupBuilder(context);
+    List<SettingsMenuItem> group = widget.groupBuilder(context);
     return Column(
       children: group.map((item) => _buildMenuItem(context, item, group)).toList(),
     );
   }
 
   Widget _buildListView(BuildContext context) {
-    List<SettingsMenuItem> group = groupBuilder(context);
+    List<SettingsMenuItem> group = widget.groupBuilder(context);
     return ListView.builder(
         itemCount: group.length,
         itemBuilder: (context, index) {
@@ -132,8 +168,16 @@ class SettingsMenu extends SettingsMenuEntry {
     );
   }
 
+  Widget _buildLoading(BuildContext context) {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return isListView ? _buildListView(context) : _buildColumn(context);
+    if (!_loadedPreferences) return _buildLoading(context);
+
+    return widget.isListView ? _buildListView(context) : _buildColumn(context);
   }
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'settings.dart';
 
@@ -6,7 +5,7 @@ void main() => runApp(App());
 
 class App extends StatelessWidget {
 
-  List<SettingsMenuItem> _groupBuilder(BuildContext context) => [
+  List<SettingsMenuItem> _groupBuilder(BuildContext context) => <SettingsMenuItem>[
     SettingsMenuItem.individualSwitch(
       key: Key('SETTING_1'),
       leading: Icon(Icons.settings),
@@ -46,6 +45,7 @@ class App extends StatelessWidget {
             subtitle: Text('Описание настройки'),
           ),
           SettingsMenuItem.section(
+            key: Key('SETTINGS_SECTION'),
             title: Text('Section'),
             groupBuilder: (context) =>  <SettingsMenuItem>[
               SettingsMenuItem.simpleSwitch(
@@ -76,10 +76,10 @@ class App extends StatelessWidget {
       defaultValue: true,
       onChanged: (value) => print('value: $value'),
       groupBuilder: (context) => <SettingsMenuItem>[
-        SettingsMenuItem.builder(
+        SettingsMenuItem.custom(
           key: Key('SETTINGS_BUILDER'),
           title: Text('Builder'),
-          defaultValue: 5,
+          defaultValue: '5',
           builder: (context, widget) {
             return ListTile(
               title: widget.title,
@@ -106,6 +106,7 @@ class App extends StatelessWidget {
           onChanged: (value) => print('value: $value'),
         ),
         SettingsMenuItem.section(
+          key: Key('SETTINGS_SECTION_1'),
           title: Text('Section 1'),
           groupBuilder: (context) => <SettingsMenuItem>[
             SettingsMenuItem.simpleSwitch(
@@ -134,6 +135,7 @@ class App extends StatelessWidget {
 //      subtitle: Text('Описание настройки'),
 //    ),
     SettingsMenuItem.section(
+      key: Key('SETTINGS_SECTION_2'),
       title: Text('Section 2'),
       groupBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.simpleSwitch(
@@ -217,7 +219,7 @@ class App extends StatelessWidget {
         )
       ],
     ),
-    SettingsMenuItem<int>.multipleChoice(
+    SettingsMenuItem.multipleChoice(
       key: Key('SETTING_8'),
       leading: Icon(Icons.settings),
       title: Text('Multiple Choice'),
@@ -226,34 +228,34 @@ class App extends StatelessWidget {
 //        String titles = choices.map((choice) => choice.title).join(', ');
 //        return Text('$titles');
 //      },
-      choices: <Choice<int>>[
-        Choice(title: Text('Опция 1'), subtitle: Text('Описание опции'), value: 1),
-        Choice(title: Text('Опция 2'), value: 2),
-        Choice(title: Text('Опция 3'), value: 3),
-        Choice(title: Text('Опция 4'), value: 4),
+      choices: <Choice>[
+        Choice(title: Text('Опция 1'), subtitle: Text('Описание опции'), value: '1'),
+        Choice(title: Text('Опция 2'), value: '2'),
+        Choice(title: Text('Опция 3'), value: '3'),
+        Choice(title: Text('Опция 4'), value: '4'),
       ],
-      defaultValue: <int>[1, 3],
-      onChanged: (List<int> value) => print('value: $value'),
+      defaultValue: ['1', '3'],
+      onChanged: (List<String> value) => print('value: $value'),
       //enabled: false
     ),
-    SettingsMenuItem<int>.singleChoice(
+    SettingsMenuItem.singleChoice(
       key: Key('SETTING_9'),
       leading: Icon(Icons.settings),
       title: Text('Single Choice'),
       //statusTextBuilder: (context, Choice<int> choice) => Text('${choice.title}'),
       pageBuilder: _buildPage,
-      choices: <Choice<int>>[
-        Choice(title: Text('Опция 1'), value: 1),
-        Choice(title: Text('Опция 2'), subtitle: Text('Описание опции'), value: 2),
-        Choice(title: Text('Опция 3'), value: 3),
-        Choice(title: Text('Опция 4'), value: 4),
+      choices: <Choice>[
+        Choice(title: Text('Опция 1'), value: '1'),
+        Choice(title: Text('Опция 2'), subtitle: Text('Описание опции'), value: '2'),
+        Choice(title: Text('Опция 3'), value: '3'),
+        Choice(title: Text('Опция 4'), value: '4'),
       ],
-      defaultValue: 1,
-      onChanged: (int value) => print('value: $value'),
+      defaultValue: '1',
+      onChanged: (String value) => print('value: $value'),
       //enabled: false
     ),
     SettingsMenuItem.time(
-      key: Key('SETTINGS_10'),
+      key: Key('SETTINGS_TIME'),
       leading: Icon(Icons.settings),
       title: Text('Time'),
       defaultValue: TimeOfDay(hour: 6, minute: 0),
@@ -262,7 +264,7 @@ class App extends StatelessWidget {
       onChanged: (value) => print('value: $value'),
     ),
     SettingsMenuItem.date(
-      key: Key('SETTINGS_10'),
+      key: Key('SETTINGS_DATE'),
       leading: Icon(Icons.settings),
       title: Text('Date'),
       firstDate: DateTime(2019),
@@ -273,7 +275,7 @@ class App extends StatelessWidget {
       onChanged: (value) => print('value: $value'),
     ),
     SettingsMenuItem.dateTime(
-      key: Key('SETTINGS_10'),
+      key: Key('SETTINGS_DATETIME'),
       leading: Icon(Icons.settings),
       title: Text('DateTime'),
       firstDate: DateTime(2019),
