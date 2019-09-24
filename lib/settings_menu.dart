@@ -120,17 +120,21 @@ class _SettingsMenuState extends State<SettingsMenu> {
       SettingsMenuItem item,
       List<SettingsMenuItem> group
   ) {
+    void _handleChanged(newValue) {
+      Settings.setWithInstance(
+        item.key.toString(),
+        newValue,
+        _preferences
+      ).then(
+        (saved) => (saved && item.onChanged != null)
+          ? item.onChanged(newValue)
+          : null
+      );
+    };
+
     SettingsMenuItemBuilder menuItem = item.copyWith(
         value: getPreferenceValue(item.key),
-        onChanged: (newValue) {
-          Settings.setWithInstance(item.key.toString(), newValue, _preferences).then(
-              (saved) {
-                if (saved) {
-                  if (item.onChanged != null) item.onChanged(newValue);
-                }
-              }
-          );
-        },
+        onChanged: _handleChanged,
         showTopDivider: SettingsMenu.needShowTopDivider(
             context: context,
             item: item,
