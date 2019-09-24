@@ -23,8 +23,8 @@ class SingleChoice<T> extends StatelessWidget {
         visible: false,
         child: CircleAvatar()
       ),
-      title: option.label,
-      subtitle: option.secondaryText,
+      title: option.title,
+      subtitle: option.subtitle,
       value: option.value,
       groupValue: value,
       onChanged: onChanged,

@@ -19,8 +19,8 @@ class MultipleChoice<T> extends StatelessWidget {
     Choice option = choices[index];
     bool checked = value.contains(option.value);
     return CheckboxListTile(
-        title: option.label,
-        subtitle: option.secondaryText,
+        title: option.title,
+        subtitle: option.subtitle,
         value: checked,
         onChanged: (bool checked) {
           List<T> _value = []..addAll(value);

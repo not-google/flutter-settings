@@ -44,11 +44,10 @@ enum SettingsPattern {
 
 class SettingsMenuItemBuilder<T> extends StatelessWidget {
   SettingsMenuItemBuilder({
-    Key key,
-    this.id,
-    this.label,
+    this.key,
+    this.title,
     @required this.builder,
-    @required this.initialValue,
+    @required this.defaultValue,
     this.value,
     this.enabled = true,
     this.onChanged,
@@ -56,7 +55,7 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
     this.pageBuilder = SettingsPageRoute.pageBuilder,
     this.pageContentBuilder,
     this.groupBuilder,
-    this.selectedId,
+    this.selectedKey,
     this.onShowSearch,
     this.showTopDivider = true,
     this.showBottomDivider = true,
@@ -66,10 +65,10 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
     assert(builder != null),
     super(key: key);
 
-  final String id;
-  final Text label;
+  final Key key;
+  final Text title;
   final bool enabled;
-  final initialValue;
+  final defaultValue;
   final value;
   final onChanged;
   final SettingsMenuItemStateBuilder builder;
@@ -77,19 +76,19 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
   final SettingsMenuItemStateBuilder pageContentBuilder;
   final SettingsPageRouteBuilder pageBuilder;
   final SettingsGroupBuilder groupBuilder;
-  final String selectedId;
+  final Key selectedKey;
   final VoidCallback onShowSearch;
   final bool showTopDivider;
   final bool showBottomDivider;
   final SettingsPattern pattern;
 
-  bool get selected => selectedId == id;
+  bool get selected => selectedKey == key;
 
   SettingsMenuItemBuilder copyWith({
-    String id,
-    Text label,
+    Key key,
+    Text title,
     bool enabled,
-    initialValue,
+    defaultValue,
     value,
     onChanged,
     SettingsMenuItemStateBuilder builder,
@@ -97,16 +96,16 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
     SettingsMenuItemStateBuilder pageContentBuilder,
     SettingsPageRouteBuilder pageBuilder,
     SettingsGroupBuilder groupBuilder,
-    String selectedId,
+    Key selectedKey,
     VoidCallback onShowSearch,
     bool showTopDivider,
     bool showBottomDivider,
     SettingsPattern pattern
   }) => SettingsMenuItemBuilder(
-      id: id ?? this.id,
-      label: label ?? this.label,
+      key: key ?? this.key,
+      title: title ?? this.title,
       enabled: enabled ?? this.enabled,
-      initialValue: initialValue ?? this.initialValue,
+      defaultValue: defaultValue ?? this.defaultValue,
       value: value ?? this.value,
       onChanged: onChanged ?? this.onChanged,
       builder: builder ?? this.builder,
@@ -114,7 +113,7 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
       pageContentBuilder: pageContentBuilder ?? this.pageContentBuilder,
       pageBuilder: pageBuilder ?? this.pageBuilder,
       groupBuilder: groupBuilder ?? this.groupBuilder,
-      selectedId: selectedId ?? this.selectedId,
+      selectedKey: selectedKey ?? this.selectedKey,
       onShowSearch: onShowSearch ?? this.onShowSearch,
       showTopDivider: showTopDivider ?? this.showTopDivider,
       showBottomDivider: showBottomDivider ?? this.showBottomDivider,
@@ -122,7 +121,7 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
   );
 
   SettingsMenuItemBuilder makeStateful() {
-    ValueNotifier _notifier = ValueNotifier(initialValue);
+    ValueNotifier _notifier = ValueNotifier(defaultValue);
 
     void handleChanged(newValue) {
       if (onChanged != null) onChanged(newValue);
@@ -147,10 +146,14 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
     );
   }
 
+  Widget buildControl(BuildContext context) {
+    return controlBuilder(context, this);
+  }
+
   Widget buildPage(BuildContext context) {
     return pageBuilder(
         context,
-        label,
+        title,
         pageContentBuilder(context, this),
         onShowSearch
     );
@@ -162,53 +165,53 @@ class SettingsMenuItemBuilder<T> extends StatelessWidget {
 
 class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
   SettingsMenuItem.builder({
-    Key key,
-    @required String id,
+    @required Key key,
     @required SettingsMenuItemStateBuilder builder,
     SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
     SettingsMenuItemStateBuilder controlBuilder,
     SettingsMenuItemStateBuilder pageContentBuilder,
     SettingsGroupBuilder groupBuilder,
-    Text label,
-    @required T initialValue,
+    Text title,
+    @required T defaultValue,
     bool enabled = true,
     ValueChanged<T> onChanged,
   }) : super(
     key: key,
-    id: id,
-    label: label,
-    initialValue: initialValue,
+    title: title,
+    defaultValue: defaultValue,
     enabled: enabled,
     onChanged: onChanged,
-    builder: builder
+    groupBuilder: groupBuilder,
+    builder: builder,
+    controlBuilder: controlBuilder,
+    pageBuilder: pageBuilder,
+    pageContentBuilder: pageContentBuilder
   );
 
   SettingsMenuItem.simpleSwitch({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
-    Widget secondaryText,
-    @required bool initialValue,
+    @required Text title,
+    Widget subtitle,
+    @required bool defaultValue,
     bool enabled = true,
     ValueChanged<bool> onChanged,
   }) : super(
     key: key,
-    builder: (context, widget) => widget.controlBuilder(context, widget),
+    builder: (context, widget) => widget.buildControl(context),
     controlBuilder: (context, widget) => SwitchListTile(
       secondary: leading ?? Icon(null),
-      title: label,
-      subtitle: secondaryText,
+      title: title,
+      subtitle: subtitle,
       value: widget.value,
       selected: widget.selected,
       onChanged: widget.enabled
         ? (widget.onChanged ?? (value) => null)
         : null
     ),
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     pattern: SettingsPattern.simpleSwitch
   );
@@ -226,7 +229,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
         groupBuilder: groupBuilder,
         itemBuilder: (item) => item.copyWith(
           onShowSearch: widget.onShowSearch,
-          selectedId: widget.selectedId,
+          selectedKey: widget.selectedKey,
           enabled: widget.enabled
         )
       ),
@@ -240,13 +243,12 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
   );
 
   SettingsMenuItem.singleChoice({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
+    @required Text title,
     ValueBuilder<Choice<T>> statusTextBuilder,
     @required List<Choice<T>> choices,
-    @required T initialValue,
+    @required T defaultValue,
     SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
     bool enabled = true,
     ValueChanged<T> onChanged
@@ -255,13 +257,13 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     builder: (context, widget) {
       T value = widget.value;
       Choice<T> selectedChoice = choices.firstWhere((choice) => choice.value == value);
-      Widget secondaryText = (statusTextBuilder != null)
+      Widget subtitle = (statusTextBuilder != null)
         ? statusTextBuilder(context, selectedChoice)
-        : selectedChoice.label;
+        : selectedChoice.title;
       return ListTile(
         leading: leading ?? Icon(null),
-        title: label,
-        subtitle: secondaryText,
+        title: title,
+        subtitle: subtitle,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: widget.buildPage
@@ -276,33 +278,31 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       value: widget.value,
       onChanged: widget.onChanged,
     ),
-    pageContentBuilder: (context, widget) => widget.controlBuilder(context, widget),
+    pageContentBuilder: (context, widget) => widget.buildControl(context),
     pageBuilder: pageBuilder,
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     pattern: SettingsPattern.singleChoice
   );
 
   SettingsMenuItem.multipleChoice({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
+    @required Text title,
     ValueBuilder<List<Choice<T>>> statusTextBuilder,
     @required List<Choice<T>> choices,
-    @required List<T> initialValue,
+    @required List<T> defaultValue,
     bool enabled = true,
     ValueChanged<List<T>> onChanged
   }) : super(
     key: key,
     builder: (context, widget) => MultipleChoiceListTile<T>(
       leading: leading ?? Icon(null),
-      title: label,
+      title: title,
       statusTextBuilder: statusTextBuilder,
-      controlBuilder: (context) => widget.controlBuilder(context, widget),
+      controlBuilder: (context) => widget.buildControl(context),
       choices: choices,
       value: widget.value,
       enabled: widget.enabled,
@@ -313,21 +313,19 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       value: widget.value,
       onChanged: widget.onChanged
     ),
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     pattern: SettingsPattern.multipleChoice
   );
 
   SettingsMenuItem.slider({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
-    Widget secondaryText,
-    @required double initialValue,
+    @required Text title,
+    Widget subtitle,
+    @required double defaultValue,
     double min = 0.0,
     double max = 1.0,
     int divisions,
@@ -340,10 +338,10 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     bool enabled = true,
   }) : super(
     key: key,
-    builder: (context, widget) => widget.controlBuilder(context, widget),
+    builder: (context, widget) => widget.buildControl(context),
     controlBuilder: (context, widget) => SliderListTile(
       secondary: leading ?? Icon(null),
-      title: label,
+      title: title,
       value: widget.value,
       selected: widget.selected,
       min: min,
@@ -356,21 +354,19 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       onChangeStart: widget.enabled ? onChangeStart : null,
       onChangeEnd: widget.enabled ? onChangeEnd : null,
     ),
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     pattern: SettingsPattern.slider
   );
 
   SettingsMenuItem.date({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
+    @required Text title,
     ValueBuilder<DateTime> statusTextBuilder,
-    @required DateTime initialValue,
+    @required DateTime defaultValue,
     @required DateTime firstDate,
     @required DateTime lastDate,
     DatePickerMode initialDatePickerMode = DatePickerMode.day,
@@ -382,10 +378,10 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     ValueChanged<DateTime> onChanged
   }) : super(
     key: key,
-    builder: (context, widget) => widget.controlBuilder(context, widget),
+    builder: (context, widget) => widget.buildControl(context),
     controlBuilder: (context, widget) => DatePickerListTile(
       leading: leading ?? Icon(null),
-      title: label,
+      title: title,
       statusTextBuilder: statusTextBuilder,
       value: widget.value,
       firstDate: firstDate,
@@ -399,30 +395,28 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       selected: widget.selected,
       onChanged: widget.onChanged,
     ),
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     pattern: SettingsPattern.date
   );
 
   SettingsMenuItem.time({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
+    @required Text title,
     ValueBuilder<TimeOfDay> statusTextBuilder,
-    @required TimeOfDay initialValue,
+    @required TimeOfDay defaultValue,
     TransitionBuilder builder,
     bool enabled = true,
     ValueChanged<TimeOfDay> onChanged
   }) : super(
     key: key,
-    builder: (context, widget) => widget.controlBuilder(context, widget),
+    builder: (context, widget) => widget.buildControl(context),
     controlBuilder: (context, widget) => TimePickerListTile(
       leading: leading ?? Icon(null),
-      title: label,
+      title: title,
       statusTextBuilder: statusTextBuilder,
       value: widget.value,
       builder: builder,
@@ -430,21 +424,19 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       selected: widget.selected,
       onChanged: widget.onChanged,
     ),
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     pattern: SettingsPattern.time
   );
 
   SettingsMenuItem.dateTime({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
+    @required Text title,
     ValueBuilder<DateTime> statusTextBuilder,
-    @required DateTime initialValue,
+    @required DateTime defaultValue,
     @required DateTime firstDate,
     @required DateTime lastDate,
     DatePickerMode initialDatePickerMode = DatePickerMode.day,
@@ -456,10 +448,10 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     ValueChanged<DateTime> onChanged
   }) : super(
     key: key,
-    builder: (context, widget) => widget.controlBuilder(context, widget),
+    builder: (context, widget) => widget.buildControl(context),
     controlBuilder: (context, widget) => DateTimePickerListTile(
       leading: leading ?? Icon(null),
-      title: label,
+      title: title,
       statusTextBuilder: statusTextBuilder,
       value: widget.value,
       firstDate: firstDate,
@@ -473,20 +465,18 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       selected: widget.selected,
       onChanged: widget.onChanged,
     ),
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     pattern: SettingsPattern.dateTime
   );
 
   SettingsMenuItem.listSubpage({
-    Key key,
-    @required String id,
-    @required Text label,
+    @required Key key,
+    @required Text title,
     Widget leading,
-    Widget secondaryText,
+    Widget subtitle,
     @required SettingsGroupBuilder groupBuilder,
     SettingsPageRouteBuilder pageBuilder  = SettingsPageRoute.pageBuilder,
     bool enabled = true,
@@ -494,8 +484,8 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     key: key,
     builder: (context, widget) => ListTile(
       leading: leading ?? Icon(null),
-      title: label,
-      subtitle: secondaryText,
+      title: title,
+      subtitle: subtitle,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
@@ -509,28 +499,26 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       groupBuilder: groupBuilder,
       itemBuilder: (item) => item.copyWith(
         onShowSearch: widget.onShowSearch,
-        selectedId: widget.selectedId
+        selectedKey: widget.selectedKey
       )
     ),
     pageBuilder: pageBuilder,
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
     groupBuilder: groupBuilder,
     pattern: SettingsPattern.listSubpage
   );
 
   SettingsMenuItem.masterSwitch({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
+    @required Text title,
     Text switchTitle,
     ValueBuilder<bool> statusTextBuilder,
     @required WidgetBuilder inactiveBuilder,
     bool duplicateSwitch = false,
     @required SettingsGroupBuilder groupBuilder,
-    @required bool initialValue,
+    @required bool defaultValue,
     bool enabled = true,
     ValueChanged<bool> onChanged,
     SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder
@@ -538,7 +526,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     key: key,
     builder: (context, widget) => MasterSwitchListTile(
       leading: leading ?? Icon(null),
-      title: label,
+      title: title,
       statusTextBuilder: statusTextBuilder,
       showSwitch: duplicateSwitch,
       value: widget.value,
@@ -552,14 +540,14 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       ),
     ),
     controlBuilder: (context, widget) => MasterSwitch(
-      title: switchTitle ?? Text('Use ${label.data}'),
+      title: switchTitle ?? Text('Use ${title.data}'),
       value: widget.value,
       onChanged: widget.onChanged,
       activeContentBuilder: (context) => SettingsMenu(
         groupBuilder: groupBuilder,
         itemBuilder: (item) => item.copyWith(
           onShowSearch: widget.onShowSearch,
-          selectedId: widget.selectedId
+          selectedKey: widget.selectedKey
         ),
       ),
       inactiveContentBuilder: (context) => Container(
@@ -569,24 +557,22 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       )
     ),
     pageContentBuilder: (context, widget)
-      => widget.controlBuilder(context, widget),
+      => widget.buildControl(context),
     pageBuilder: pageBuilder,
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     groupBuilder: groupBuilder,
     pattern: SettingsPattern.masterSwitch
   );
 
   SettingsMenuItem.individualSwitch({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
+    @required Text title,
     @required Widget description,
-    @required bool initialValue,
+    @required bool defaultValue,
     bool enabled = true,
     SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
     ValueChanged<bool> onChanged
@@ -594,7 +580,7 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
     key: key,
     builder: (context, widget) => ListTile(
       leading: leading ?? Icon(null),
-      title: label,
+      title: title,
       subtitle: Text(
         widget.value
           ? SettingsLocalizations.activeLabel
@@ -614,38 +600,36 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       description: description,
       onChanged: widget.onChanged,
     ),
-    pageContentBuilder: (context, widget) => widget.controlBuilder(context, widget),
+    pageContentBuilder: (context, widget) => widget.buildControl(context),
     pageBuilder: pageBuilder,
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     pattern: SettingsPattern.individualSwitch
   );
 
   SettingsMenuItem.dependency({
-    Key key,
-    @required String id,
+    @required Key key,
     Widget leading,
-    @required Text label,
+    @required Text title,
     ValueBuilder<bool> statusTextBuilder,
     @required SettingsGroupBuilder groupBuilder,
-    @required bool initialValue,
+    @required bool defaultValue,
     ValueChanged<bool> onChanged,
     bool enabled = true,
   }) : super(
     key: key,
-    builder: (context, widget) => widget.controlBuilder(context, widget),
+    builder: (context, widget) => widget.buildControl(context),
     controlBuilder: (context, widget) => Dependency(
       leading: leading ?? Icon(null),
-      title: label,
+      title: title,
       statusTextBuilder: statusTextBuilder,
       dependentBuilder: (context, dependencyEnabled) => SettingsMenu.column(
         groupBuilder: groupBuilder,
         itemBuilder: (item) => item.copyWith(
           enabled: item.enabled == false ? false : dependencyEnabled,
-          selectedId: widget.selectedId,
+          selectedKey: widget.selectedKey,
           onShowSearch: widget.onShowSearch,
         )
       ),
@@ -654,10 +638,9 @@ class SettingsMenuItem<T> extends SettingsMenuItemBuilder<T> {
       selected: widget.selected,
       onChanged: widget.onChanged,
     ),
-    id: id,
-    label: label,
+    title: title,
     enabled: enabled,
-    initialValue: initialValue,
+    defaultValue: defaultValue,
     onChanged: onChanged,
     groupBuilder: groupBuilder,
     pattern: SettingsPattern.dependency

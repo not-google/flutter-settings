@@ -86,11 +86,11 @@ class DatePickerListTile extends StatelessWidget {
       return statusTextBuilder(context, value);
 
     RegExp timeRegExp = RegExp(' [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}\$');
-    String secondaryText = value
+    String subtitle = value
         .toString()
         .replaceAll(timeRegExp, '');
     return Text(
-        secondaryText,
+        subtitle,
         softWrap: false,
         overflow: TextOverflow.ellipsis
     );

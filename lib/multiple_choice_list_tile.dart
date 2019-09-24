@@ -52,10 +52,10 @@ class MultipleChoiceListTile<T> extends StatelessWidget {
     if (statusTextBuilder != null) {
       return statusTextBuilder(context, checkedChoices);
     } else {
-      String secondaryText = checkedChoices.map(
-              (choice) => choice.label.data
+      String subtitle = checkedChoices.map(
+              (choice) => choice.title.data
       ).join(', ');
-      return Text(secondaryText);
+      return Text(subtitle);
     }
   }
 

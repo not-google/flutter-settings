@@ -46,7 +46,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     data.forEach((item) {
       List<String> itemPathSegments;
       bool isPage = item.pageContentBuilder != null;
-      bool hasMatch = _HighlightedText.hasMatch(item.label?.data, query);
+      bool hasMatch = _HighlightedText.hasMatch(item.title?.data, query);
       if (hasMatch) {
         suggestions.add(
             SettingsSearchSuggestion(
@@ -61,7 +61,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         if (isPage) {
           itemPathSegments = []
             ..addAll(pathSegments)
-            ..add(item.label.data);
+            ..add(item.title.data);
         }
 
         _getSuggestions(
@@ -97,7 +97,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     if (hasPage) {
       return suggestion.page
         .copyWith(
-          selectedId: suggestion.item.id,
+          selectedKey: suggestion.item.key,
           onShowSearch: onShowSearch
         )
         .makeStateful()
@@ -109,7 +109,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         SettingsMenu(
           groupBuilder: groupBuilder,
           itemBuilder: (item) => item.copyWith(
-            selectedId: suggestion.item.id,
+            selectedKey: suggestion.item.key,
             onShowSearch: onShowSearch
           )
         ),
@@ -142,29 +142,39 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   @override
   Widget buildResults(BuildContext context) => buildSuggestions(context);
 
+  Widget _buildClearHistoryAction(BuildContext context) {
+    if (_history.isEmpty) return Container();
+
+    return PopupMenuButton(
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 1,
+          child: ListTile(
+            title: Text('Clear history'),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildClearAction(BuildContext context) {
+    if (query.isEmpty) return Container();
+
+    return IconButton(
+      tooltip: 'Clear',
+      icon: const Icon(Icons.clear),
+      onPressed: () {
+        query = '';
+        showSuggestions(context);
+      },
+    );
+  }
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return <Widget>[
-      query.isEmpty
-          ? Container()
-          : IconButton(
-        tooltip: 'Clear',
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-          showSuggestions(context);
-        },
-      ),
-      PopupMenuButton(
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            value: 1,
-            child: ListTile(
-              title: Text('Clear history'),
-            ),
-          )
-        ],
-      )
+      _buildClearAction(context),
+      _buildClearHistoryAction(context)
     ];
   }
 }
@@ -182,11 +192,11 @@ class _SettingsSearchSuggestionList extends StatelessWidget {
 
   Widget _buildItem(BuildContext context, int index) {
     final SettingsSearchSuggestion suggestion = suggestions.elementAt(index);
-    final String label = suggestion.item.label.data;
+    final String title = suggestion.item.title.data;
     return ListTile(
       leading: query.isEmpty ? const Icon(Icons.history) : const Icon(null),
       title: _HighlightedText(
-        text: label,
+        text: title,
         highlight: query,
       ),
       subtitle: Text(suggestion.pathSegments.join(' > ')),
@@ -211,6 +221,8 @@ class _HighlightedText extends StatelessWidget {
     this.style,
     this.highlightStyle
   }) :
+    assert(text != null),
+    assert(highlight != null),
     super(key: key);
 
   final String text;

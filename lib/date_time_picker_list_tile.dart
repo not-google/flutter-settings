@@ -126,11 +126,11 @@ class DateTimePickerListTile extends StatelessWidget {
       return statusTextBuilder(context, value);
 
     RegExp millisecondsRegExp = RegExp('\.[0-9]{3}\$');
-    String secondaryText = value.toLocal()
+    String subtitle = value.toLocal()
         .toString()
         .replaceAll(millisecondsRegExp, '');
     return Text(
-        secondaryText,
+        subtitle,
         softWrap: false,
         overflow: TextOverflow.ellipsis
     );
