@@ -665,7 +665,7 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => widget
+          builder: widget.buildPage
         )
       ),
       selected: widget.selected,

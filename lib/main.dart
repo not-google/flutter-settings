@@ -22,12 +22,12 @@ class _SettingsPageRoute extends StatefulWidget {
 
   List<SettingsMenuItem> _groupBuilder(BuildContext context) => <SettingsMenuItem>[
     SettingsMenuItem.individualSwitch(
-      key: Key('SETTING_1'),
+      key: Key('SETTINGS_INDIVIDUAL_SWITCH'),
       leading: Icon(Icons.settings),
       title: Text('Individual Switch'),
       description: Text('Очень длинное описание, которое разьясняет назначение данной настройки'),
       defaultValue: true,
-      enabled: false,
+      enabled: true,
       onChangeSaved: (value) => print('value: $value'),
       //pageBuilder: _buildPage,
     ),
@@ -345,10 +345,10 @@ class _SettingsPageRouteState extends State<_SettingsPageRoute> {
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    _load();
   }
 
-  void _loadSettings() async {
+  void _load() async {
     _settings = await Settings.getInstance();
     setState(() => _loaded = true);
   }
