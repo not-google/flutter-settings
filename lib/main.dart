@@ -4,6 +4,21 @@ import 'settings.dart';
 void main() => runApp(App());
 
 class App extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      routes: {
+        Home.routeName: (context) => Home(),
+        SettingsPageRoute.routeName: (context) => _SettingsPageRoute()
+      },
+      initialRoute: SettingsPageRoute.routeName,
+      //theme: ThemeData.dark(),
+    );
+  }
+}
+
+class _SettingsPageRoute extends StatefulWidget {
+
 
   List<SettingsMenuItem> _groupBuilder(BuildContext context) => <SettingsMenuItem>[
     SettingsMenuItem.individualSwitch(
@@ -13,58 +28,58 @@ class App extends StatelessWidget {
       description: Text('Очень длинное описание, которое разьясняет назначение данной настройки'),
       defaultValue: true,
       enabled: false,
-      onChanged: (value) => print('value: $value'),
+      onChangeSaved: (value) => print('value: $value'),
       //pageBuilder: _buildPage,
     ),
     SettingsMenuItem.masterSwitch(
-        key: Key('SETTING_2'),
-        leading: Icon(Icons.settings),
-        title: Text('Master Switch'),
-        //masterSwitchTitle: Text('Use Master Switch'),
-        //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
-        inactiveBuilder: (context) => Text('Текст неактивного состояния'),
-        defaultValue: false,
-        duplicateSwitch: true,
-        onChanged: (bool value) => print('value: $value'),
-        //enabled: true,
-        //pageBuilder: _buildPage,
-        groupBuilder: (context) => <SettingsMenuItem>[
-          SettingsMenuItem.simpleSwitch(
-            key: Key('SETTING_2.1'),
-            leading: Icon(Icons.settings),
-            title: Text('Simple Switch 1'),
-            defaultValue: true,
-            subtitle: Text('Описание настройки'),
-            onChanged: (value) => print(value),
-          ),
-          SettingsMenuItem.simpleSwitch(
-            key: Key('SETTING_2.2'),
-            leading: Icon(Icons.settings),
-            title: Text('Simple Switch 2'),
-            defaultValue: false,
-            subtitle: Text('Описание настройки'),
-          ),
-          SettingsMenuItem.section(
-            key: Key('SETTINGS_SECTION'),
-            title: Text('Section'),
-            groupBuilder: (context) =>  <SettingsMenuItem>[
-              SettingsMenuItem.simpleSwitch(
-                key: Key('SETTING_3.3.1'),
-                leading: Icon(Icons.settings),
-                title: Text('Simple Switch 3'),
-                defaultValue: true,
-                subtitle: Text('Описание настройки'),
-              ),
-              SettingsMenuItem.simpleSwitch(
-                key: Key('SETTING_3.3.2'),
-                leading: Icon(Icons.settings),
-                title: Text('Simple Switch 4'),
-                defaultValue: false,
-                subtitle: Text('Описание настройки'),
-              ),
-            ],
-          )
-        ],
+      key: Key('SETTING_2'),
+      leading: Icon(Icons.settings),
+      title: Text('Master Switch'),
+      //masterSwitchTitle: Text('Use Master Switch'),
+      //statusTextBuilder: (_, isActive) => isActive ? Text('On') : Text('Status Off'),
+      inactiveBuilder: (context) => Text('Текст неактивного состояния'),
+      defaultValue: false,
+      duplicateSwitch: true,
+      onChangeSaved: (bool value) => print('value: $value'),
+      //enabled: true,
+      //pageBuilder: _buildPage,
+      groupBuilder: (context) => <SettingsMenuItem>[
+        SettingsMenuItem.simpleSwitch(
+          key: Key('SETTING_2.1'),
+          leading: Icon(Icons.settings),
+          title: Text('Simple Switch 1'),
+          defaultValue: true,
+          subtitle: Text('Описание настройки'),
+          onChangeSaved: (value) => print(value),
+        ),
+        SettingsMenuItem.simpleSwitch(
+          key: Key('SETTING_2.2'),
+          leading: Icon(Icons.settings),
+          title: Text('Simple Switch 2'),
+          defaultValue: false,
+          subtitle: Text('Описание настройки'),
+        ),
+        SettingsMenuItem.section(
+          key: Key('SETTINGS_SECTION'),
+          title: Text('Section'),
+          groupBuilder: (context) =>  <SettingsMenuItem>[
+            SettingsMenuItem.simpleSwitch(
+              key: Key('SETTING_3.3.1'),
+              leading: Icon(Icons.settings),
+              title: Text('Simple Switch 3'),
+              defaultValue: true,
+              subtitle: Text('Описание настройки'),
+            ),
+            SettingsMenuItem.simpleSwitch(
+              key: Key('SETTING_3.3.2'),
+              leading: Icon(Icons.settings),
+              title: Text('Simple Switch 4'),
+              defaultValue: false,
+              subtitle: Text('Описание настройки'),
+            ),
+          ],
+        )
+      ],
     ),
     SettingsMenuItem.dependency(
       key: Key('SETTING_3'),
@@ -74,19 +89,19 @@ class App extends StatelessWidget {
           ? Text('Зависимости доступны')
           : Text('Зависимости не доступны'),
       defaultValue: true,
-      onChanged: (value) => print('value: $value'),
+      onChangeSaved: (value) => print('value: $value'),
       groupBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.custom(
-          key: Key('SETTINGS_BUILDER'),
-          title: Text('Builder'),
-          defaultValue: '5',
-          builder: (context, widget) {
-            return ListTile(
-              title: widget.title,
-              subtitle: Text(widget.enabled ? 'Enabled' : 'Disabled'),
-              selected: widget.selected,
-            );
-          }
+            key: Key('SETTINGS_BUILDER'),
+            title: Text('Builder'),
+            defaultValue: '5',
+            builder: (context, widget) {
+              return ListTile(
+                title: widget.title,
+                subtitle: Text(widget.enabled ? 'Enabled' : 'Disabled'),
+                selected: widget.selected,
+              );
+            }
         ),
         SettingsMenuItem.simpleSwitch(
           key: Key('SETTING_3.1'),
@@ -94,7 +109,7 @@ class App extends StatelessWidget {
           title: Text('Simple Switch 5'),
           defaultValue: true,
           subtitle: Text('Описание настройки'),
-          onChanged: (value) => print('value: $value'),
+          onChangeSaved: (value) => print('value: $value'),
         ),
         SettingsMenuItem.simpleSwitch(
           key: Key('SETTING_3.2'),
@@ -103,7 +118,7 @@ class App extends StatelessWidget {
           defaultValue: true,
           enabled: false,
           subtitle: Text('Описание настройки'),
-          onChanged: (value) => print('value: $value'),
+          onChangeSaved: (value) => print('value: $value'),
         ),
         SettingsMenuItem.section(
           key: Key('SETTINGS_SECTION_1'),
@@ -235,7 +250,7 @@ class App extends StatelessWidget {
         Choice(title: Text('Опция 4'), value: '4'),
       ],
       defaultValue: ['1', '3'],
-      onChanged: (List<String> value) => print('value: $value'),
+      onChangeSaved: (List<String> value) => print('value: $value'),
       //enabled: false
     ),
     SettingsMenuItem.singleChoice(
@@ -251,7 +266,7 @@ class App extends StatelessWidget {
         Choice(title: Text('Опция 4'), value: '4'),
       ],
       defaultValue: '1',
-      onChanged: (String value) => print('value: $value'),
+      onChangeSaved: (String value) => print('value: $value'),
       //enabled: false
     ),
     SettingsMenuItem.time(
@@ -261,7 +276,7 @@ class App extends StatelessWidget {
       defaultValue: TimeOfDay(hour: 6, minute: 0),
       enabled: true,
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
-      onChanged: (value) => print('value: $value'),
+      onChangeSaved: (value) => print('value: $value'),
     ),
     SettingsMenuItem.date(
       key: Key('SETTINGS_DATE'),
@@ -272,7 +287,7 @@ class App extends StatelessWidget {
       defaultValue: DateTime(2020),
       enabled: true,
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
-      onChanged: (value) => print('value: $value'),
+      onChangeSaved: (value) => print('value: $value'),
     ),
     SettingsMenuItem.dateTime(
       key: Key('SETTINGS_DATETIME'),
@@ -283,7 +298,7 @@ class App extends StatelessWidget {
       defaultValue: DateTime(2020),
       enabled: true,
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
-      onChanged: (value) => print('value: $value'),
+      onChangeSaved: (value) => print('value: $value'),
     ),
     SettingsMenuItem.simpleSwitch(
       key: Key('SETTING_11'),
@@ -292,49 +307,73 @@ class App extends StatelessWidget {
       defaultValue: true,
       enabled: true,
       subtitle: Text('Описание настройки'),
-      onChanged: (value) => print('value: $value'),
+      onChangeSaved: (value) => print('value: $value'),
     ),
   ];
 
   Widget _buildPage(
-    BuildContext context,
-    Widget title,
-    Widget body,
-    VoidCallback onShowSearch
-  ) {
+      BuildContext context,
+      Widget title,
+      Widget body,
+      VoidCallback onShowSearch
+      ) {
     return Scaffold(
-      appBar: AppBar(
-        title: title,
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: onShowSearch
-          ),
-          IconButton(
-            icon: Icon(Icons.help),
-            onPressed: () => null
-          )
-        ],
-      ),
-      body: body
+        appBar: AppBar(
+          title: title,
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(Icons.search),
+                onPressed: onShowSearch
+            ),
+            IconButton(
+                icon: Icon(Icons.help),
+                onPressed: () => null
+            )
+          ],
+        ),
+        body: body
+    );
+  }
+
+  @override
+  _SettingsPageRouteState createState() => _SettingsPageRouteState();
+}
+class _SettingsPageRouteState extends State<_SettingsPageRoute> {
+  Settings _settings;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  void _loadSettings() async {
+    _settings = await Settings.getInstance();
+    setState(() => _loaded = true);
+  }
+
+  Widget _buildLoading(BuildContext context) {
+    return Center(
+      child: CircularProgressIndicator(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      routes: {
-        Home.routeName: (context) => Home(),
-        SettingsPageRoute.routeName: (context) => SettingsPageRoute(
-          title: Text('Settings 1'),
-          body: SettingsMenu(
-            groupBuilder: _groupBuilder,
-          ),
-          //builder: _buildPage,
-        )
-      },
-      initialRoute: SettingsPageRoute.routeName,
-      //theme: ThemeData.dark(),
+    if (!_loaded) return _buildLoading(context);
+
+    return SettingsPageRoute(
+      title: Text('Settings'),
+      body: SettingsMenu(
+        groupBuilder: widget._groupBuilder,
+        itemBuilder: (item) => item.copyWith(
+          onGetPreloaded: _settings.getPreloaded,
+          onGetValue: _settings.get,
+          onSetValue: _settings.set,
+        ),
+      ),
+      //builder: _buildPage,
     );
   }
 }

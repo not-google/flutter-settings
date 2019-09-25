@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'settings_menu_item.dart';
 import 'settings_menu.dart';
-import 'settings_page.dart';
+import 'settings_page_route.dart';
 
 class SettingsSearchSuggestion {
   SettingsSearchSuggestion({
@@ -19,15 +19,13 @@ class SettingsSearchSuggestion {
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
     @required this.groupBuilder,
-    @required this.title,
-    this.pageBuilder = SettingsPageRoute.pageBuilder,
+    @required this.pageWithSelectedBuilder,
     @required this.onShowSearch
   }) :
     assert(groupBuilder != null);
 
   final SettingsGroupBuilder groupBuilder;
-  final SettingsPageRouteBuilder pageBuilder;
-  final Widget title;
+  final SettingsPageRouteSelectedBuilder pageWithSelectedBuilder;
   final VoidCallback onShowSearch;
   final Iterable<SettingsSearchSuggestion> _history = [];
 
@@ -93,29 +91,19 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
 
   Widget _buildPage(BuildContext context, SettingsSearchSuggestion suggestion) {
     bool hasPage = suggestion.page != null;
+    Key selectedKey = suggestion.item.key;
 
     if (hasPage) {
       return suggestion.page
         .copyWith(
-          selectedKey: suggestion.item.key,
+          selectedKey: selectedKey,
           onShowSearch: onShowSearch
         )
         .makeStateful()
         .buildPage(context);
-    } else {
-      return pageBuilder(
-        context,
-        title,
-        SettingsMenu(
-          groupBuilder: groupBuilder,
-          itemBuilder: (item) => item.copyWith(
-            selectedKey: suggestion.item.key,
-            onShowSearch: onShowSearch
-          )
-        ),
-        onShowSearch
-      );
     }
+
+    return pageWithSelectedBuilder(context, selectedKey);
   }
 
   @override

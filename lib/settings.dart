@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 export 'settings_localizations.dart';
 export 'types.dart';
 export 'choice.dart';
-export 'settings_page.dart';
+export 'settings_page_route.dart';
 export 'settings_menu_item.dart';
 export 'settings_menu.dart';
 export 'settings_search_delegate.dart';
@@ -20,52 +21,54 @@ export 'settings_search_delegate.dart';
 //export 'time_picker_list_tile.dart';
 //export 'date_time_picker_list_tile.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
 class Settings {
+  Settings.createWith(this.preferences);
 
-  static Future<SharedPreferences> getInstance() async {
-    return await SharedPreferences.getInstance();
+  final SharedPreferences preferences;
+
+  static Future<Settings> getInstance() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    return Settings.createWith(preferences);
   }
 
-  static getWithInstance(String key, SharedPreferences preferences) {
-    String valueType = preferences.getString('_TYPE_OF_$key');
+  _get(Key key) {
+    String _key = key.toString();
+    String valueType = preferences.getString('_TYPE_OF_$_key');
 
     switch(valueType) {
-      case 'bool': return preferences.getBool(key);
-      case 'double': return preferences.getDouble(key);
-      case 'int': return preferences.getInt(key);
-      case 'String': return preferences.getString(key);
-      case 'List<String>': return preferences.getStringList(key);
+      case 'bool': return preferences.getBool(_key);
+      case 'double': return preferences.getDouble(_key);
+      case 'int': return preferences.getInt(_key);
+      case 'String': return preferences.getString(_key);
+      case 'List<String>': return preferences.getStringList(_key);
       case 'DateTime':
-        int millisecondsSinceEpoch = preferences.getInt(key);
+        int millisecondsSinceEpoch = preferences.getInt(_key);
         return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
       case 'TimeOfDay':
-        int timeInMinutes = preferences.getInt(key);
+        int timeInMinutes = preferences.getInt(_key);
         return _timeFromMinutes(timeInMinutes);
     }
   }
 
-  static get(String key) async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    return getWithInstance(key, preferences);
+  dynamic getPreloaded(Key key) {
+    return _get(key);
   }
 
-  static Future<bool> set(String key, value) async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    return setWithInstance(key, value, preferences);
+  Future<dynamic> get(Key key) async {
+    return _get(key);
   }
 
-  static setWithInstance(String key, value, SharedPreferences preferences) {
+  Future<bool> set(Key key, value) async {
+    String _key = key.toString();
     preferences.setString('_TYPE_OF_$key', value.runtimeType.toString());
 
-    return (value is bool) ? preferences.setBool(key, value)
-        : (value is double) ? preferences.setDouble(key, value)
-        : (value is int) ? preferences.setInt(key, value)
-        : (value is String) ? preferences.setString(key, value)
-        : (value is List<String>) ? preferences.setStringList(key, value)
-        : (value is DateTime) ? preferences.setInt(key, value.millisecondsSinceEpoch)
-        : (value is TimeOfDay) ? preferences.setInt(key, _timeToMinutes(value))
+    return (value is bool) ? preferences.setBool(_key, value)
+        : (value is double) ? preferences.setDouble(_key, value)
+        : (value is int) ? preferences.setInt(_key, value)
+        : (value is String) ? preferences.setString(_key, value)
+        : (value is List<String>) ? preferences.setStringList(_key, value)
+        : (value is DateTime) ? preferences.setInt(_key, value.millisecondsSinceEpoch)
+        : (value is TimeOfDay) ? preferences.setInt(_key, _timeToMinutes(value))
         : false;
   }
 
