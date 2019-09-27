@@ -3,9 +3,9 @@ import 'settings_menu.dart';
 import 'settings_menu_item.dart';
 import 'settings_search_delegate.dart';
 
-typedef SettingsPageRouteSelectedBuilder = Widget Function(
+typedef SettingsPageRouteWithItemBuilder = Widget Function(
   BuildContext context,
-  Key selectedKey
+  SettingsGroupItemBuilder itemBuilder
 );
 typedef SettingsPageRouteBuilder<T> = Widget Function(
     BuildContext context,
@@ -14,7 +14,7 @@ typedef SettingsPageRouteBuilder<T> = Widget Function(
     VoidCallback onShowSearch,
 );
 
-class SettingsPageRoute extends StatefulWidget {
+class SettingsPageRoute extends StatelessWidget {
   SettingsPageRoute({
     Key key,
     @required this.title,
@@ -53,75 +53,45 @@ class SettingsPageRoute extends StatefulWidget {
     );
   }
 
-  @override
-  _SettingsPageRouteState createState() => _SettingsPageRouteState();
-}
-
-class _SettingsPageRouteState extends State<SettingsPageRoute> {
-//  Settings _settings;
-//  bool _loaded = false;
-
-  Widget get _title => widget.title ?? Text(SettingsPageRoute.routeTitle);
-  SettingsMenu get _settingsMenu => widget.body;
+  Widget get _title => title ?? Text(SettingsPageRoute.routeTitle);
+  SettingsMenu get _settingsMenu => body;
   SettingsGroupBuilder get _groupBuilder => _settingsMenu.groupBuilder;
-
-//  @override
-//  void initState() {
-//    super.initState();
-//    _loadSettings();
-//  }
-//
-//  void _loadSettings() async {
-//    _settings = await Settings.getInstance();
-//    setState(() => _loaded = true);
-//  }
 
   void _showSearch(context) {
     showSearch(
         context: context,
-        delegate: widget.searchDelegate ?? SettingsSearchDelegate(
+        delegate: searchDelegate ?? SettingsSearchDelegate(
             groupBuilder: _groupBuilder,
-            pageWithSelectedBuilder: this.buildWithSelected,
-            onShowSearch: () => _showSearch(context)
+            itemBuilder: _buildItem,
+            pageBuilder: this.buildWithItemBuilder,
         )
     );
   }
 
-  Widget _buildBody(BuildContext context, [selectedKey]) {
-    return SettingsMenu(
-        groupBuilder: _groupBuilder,
-        itemBuilder: (item) {
-          item = _settingsMenu.itemBuilder != null
-              ? _settingsMenu.itemBuilder(item)
-              : item;
-          item = item.copyWith(
-            selectedKey: selectedKey,
-//            value: _settings.getLoaded(item.key.toString()),
-//            valueLoaded: _loaded,
-//            onGetValue: _settings.get,
-//            onSetValue: _settings.set,
-            onShowSearch: () => _showSearch(context)
-          );
-          return item;
-        }
+  SettingsMenuItemBuilder _buildItem(BuildContext context, SettingsMenuItemBuilder item) {
+    return (_settingsMenu.itemBuilder != null
+        ? _settingsMenu.itemBuilder(context, item)
+        : item
+    ).copyWith(
+      onShowSearch: () => _showSearch(context)
     );
   }
 
-  Widget _buildLoading(BuildContext context) {
-    return Center(
-      child: CircularProgressIndicator(),
+  Widget _buildBody(BuildContext context, [SettingsGroupItemBuilder itemBuilder]) {
+    return _settingsMenu.copyWith(
+      itemBuilder: itemBuilder ?? _buildItem
     );
   }
 
-  Widget buildWithSelected(BuildContext context, [selectedKey]) {
-    return widget.builder(
+  Widget buildWithItemBuilder(BuildContext context, [SettingsGroupItemBuilder itemBuilder]) {
+    return builder(
         context,
         _title,
-        _buildBody(context, selectedKey),
+        _buildBody(context, itemBuilder),
         () => _showSearch(context)
     );
   }
 
   @override
-  Widget build(BuildContext context) => buildWithSelected(context);
+  Widget build(BuildContext context) => buildWithItemBuilder(context);
 }

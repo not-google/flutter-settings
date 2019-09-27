@@ -50,7 +50,7 @@ class Settings {
     }
   }
 
-  dynamic getPreloaded(Key key) {
+  dynamic getLoaded(Key key) {
     return _get(key);
   }
 

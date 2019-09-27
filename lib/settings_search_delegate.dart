@@ -19,14 +19,16 @@ class SettingsSearchSuggestion {
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
     @required this.groupBuilder,
-    @required this.pageWithSelectedBuilder,
-    @required this.onShowSearch
+    @required this.itemBuilder,
+    @required this.pageBuilder,
   }) :
+    assert(pageBuilder != null),
+    assert(itemBuilder != null),
     assert(groupBuilder != null);
 
   final SettingsGroupBuilder groupBuilder;
-  final SettingsPageRouteSelectedBuilder pageWithSelectedBuilder;
-  final VoidCallback onShowSearch;
+  final SettingsGroupItemBuilder itemBuilder;
+  final SettingsPageRouteWithItemBuilder pageBuilder;
   final Iterable<SettingsSearchSuggestion> _history = [];
 
   List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
@@ -92,18 +94,21 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   Widget _buildPage(BuildContext context, SettingsSearchSuggestion suggestion) {
     bool hasPage = suggestion.page != null;
     Key selectedKey = suggestion.item.key;
+    SettingsGroupItemBuilder _itemBuilder = (context, item)
+      => itemBuilder(
+        context,
+        item.copyWith(
+          selectedKey: selectedKey
+        )
+      );
 
     if (hasPage) {
-      return suggestion.page
-        .copyWith(
-          selectedKey: selectedKey,
-          onShowSearch: onShowSearch
-        )
-        .makeStateful()
+      return itemBuilder(context, suggestion.page)
+        .copyWith(itemBuilder: _itemBuilder)
         .buildPage(context);
     }
 
-    return pageWithSelectedBuilder(context, selectedKey);
+    return pageBuilder(context, _itemBuilder);
   }
 
   @override

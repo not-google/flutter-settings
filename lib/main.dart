@@ -28,7 +28,7 @@ class _SettingsPageRoute extends StatefulWidget {
       description: Text('Очень длинное описание, которое разьясняет назначение данной настройки'),
       defaultValue: true,
       enabled: true,
-      onChangeSaved: (value) => print('value: $value'),
+      //onSetValue: (value) => print('value: $value'),
       //pageBuilder: _buildPage,
     ),
     SettingsMenuItem.masterSwitch(
@@ -40,7 +40,7 @@ class _SettingsPageRoute extends StatefulWidget {
       inactiveBuilder: (context) => Text('Текст неактивного состояния'),
       defaultValue: false,
       duplicateSwitch: true,
-      onChangeSaved: (bool value) => print('value: $value'),
+      //onSetValue: (bool value) => print('value: $value'),
       //enabled: true,
       //pageBuilder: _buildPage,
       groupBuilder: (context) => <SettingsMenuItem>[
@@ -50,7 +50,7 @@ class _SettingsPageRoute extends StatefulWidget {
           title: Text('Simple Switch 1'),
           defaultValue: true,
           subtitle: Text('Описание настройки'),
-          onChangeSaved: (value) => print(value),
+          //onSetValue: (value) => print(value),
         ),
         SettingsMenuItem.simpleSwitch(
           key: Key('SETTING_2.2'),
@@ -89,7 +89,7 @@ class _SettingsPageRoute extends StatefulWidget {
           ? Text('Зависимости доступны')
           : Text('Зависимости не доступны'),
       defaultValue: true,
-      onChangeSaved: (value) => print('value: $value'),
+      //onSetValue: (value) => print('value: $value'),
       groupBuilder: (context) => <SettingsMenuItem>[
         SettingsMenuItem.custom(
             key: Key('SETTINGS_BUILDER'),
@@ -109,7 +109,7 @@ class _SettingsPageRoute extends StatefulWidget {
           title: Text('Simple Switch 5'),
           defaultValue: true,
           subtitle: Text('Описание настройки'),
-          onChangeSaved: (value) => print('value: $value'),
+          //onSetValue: (value) => print('value: $value'),
         ),
         SettingsMenuItem.simpleSwitch(
           key: Key('SETTING_3.2'),
@@ -118,7 +118,7 @@ class _SettingsPageRoute extends StatefulWidget {
           defaultValue: true,
           enabled: false,
           subtitle: Text('Описание настройки'),
-          onChangeSaved: (value) => print('value: $value'),
+          //onSetValue: (value) => print('value: $value'),
         ),
         SettingsMenuItem.section(
           key: Key('SETTINGS_SECTION_1'),
@@ -177,7 +177,7 @@ class _SettingsPageRoute extends StatefulWidget {
       defaultValue: 0,
       min: 0,
       max: 100,
-      onChangeEnd: (double value) => print('value: $value'),
+      //onChangeEnd: (double value) => print('value: $value'),
     ),
     SettingsMenuItem.listSubpage(
       key: Key('ListSubpage'),
@@ -250,7 +250,7 @@ class _SettingsPageRoute extends StatefulWidget {
         Choice(title: Text('Опция 4'), value: '4'),
       ],
       defaultValue: ['1', '3'],
-      onChangeSaved: (List<String> value) => print('value: $value'),
+      //onSetValue: (List<String> value) => print('value: $value'),
       //enabled: false
     ),
     SettingsMenuItem.singleChoice(
@@ -266,7 +266,7 @@ class _SettingsPageRoute extends StatefulWidget {
         Choice(title: Text('Опция 4'), value: '4'),
       ],
       defaultValue: '1',
-      onChangeSaved: (String value) => print('value: $value'),
+      //onSetValue: (String value) => print('value: $value'),
       //enabled: false
     ),
     SettingsMenuItem.time(
@@ -276,7 +276,7 @@ class _SettingsPageRoute extends StatefulWidget {
       defaultValue: TimeOfDay(hour: 6, minute: 0),
       enabled: true,
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
-      onChangeSaved: (value) => print('value: $value'),
+      //onSetValue: (value) => print('value: $value'),
     ),
     SettingsMenuItem.date(
       key: Key('SETTINGS_DATE'),
@@ -287,7 +287,7 @@ class _SettingsPageRoute extends StatefulWidget {
       defaultValue: DateTime(2020),
       enabled: true,
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
-      onChangeSaved: (value) => print('value: $value'),
+      //onSetValue: (value) => print('value: $value'),
     ),
     SettingsMenuItem.dateTime(
       key: Key('SETTINGS_DATETIME'),
@@ -298,7 +298,7 @@ class _SettingsPageRoute extends StatefulWidget {
       defaultValue: DateTime(2020),
       enabled: true,
       //statusTextBuilder: (context, value) => Text(value.toIso8601String()),
-      onChangeSaved: (value) => print('value: $value'),
+      //onSetValue: (value) => print('value: $value'),
     ),
     SettingsMenuItem.simpleSwitch(
       key: Key('SETTING_11'),
@@ -307,7 +307,7 @@ class _SettingsPageRoute extends StatefulWidget {
       defaultValue: true,
       enabled: true,
       subtitle: Text('Описание настройки'),
-      onChangeSaved: (value) => print('value: $value'),
+      //onSetValue: (value) => print('value: $value'),
     ),
   ];
 
@@ -367,10 +367,9 @@ class _SettingsPageRouteState extends State<_SettingsPageRoute> {
       title: Text('Settings'),
       body: SettingsMenu(
         groupBuilder: widget._groupBuilder,
-        itemBuilder: (item) => item.copyWith(
-          onGetPreloaded: _settings.getPreloaded,
-          onGetValue: _settings.get,
-          onSetValue: _settings.set,
+        itemBuilder: (context, item) => item.copyWith(
+          onGetValue: () => _settings.getLoaded(item.key),
+          onSetValue: (value) => _settings.set(item.key, value),
         ),
       ),
       //builder: _buildPage,

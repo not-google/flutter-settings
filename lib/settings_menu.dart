@@ -1,45 +1,39 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_menu_item.dart';
 import 'settings.dart';
+
+//typedef SettingValueGetter<T> = FutureOr<T> Function(Key key);
+//typedef SettingValueSetter<T> = FutureOr<bool> Function(Key key, T value);
 
 enum SettingsMenuType {
   column,
   listView
 }
 
-abstract class SettingsMenuEntry extends StatelessWidget {
-  SettingsMenuEntry({
-    Key key,
-    @required this.type
-  }) : super(key: key);
-
-  final SettingsMenuType type;
-}
-
-class SettingsMenu extends SettingsMenuEntry {
+class SettingsMenu extends StatelessWidget {
   SettingsMenu({
     Key key,
     @required this.groupBuilder,
     this.itemBuilder,
+    this.type = SettingsMenuType.listView
   }) :
     assert(groupBuilder != null),
-    super(
-      key: key,
-      type: SettingsMenuType.listView
-    );
+    super(key: key);
 
-  SettingsMenu.column({
-    Key key,
-    @required this.groupBuilder,
-    this.itemBuilder,
-  }) :
-    assert(groupBuilder != null),
-    super(
-      key: key,
-      type: SettingsMenuType.column
+  SettingsMenu copyWith({
+    SettingsGroupBuilder groupBuilder,
+    SettingsGroupItemBuilder itemBuilder,
+    SettingsMenuType type
+  }) {
+    return SettingsMenu(
+      groupBuilder: groupBuilder ?? this.groupBuilder,
+      itemBuilder: itemBuilder ?? this.itemBuilder,
+      type: type ?? this.type
     );
+  }
 
+  final SettingsMenuType type;
   final SettingsGroupBuilder groupBuilder;
   final SettingsGroupItemBuilder itemBuilder;
 
@@ -92,12 +86,18 @@ class SettingsMenu extends SettingsMenuEntry {
     return true;
   }
 
+  SettingsMenuItemBuilder _buildItem(BuildContext context, SettingsMenuItemBuilder item) {
+    return (itemBuilder != null ? itemBuilder(context, item) : item).copyWith(
+      itemBuilder: _buildItem
+    ).makeStateful();
+  }
+
   Widget _buildMenuItem(
       BuildContext context,
       SettingsMenuItem item,
       List<SettingsMenuItem> group
   ) {
-    return (itemBuilder != null ? itemBuilder(item) : item).copyWith(
+    return _buildItem(context, item).copyWith(
         showTopDivider: SettingsMenu.needShowTopDivider(
             context: context,
             item: item,
@@ -110,7 +110,7 @@ class SettingsMenu extends SettingsMenuEntry {
             group: group,
             hideWhenLast: isListView
         )
-    ).makeStateful();
+    );
   }
 
   Widget _buildColumn(BuildContext context) {
