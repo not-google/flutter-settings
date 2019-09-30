@@ -22,16 +22,16 @@ export 'settings_search_delegate.dart';
 //export 'date_time_picker_list_tile.dart';
 
 class Settings {
-  Settings.createWith(this.preferences);
+  Settings.initWith(this.preferences);
 
   final SharedPreferences preferences;
 
   static Future<Settings> getInstance() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    return Settings.createWith(preferences);
+    return Settings.initWith(preferences);
   }
 
-  _get(Key key) {
+  dynamic get(Key key) {
     String _key = key.toString();
     String valueType = preferences.getString('_TYPE_OF_$_key');
 
@@ -50,15 +50,7 @@ class Settings {
     }
   }
 
-  dynamic getLoaded(Key key) {
-    return _get(key);
-  }
-
-  Future<dynamic> get(Key key) async {
-    return _get(key);
-  }
-
-  Future<bool> set(Key key, value) async {
+  Future<bool> set(Key key, value) {
     String _key = key.toString();
     preferences.setString('_TYPE_OF_$key', value.runtimeType.toString());
 

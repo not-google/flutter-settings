@@ -74,7 +74,7 @@ class SettingsPageRoute extends StatelessWidget {
         : item
     ).copyWith(
       onShowSearch: () => _showSearch(context)
-    );
+    ).makeStateful();
   }
 
   Widget _buildBody(BuildContext context, [SettingsGroupItemBuilder itemBuilder]) {

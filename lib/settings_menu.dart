@@ -89,7 +89,7 @@ class SettingsMenu extends StatelessWidget {
   SettingsMenuItemBuilder _buildItem(BuildContext context, SettingsMenuItemBuilder item) {
     return (itemBuilder != null ? itemBuilder(context, item) : item).copyWith(
       itemBuilder: _buildItem
-    ).makeStateful();
+    );
   }
 
   Widget _buildMenuItem(

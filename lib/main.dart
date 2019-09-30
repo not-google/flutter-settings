@@ -368,9 +368,10 @@ class _SettingsPageRouteState extends State<_SettingsPageRoute> {
       body: SettingsMenu(
         groupBuilder: widget._groupBuilder,
         itemBuilder: (context, item) => item.copyWith(
-          onGetValue: () => _settings.getLoaded(item.key),
+          onGetValue: () => _settings.get(item.key),
           onSetValue: (value) => _settings.set(item.key, value),
-        ),
+        )
+        //.makeStateful(),
       ),
       //builder: _buildPage,
     );
