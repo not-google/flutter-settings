@@ -15,8 +15,9 @@ class SettingsMenu extends StatelessWidget {
   SettingsMenu({
     Key key,
     @required this.groupBuilder,
-    this.itemBuilder = SettingsMenu.buildItem,
-    this.type = SettingsMenuType.listView
+    this.itemBuilder = SettingsMenu.defaultItemBuilder,
+    this.searchDelegate,
+    this.type = SettingsMenuType.listView,
   }) :
     assert(groupBuilder != null),
     super(key: key);
@@ -24,20 +25,23 @@ class SettingsMenu extends StatelessWidget {
   final SettingsMenuType type;
   final SettingsGroupBuilder groupBuilder;
   final SettingsGroupItemBuilder itemBuilder;
+  final SearchDelegate searchDelegate;
 
   SettingsMenu copyWith({
     SettingsGroupBuilder groupBuilder,
     SettingsGroupItemBuilder itemBuilder,
+    SearchDelegate searchDelegate,
     SettingsMenuType type
   }) {
     return SettingsMenu(
         groupBuilder: groupBuilder ?? this.groupBuilder,
         itemBuilder: itemBuilder ?? this.itemBuilder,
+        searchDelegate: searchDelegate ?? this.searchDelegate,
         type: type ?? this.type
     );
   }
 
-  static SettingsMenuItemBuilder buildItem(
+  static SettingsMenuItemBuilder defaultItemBuilder(
       BuildContext context,
       SettingsMenuItemBuilder item
   ) => item;
@@ -91,9 +95,21 @@ class SettingsMenu extends StatelessWidget {
     return true;
   }
 
-  SettingsMenuItemBuilder _buildItem(BuildContext context, SettingsMenuItemBuilder item) {
-    return itemBuilder(context, item).copyWith(
-      itemBuilder: _buildItem
+  SettingsMenuItemBuilder buildItem(BuildContext context, SettingsMenuItemBuilder item) {
+    SettingsMenuItemBuilder _item = itemBuilder(context, item);
+
+    return _item.copyWith(
+      itemBuilder: buildItem,
+      onShowSearch: _item.onShowSearch ?? () => showSettingsSearch(context)
+    ).makeStateful();
+  }
+
+  void showSettingsSearch(BuildContext context) {
+    showSearch(
+        context: context,
+        delegate: searchDelegate ?? SettingsSearchDelegate(
+            rootSettingsMenu: this
+        )
     );
   }
 
@@ -102,7 +118,7 @@ class SettingsMenu extends StatelessWidget {
       SettingsMenuItem item,
       List<SettingsMenuItem> group
   ) {
-    return _buildItem(context, item).copyWith(
+    return buildItem(context, item).copyWith(
         showTopDivider: SettingsMenu.needShowTopDivider(
             context: context,
             item: item,

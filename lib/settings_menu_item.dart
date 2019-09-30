@@ -71,7 +71,7 @@ class SettingsMenuItemBuilder extends StatelessWidget {
     this.onGetValue,
     this.onSetValue,
     this.controlBuilder,
-    this.pageBuilder = SettingsPageRoute.pageBuilder,
+    this.pageBuilder = SettingsPageRoute.defaultPageBuilder,
     this.pageContentBuilder,
     this.groupBuilder,
     this.itemBuilder,
@@ -232,7 +232,7 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
   SettingsMenuItem.custom({
     @required Key key,
     @required SettingsMenuItemStateBuilder builder,
-    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
+    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.defaultPageBuilder,
     SettingsMenuItemStateBuilder controlBuilder,
     SettingsMenuItemStateBuilder pageContentBuilder,
     SettingsGroupBuilder groupBuilder,
@@ -314,7 +314,7 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
     ValueBuilder<Choice> statusTextBuilder,
     @required List<Choice> choices,
     @required String defaultValue,
-    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
+    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.defaultPageBuilder,
     bool enabled = true,
     ValueSetter<String> onSetValue
   }) : super(
@@ -549,7 +549,7 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
     Widget leading,
     Widget subtitle,
     @required SettingsGroupBuilder groupBuilder,
-    SettingsPageRouteBuilder pageBuilder  = SettingsPageRoute.pageBuilder,
+    SettingsPageRouteBuilder pageBuilder  = SettingsPageRoute.defaultPageBuilder,
     bool enabled = true,
   }) : super(
     key: key,
@@ -590,7 +590,7 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
     @required bool defaultValue,
     bool enabled = true,
     ValueSetter<bool> onSetValue,
-    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder
+    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.defaultPageBuilder
   }) : super(
     key: key,
     builder: (context, widget) => MasterSwitchListTile(
@@ -641,7 +641,7 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
     @required Widget description,
     @required bool defaultValue,
     bool enabled = true,
-    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.pageBuilder,
+    SettingsPageRouteBuilder pageBuilder = SettingsPageRoute.defaultPageBuilder,
     ValueSetter<bool> onSetValue
   }) : super(
     key: key,

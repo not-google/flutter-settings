@@ -316,7 +316,7 @@ class _SettingsPageRoute extends StatefulWidget {
       Widget title,
       Widget body,
       VoidCallback onShowSearch
-      ) {
+  ) {
     return Scaffold(
         appBar: AppBar(
           title: title,
@@ -363,15 +363,24 @@ class _SettingsPageRouteState extends State<_SettingsPageRoute> {
   Widget build(BuildContext context) {
     if (!_loaded) return _buildLoading(context);
 
+//    return Scaffold(
+//      body: SettingsMenu(
+//          groupBuilder: widget._groupBuilder,
+//          itemBuilder: (context, item) => item.copyWith(
+//            onGetValue: () => _settings.get(item.key),
+//            onSetValue: (value) => _settings.set(item.key, value),
+//          )
+//      ),
+//    );
+
     return SettingsPageRoute(
-      title: Text('Settings'),
+      title: Text('Settings 111'),
       body: SettingsMenu(
         groupBuilder: widget._groupBuilder,
         itemBuilder: (context, item) => item.copyWith(
           onGetValue: () => _settings.get(item.key),
           onSetValue: (value) => _settings.set(item.key, value),
         )
-        //.makeStateful(),
       ),
       //builder: _buildPage,
     );

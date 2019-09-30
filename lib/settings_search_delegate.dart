@@ -16,15 +16,17 @@ class SettingsSearchSuggestion {
   final List<String> pathSegments;
 }
 
-class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
+class SettingsSearchDelegate extends SearchDelegate {
   SettingsSearchDelegate({
-    @required this.rootPageRoute,
-  }) :assert(rootPageRoute != null);
+    @required this.rootSettingsMenu,
+    this.rootPageRoute
+  }) :assert(rootSettingsMenu != null);
 
   final SettingsPageRoute rootPageRoute;
+  final SettingsMenu rootSettingsMenu;
   final Iterable<SettingsSearchSuggestion> _history = [];
 
-  SettingsGroupBuilder get _groupBuilder => rootPageRoute.body.groupBuilder;
+  SettingsGroupBuilder get _groupBuilder => rootSettingsMenu.groupBuilder;
 
   List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
     SettingsMenuItem itemWithPage,
@@ -91,7 +93,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
     Key selectedKey = suggestion.item.key;
 
     SettingsGroupItemBuilder _buildItemWithSelected = (context, item)
-      => rootPageRoute.buildItem(context, item)
+      => rootSettingsMenu.buildItem(context, item)
           .copyWith(selectedKey: selectedKey);
 
     // When searched placed on subpage
@@ -101,11 +103,23 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         .buildPage(context);
     }
 
-    // When searched placed on root page
-    return rootPageRoute.copyWith(
-      body: rootPageRoute.body.copyWith(
+    SettingsMenu settingsMenuWithSelected = rootSettingsMenu.copyWith(
         itemBuilder: _buildItemWithSelected
-      )
+    );
+
+    // When searched placed on root page
+    if (rootPageRoute != null) {
+      return rootPageRoute.copyWith(
+          body: settingsMenuWithSelected
+      );
+    }
+
+    // Default root page
+    return SettingsPageRoute.defaultPageBuilder(
+        context,
+        null,
+        settingsMenuWithSelected,
+        () => rootSettingsMenu.showSettingsSearch(context)
     );
   }
 

@@ -19,35 +19,30 @@ class SettingsPageRoute extends StatelessWidget {
     Key key,
     @required this.title,
     @required this.body,
-    this.builder = SettingsPageRoute.pageBuilder,
-    this.searchDelegate
+    this.builder = SettingsPageRoute.defaultPageBuilder,
   }) :
     assert(body != null),
     super(key: key);
 
   static String routeName = '/settings';
-  static String routeTitle = 'Settings';
 
   final Widget title;
   final SettingsMenu body;
   final SettingsPageRouteBuilder builder;
-  final SettingsSearchDelegate searchDelegate;
 
   copyWith({
     Widget title,
     SettingsMenu body,
-    SettingsPageRouteBuilder builder,
-    SettingsSearchDelegate searchDelegate
+    SettingsPageRouteBuilder builder
   }) {
     return SettingsPageRoute(
       title: title ?? this.title,
       body: body ?? this.body,
-      builder: builder ?? this.builder,
-      searchDelegate: searchDelegate ?? this.searchDelegate,
+      builder: builder ?? this.builder
     );
   }
 
-  static Widget pageBuilder(
+  static Widget defaultPageBuilder(
     BuildContext context,
     Widget title,
     Widget body,
@@ -55,7 +50,7 @@ class SettingsPageRoute extends StatelessWidget {
   ) {
     return Scaffold(
       appBar: AppBar(
-        title: title ?? Text(routeTitle),
+        title: title,
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
@@ -67,36 +62,23 @@ class SettingsPageRoute extends StatelessWidget {
     );
   }
 
-  Widget get _title => title ?? Text(SettingsPageRoute.routeTitle);
-  SettingsMenu get _settingsMenu => body;
-  SettingsGroupBuilder get _groupBuilder => _settingsMenu.groupBuilder;
-
-  void _showSearch(context) {
-    showSearch(
-        context: context,
-        delegate: searchDelegate ?? SettingsSearchDelegate(
+  Widget _buildSettingsMenu(BuildContext context) {
+    return this.body.copyWith(
+      searchDelegate: SettingsSearchDelegate(
+          rootSettingsMenu: body,
           rootPageRoute: this
-        )
-    );
-  }
-
-  SettingsMenuItemBuilder buildItem(BuildContext context, SettingsMenuItemBuilder item) {
-    return _settingsMenu.itemBuilder(context, item).copyWith(
-      onShowSearch: () => _showSearch(context)
-    ).makeStateful();
-  }
-
-  Widget _buildBody(BuildContext context) {
-    return _settingsMenu.copyWith(
-      itemBuilder: buildItem
+      )
     );
   }
 
   @override
-  Widget build(BuildContext context) => builder(
-    context,
-    _title,
-    _buildBody(context),
-    () => _showSearch(context)
-  );
+  Widget build(BuildContext context) {
+    SettingsMenu _settingsMenu = _buildSettingsMenu(context);
+    return builder(
+        context,
+        title,
+        _settingsMenu,
+        () => _settingsMenu.showSettingsSearch(context)
+    );
+  }
 }
