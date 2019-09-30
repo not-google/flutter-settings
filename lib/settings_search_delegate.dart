@@ -6,51 +6,46 @@ import 'settings_page_route.dart';
 class SettingsSearchSuggestion {
   SettingsSearchSuggestion({
     @required this.item,
-    this.page,
+    this.itemWithPage,
     this.pathSegments,
   }) :
     assert(item != null);
 
   final SettingsMenuItem item;
-  final SettingsMenuItem page;
+  final SettingsMenuItem itemWithPage;
   final List<String> pathSegments;
 }
 
 class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   SettingsSearchDelegate({
-    @required this.groupBuilder,
-    @required this.itemBuilder,
-    @required this.pageBuilder,
-  }) :
-    assert(pageBuilder != null),
-    assert(itemBuilder != null),
-    assert(groupBuilder != null);
+    @required this.rootPageRoute,
+  }) :assert(rootPageRoute != null);
 
-  final SettingsGroupBuilder groupBuilder;
-  final SettingsGroupItemBuilder itemBuilder;
-  final SettingsPageRouteWithItemBuilder pageBuilder;
+  final SettingsPageRoute rootPageRoute;
   final Iterable<SettingsSearchSuggestion> _history = [];
 
+  SettingsGroupBuilder get _groupBuilder => rootPageRoute.body.groupBuilder;
+
   List<SettingsSearchSuggestion> _getSuggestions(BuildContext context, {
-    SettingsMenuItem page,
+    SettingsMenuItem itemWithPage,
     SettingsMenuItem parent,
     List<SettingsSearchSuggestion> suggestions,
     List<String> pathSegments
   }) {
     List<SettingsMenuItem> data = parent != null
         ? parent.groupBuilder(context)
-        : this.groupBuilder(context);
+        : _groupBuilder(context);
     pathSegments = pathSegments ?? [];
     suggestions = suggestions ?? [];
 
     data.forEach((item) {
       List<String> itemPathSegments;
-      bool isPage = item.pageContentBuilder != null;
+      bool hasPageRoute = item.pageContentBuilder != null;
       bool hasMatch = _HighlightedText.hasMatch(item.title?.data, query);
       if (hasMatch) {
         suggestions.add(
             SettingsSearchSuggestion(
-                page: page,
+                itemWithPage: itemWithPage,
                 item: item,
                 pathSegments: pathSegments
             )
@@ -58,7 +53,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       }
 
       if (item.groupBuilder != null) {
-        if (isPage) {
+        if (hasPageRoute) {
           itemPathSegments = []
             ..addAll(pathSegments)
             ..add(item.title.data);
@@ -67,7 +62,7 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
         _getSuggestions(
             context,
             parent: item,
-            page: isPage ? item : page,
+            itemWithPage: hasPageRoute ? item : itemWithPage,
             suggestions: suggestions,
             pathSegments: itemPathSegments
         );
@@ -92,23 +87,26 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
   }
 
   Widget _buildPage(BuildContext context, SettingsSearchSuggestion suggestion) {
-    bool hasPage = suggestion.page != null;
+    bool hasPageRoute = suggestion.itemWithPage != null;
     Key selectedKey = suggestion.item.key;
-    SettingsGroupItemBuilder _itemBuilder = (context, item)
-      => itemBuilder(
-        context,
-        item.copyWith(
-          selectedKey: selectedKey
-        )
-      );
 
-    if (hasPage) {
-      return itemBuilder(context, suggestion.page)
-        .copyWith(itemBuilder: _itemBuilder)
+    SettingsGroupItemBuilder _buildItemWithSelected = (context, item)
+      => rootPageRoute.buildItem(context, item)
+          .copyWith(selectedKey: selectedKey);
+
+    // When searched placed on subpage
+    if (hasPageRoute) {
+      return _buildItemWithSelected(context, suggestion.itemWithPage)
+        .copyWith(itemBuilder: _buildItemWithSelected)
         .buildPage(context);
     }
 
-    return pageBuilder(context, _itemBuilder);
+    // When searched placed on root page
+    return rootPageRoute.copyWith(
+      body: rootPageRoute.body.copyWith(
+        itemBuilder: _buildItemWithSelected
+      )
+    );
   }
 
   @override
@@ -123,9 +121,9 @@ class SettingsSearchDelegate extends SearchDelegate<SettingsMenuItem> {
       onSelected: (SettingsSearchSuggestion suggestion) {
         close(context, null);
         Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (context) => _buildPage(context, suggestion)
-            )
+          MaterialPageRoute(
+            builder: (context) => _buildPage(context, suggestion)
+          )
         );
         //showResults(context);
       },

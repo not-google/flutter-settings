@@ -33,6 +33,20 @@ class SettingsPageRoute extends StatelessWidget {
   final SettingsPageRouteBuilder builder;
   final SettingsSearchDelegate searchDelegate;
 
+  copyWith({
+    Widget title,
+    SettingsMenu body,
+    SettingsPageRouteBuilder builder,
+    SettingsSearchDelegate searchDelegate
+  }) {
+    return SettingsPageRoute(
+      title: title ?? this.title,
+      body: body ?? this.body,
+      builder: builder ?? this.builder,
+      searchDelegate: searchDelegate ?? this.searchDelegate,
+    );
+  }
+
   static Widget pageBuilder(
     BuildContext context,
     Widget title,
@@ -61,37 +75,28 @@ class SettingsPageRoute extends StatelessWidget {
     showSearch(
         context: context,
         delegate: searchDelegate ?? SettingsSearchDelegate(
-            groupBuilder: _groupBuilder,
-            itemBuilder: _buildItem,
-            pageBuilder: this.buildWithItemBuilder,
+          rootPageRoute: this
         )
     );
   }
 
-  SettingsMenuItemBuilder _buildItem(BuildContext context, SettingsMenuItemBuilder item) {
-    return (_settingsMenu.itemBuilder != null
-        ? _settingsMenu.itemBuilder(context, item)
-        : item
-    ).copyWith(
+  SettingsMenuItemBuilder buildItem(BuildContext context, SettingsMenuItemBuilder item) {
+    return _settingsMenu.itemBuilder(context, item).copyWith(
       onShowSearch: () => _showSearch(context)
     ).makeStateful();
   }
 
-  Widget _buildBody(BuildContext context, [SettingsGroupItemBuilder itemBuilder]) {
+  Widget _buildBody(BuildContext context) {
     return _settingsMenu.copyWith(
-      itemBuilder: itemBuilder ?? _buildItem
-    );
-  }
-
-  Widget buildWithItemBuilder(BuildContext context, [SettingsGroupItemBuilder itemBuilder]) {
-    return builder(
-        context,
-        _title,
-        _buildBody(context, itemBuilder),
-        () => _showSearch(context)
+      itemBuilder: buildItem
     );
   }
 
   @override
-  Widget build(BuildContext context) => buildWithItemBuilder(context);
+  Widget build(BuildContext context) => builder(
+    context,
+    _title,
+    _buildBody(context),
+    () => _showSearch(context)
+  );
 }

@@ -15,11 +15,15 @@ class SettingsMenu extends StatelessWidget {
   SettingsMenu({
     Key key,
     @required this.groupBuilder,
-    this.itemBuilder,
+    this.itemBuilder = SettingsMenu.buildItem,
     this.type = SettingsMenuType.listView
   }) :
     assert(groupBuilder != null),
     super(key: key);
+
+  final SettingsMenuType type;
+  final SettingsGroupBuilder groupBuilder;
+  final SettingsGroupItemBuilder itemBuilder;
 
   SettingsMenu copyWith({
     SettingsGroupBuilder groupBuilder,
@@ -27,15 +31,16 @@ class SettingsMenu extends StatelessWidget {
     SettingsMenuType type
   }) {
     return SettingsMenu(
-      groupBuilder: groupBuilder ?? this.groupBuilder,
-      itemBuilder: itemBuilder ?? this.itemBuilder,
-      type: type ?? this.type
+        groupBuilder: groupBuilder ?? this.groupBuilder,
+        itemBuilder: itemBuilder ?? this.itemBuilder,
+        type: type ?? this.type
     );
   }
 
-  final SettingsMenuType type;
-  final SettingsGroupBuilder groupBuilder;
-  final SettingsGroupItemBuilder itemBuilder;
+  static SettingsMenuItemBuilder buildItem(
+      BuildContext context,
+      SettingsMenuItemBuilder item
+  ) => item;
 
   bool get isListView => type == SettingsMenuType.listView;
 
@@ -87,7 +92,7 @@ class SettingsMenu extends StatelessWidget {
   }
 
   SettingsMenuItemBuilder _buildItem(BuildContext context, SettingsMenuItemBuilder item) {
-    return (itemBuilder != null ? itemBuilder(context, item) : item).copyWith(
+    return itemBuilder(context, item).copyWith(
       itemBuilder: _buildItem
     );
   }

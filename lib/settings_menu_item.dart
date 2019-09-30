@@ -79,6 +79,7 @@ class SettingsMenuItemBuilder extends StatelessWidget {
     this.showTopDivider = true,
     this.showBottomDivider = true,
     this.loading = false,
+    this.isStateful = false,
     this.pattern,
   }) :
     assert(key != null),
@@ -105,6 +106,7 @@ class SettingsMenuItemBuilder extends StatelessWidget {
   final bool showTopDivider;
   final bool showBottomDivider;
   final bool loading;
+  final bool isStateful;
   final SettingsPattern pattern;
 
   bool get selected => selectedKey != null && selectedKey == key;
@@ -132,6 +134,7 @@ class SettingsMenuItemBuilder extends StatelessWidget {
     bool showTopDivider,
     bool showBottomDivider,
     bool loading,
+    bool isStateful,
     SettingsPattern pattern
   }) => SettingsMenuItemBuilder(
       key: key ?? this.key,
@@ -153,6 +156,7 @@ class SettingsMenuItemBuilder extends StatelessWidget {
       showTopDivider: showTopDivider ?? this.showTopDivider,
       showBottomDivider: showBottomDivider ?? this.showBottomDivider,
       loading: loading ?? this.loading,
+      isStateful: isStateful ?? this.isStateful,
       pattern: pattern ?? this.pattern
   );
 
@@ -200,7 +204,8 @@ class SettingsMenuItemBuilder extends StatelessWidget {
         controlBuilder: separated ? statefulBuilder(controlBuilder) : controlBuilder,
         //onSetValue: handleChangeSaved,
         onSetValue: handleSetValue,
-        loading: true
+        loading: true,
+        isStateful: true
     );
   }
 
