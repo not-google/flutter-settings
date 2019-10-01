@@ -31,36 +31,80 @@ class Settings {
     return Settings.initWith(preferences);
   }
 
-  dynamic get(Key key) {
-    String _key = key.toString();
-    String valueType = preferences.getString('_TYPE_OF_$_key');
+  bool getBool(Key key) => preferences.getBool('$key');
+  Future<bool> setBool(Key key, bool value) {
+    _setValueType(key, value);
+    return preferences.setBool('$key', value);
+  }
 
-    switch(valueType) {
-      case 'bool': return preferences.getBool(_key);
-      case 'double': return preferences.getDouble(_key);
-      case 'int': return preferences.getInt(_key);
-      case 'String': return preferences.getString(_key);
-      case 'List<String>': return preferences.getStringList(_key);
-      case 'DateTime':
-        int millisecondsSinceEpoch = preferences.getInt(_key);
-        return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
-      case 'TimeOfDay':
-        int timeInMinutes = preferences.getInt(_key);
-        return _timeFromMinutes(timeInMinutes);
+  double getDouble(Key key) => preferences.getDouble('$key');
+  Future<bool> setDouble(Key key, double value) {
+    _setValueType(key, value);
+    return preferences.setDouble('$key', value);
+  }
+
+  int getInt(Key key) => preferences.getInt('$key');
+  Future<bool> setInt(Key key, int value) {
+    _setValueType(key, value);
+    return preferences.setInt('$key', value);
+  }
+
+  String getString(Key key) => preferences.getString(key.toString());
+  Future<bool> setString(Key key, String value) {
+    _setValueType(key, value);
+    return preferences.setString('$key', value);
+  }
+
+  List<String> getStringList(Key key) => preferences.getStringList('$key');
+  Future<bool> setStringList(Key key, List<String> value) {
+    _setValueType(key, value);
+    return preferences.setStringList('$key', value);
+  }
+
+  DateTime getDateTime(Key key) => DateTime.fromMillisecondsSinceEpoch(
+      preferences.getInt('$key')
+  );
+  Future<bool> setDateTime(Key key, DateTime value) {
+    _setValueType(key, value);
+    return preferences.setInt('$key', value.millisecondsSinceEpoch);
+  }
+
+  TimeOfDay getTimeOfDay(Key key) => _timeFromMinutes(
+      preferences.getInt('$key')
+  );
+  Future<bool> setTimeOfDay(Key key, TimeOfDay value) {
+    _setValueType(key, value);
+    return preferences.setInt('$key', _timeToMinutes(value));
+  }
+
+  String _getValueType(Key key) => preferences.getString('_TYPE_OF_$key');
+  Future<bool> _setValueType(Key key, dynamic value)
+    => preferences.setString('_TYPE_OF_$key', '${value.runtimeType}');
+
+  dynamic get(Key key) {
+    String type = _getValueType(key);
+
+    switch(type) {
+      case 'bool': return getBool(key);
+      case 'double': return getDouble(key);
+      case 'int': return getInt(key);
+      case 'String': return getString(key);
+      case 'List<String>': return getStringList(key);
+      case 'DateTime': return getDateTime(key);
+      case 'TimeOfDay': return getTimeOfDay(key);
     }
   }
 
-  Future<bool> set(Key key, value) {
-    String _key = key.toString();
-    preferences.setString('_TYPE_OF_$key', value.runtimeType.toString());
+  Future<bool> set(Key key, dynamic value) {
+    _setValueType(key, value);
 
-    return (value is bool) ? preferences.setBool(_key, value)
-        : (value is double) ? preferences.setDouble(_key, value)
-        : (value is int) ? preferences.setInt(_key, value)
-        : (value is String) ? preferences.setString(_key, value)
-        : (value is List<String>) ? preferences.setStringList(_key, value)
-        : (value is DateTime) ? preferences.setInt(_key, value.millisecondsSinceEpoch)
-        : (value is TimeOfDay) ? preferences.setInt(_key, _timeToMinutes(value))
+    return (value is bool) ? setBool(key, value)
+        : (value is double) ? setDouble(key, value)
+        : (value is int) ? setInt(key, value)
+        : (value is String) ? setString(key, value)
+        : (value is List<String>) ? setStringList(key, value)
+        : (value is DateTime) ? setDateTime(key, value)
+        : (value is TimeOfDay) ? setTimeOfDay(key, value)
         : false;
   }
 

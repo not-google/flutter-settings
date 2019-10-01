@@ -8,16 +8,19 @@ class MasterSwitch extends StatelessWidget {
     @required this.value,
     @required this.activeContentBuilder,
     @required this.inactiveContentBuilder,
-    @required this.onChanged
+    @required this.onChanged,
+    this.loading = false
   }) :
     assert(title != null),
     assert(value != null),
+    assert(loading != null),
     assert(activeContentBuilder != null),
     assert(inactiveContentBuilder != null),
     super(key: key);
 
   final Text title;
   final bool value;
+  final bool loading;
   final WidgetBuilder activeContentBuilder;
   final WidgetBuilder inactiveContentBuilder;
   final ValueChanged<bool> onChanged;
@@ -27,6 +30,7 @@ class MasterSwitch extends StatelessWidget {
     return ContentSwitch(
       title: title,
       value: value,
+      loading: loading,
       contentBuilder: value ? activeContentBuilder : inactiveContentBuilder,
       onChanged: onChanged,
     );

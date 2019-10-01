@@ -101,7 +101,7 @@ class SettingsMenu extends StatelessWidget {
     return _item.copyWith(
       itemBuilder: buildItem,
       onShowSearch: _item.onShowSearch ?? () => showSettingsSearch(context)
-    ).makeStateful();
+    );
   }
 
   void showSettingsSearch(BuildContext context) {
