@@ -380,7 +380,11 @@ class _SettingsPageRouteState extends State<_SettingsPageRoute> {
             enabled: true,
             subtitle: Text('Описание настройки'),
             onGetValue: _settings.getBool,
-            onSetValue: _settings.setBool,
+            //onSetValue: _settings.setBool,
+            onSetValue: (key, value) async {
+              await Future.delayed(Duration(milliseconds: 1000));
+              return await _settings.setBool(key, value);
+            },
           ),
         ],
       ),

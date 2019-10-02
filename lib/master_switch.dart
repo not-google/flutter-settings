@@ -31,7 +31,8 @@ class MasterSwitch extends StatelessWidget {
       title: title,
       value: value,
       loading: loading,
-      contentBuilder: value ? activeContentBuilder : inactiveContentBuilder,
+      activeContentBuilder: activeContentBuilder,
+      inactiveContentBuilder: inactiveContentBuilder,
       onChanged: onChanged,
     );
   }

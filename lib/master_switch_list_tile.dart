@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'settings_localizations.dart';
+import 'status_switch.dart';
 import 'types.dart';
 
 class MasterSwitchListTile extends StatelessWidget {
@@ -12,12 +13,14 @@ class MasterSwitchListTile extends StatelessWidget {
     @required this.value,
     this.enabled = true,
     this.selected = false,
+    this.loading = false,
     @required this.onChanged,
     this.onTap
   }) :
     assert(title != null),
     assert(showSwitch != null),
     assert(value != null),
+    assert(loading != null),
     assert(enabled != null),
     assert(selected != null),
     super(key: key);
@@ -27,6 +30,7 @@ class MasterSwitchListTile extends StatelessWidget {
   final ValueBuilder<bool> statusTextBuilder;
   final bool showSwitch;
   final bool value;
+  final bool loading;
   final bool enabled;
   final bool selected;
   final ValueChanged<bool> onChanged;
@@ -36,9 +40,10 @@ class MasterSwitchListTile extends StatelessWidget {
     if (!showSwitch) return Container();
 
     return Container(
-      child: Switch(
+      child: StatusSwitch(
         value: value,
         onChanged: onChanged,
+        loading: loading,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       decoration: BoxDecoration(

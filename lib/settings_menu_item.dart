@@ -1,4 +1,3 @@
-//import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'settings_localizations.dart';
@@ -18,6 +17,8 @@ import 'master_switch.dart';
 import 'master_switch_list_tile.dart';
 import 'individual_switch.dart';
 import 'dependency.dart';
+import 'status_switch_list_tile.dart';
+
 
 typedef SettingsGroupBuilder = List<SettingsMenuItemBuilder> Function(BuildContext context);
 typedef SettingsGroupItemBuilder = SettingsMenuItemBuilder Function(
@@ -56,6 +57,16 @@ const List<SettingsPattern> patternsWithSeparatedControls = [
   SettingsPattern.masterSwitch,
   SettingsPattern.individualSwitch
 ];
+
+class SettingsMenuItemState {
+  SettingsMenuItemState({
+    this.value,
+    this.loading
+  });
+
+  final value;
+  final bool loading;
+}
 
 class SettingsMenuItemBuilder extends StatelessWidget {
   SettingsMenuItemBuilder({
@@ -166,7 +177,7 @@ class SettingsMenuItemBuilder extends StatelessWidget {
   FutureOr<bool> setValue(dynamic value) => onSetValue != null
       ? onSetValue(key, value)
       : false;
-  
+
   SettingsMenuItemBuilder buildItem(BuildContext context, SettingsMenuItemBuilder item) {
     return itemBuilder != null ? itemBuilder(context, item) : item;
   }
@@ -174,38 +185,44 @@ class SettingsMenuItemBuilder extends StatelessWidget {
   SettingsMenuItemBuilder makeStateful() {
     FutureOr _value = getValue();
     bool _loading = _value is Future;
-    ValueNotifier _notifier = ValueNotifier({
-      'value': _loading ? defaultValue : _value,
-      'loading': _loading
-    });
+    ValueNotifier<SettingsMenuItemState> _notifier = ValueNotifier(
+      SettingsMenuItemState(
+        value: _loading ? defaultValue : _value,
+        loading: _loading
+      )
+    );
 
     if (_loading) (_value as Future).then(
-      (value) => _notifier.value = value
+      (value) => _notifier.value = SettingsMenuItemState(
+        value: value,
+        loading: false
+      )
     );
 
     void handleChanged(dynamic newValue) async {
-      _notifier.value = {
-        'value': _notifier.value['value'],
-        'loading': true
-      };
+      var oldValue = _notifier.value.value;
+      _notifier.value = SettingsMenuItemState(
+          value: newValue,
+          loading: true
+      );
 
       bool saved = await setValue(newValue);
 
-      if (saved) _notifier.value = {
-        'value': newValue,
-        'loading': false
-      };
+      _notifier.value = SettingsMenuItemState(
+        value: saved ? newValue : oldValue,
+        loading: false
+      );
     }
 
     statefulBuilder(SettingsMenuItemStateBuilder builder)
       => (BuildContext context, SettingsMenuItemBuilder widget)
       => ValueListenableBuilder(
           valueListenable: _notifier,
-          builder: (context, value, _) => builder(
+          builder: (BuildContext context, SettingsMenuItemState state, _) => builder(
             context,
             widget.copyWith(
-              value: value['value'],
-              loading: value['loading']
+              value: state.value,
+              loading: state.loading,
             )
           )
         );
@@ -258,15 +275,15 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
   }) : super(
     key: key,
     builder: (context, widget) => widget.buildControl(context),
-    controlBuilder: (context, widget) => SwitchListTile(
+    controlBuilder: (context, widget) => StatusSwitchListTile(
       secondary: leading ?? Icon(null),
       title: title,
       subtitle: subtitle,
       value: widget.value,
+      loading: widget.loading,
       selected: widget.selected,
-      onChanged: widget.enabled
-        ? (widget.onChanged ?? (value) => null)
-        : null
+      enabled: widget.enabled,
+      onChanged: widget.onChanged
     ),
     title: title,
     enabled: enabled,
@@ -602,6 +619,7 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
       statusTextBuilder: statusTextBuilder,
       showSwitch: duplicateSwitch,
       value: widget.value,
+      loading: widget.loading,
       enabled: widget.enabled,
       selected: widget.selected,
       onChanged: widget.onChanged,

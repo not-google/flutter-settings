@@ -27,21 +27,26 @@ class IndividualSwitch extends StatelessWidget {
     );
   }
 
+  Widget _buildContent(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(
+          left: 72,
+          right: 16.0,
+          top: 16.0,
+          bottom: 16.0
+      ),
+      child: description,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ContentSwitch(
       title: _buildTitle(context),
       value: value,
       loading: loading,
-      contentBuilder: (context) => Container(
-        padding: const EdgeInsets.only(
-          left: 72,
-          right: 16.0,
-          top: 16.0,
-          bottom: 16.0
-        ),
-        child: description,
-      ),
+      activeContentBuilder: _buildContent,
+      inactiveContentBuilder: _buildContent,
       onChanged: onChanged,
     );
   }
