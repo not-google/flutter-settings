@@ -335,8 +335,14 @@ class _SettingsPageRouteState extends State<_SettingsPageRoute> {
               Choice(title: Text('Опция 4'), value: '4'),
             ],
             defaultValue: '1',
+            enabled: true,
             onGetValue: _settings.getString,
-            onSetValue: _settings.setString,
+            onSetValue: (key, value) async {
+              await Future.delayed(Duration(seconds: 1));
+
+              return false;
+              return _settings.setString(key, value);
+            },
           ),
           SettingsMenuItem.time(
             key: Key('SETTINGS_TIME'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'types.dart';
+import 'status_switch_list_tile.dart';
 
 class Dependency extends StatelessWidget {
   Dependency({
@@ -11,11 +12,13 @@ class Dependency extends StatelessWidget {
     this.dependencyEnabled = true,
     this.enabled = true,
     this.selected = false,
+    this.loading = false,
     @required this.onChanged
   }) :
     assert(title != null),
     assert(dependentBuilder != null),
     assert(dependencyEnabled != null),
+    assert(loading != null),
     assert(enabled != null),
     assert(selected != null),
     super(key: key);
@@ -26,6 +29,7 @@ class Dependency extends StatelessWidget {
   final ValueBuilder<bool> dependentBuilder;
   final bool dependencyEnabled;
   final bool enabled;
+  final bool loading;
   final bool selected;
   final ValueChanged<bool> onChanged;
 
@@ -39,12 +43,14 @@ class Dependency extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        SwitchListTile(
+        StatusSwitchListTile(
           secondary: leading,
           title: title,
           subtitle: _buildStatusText(context),
           value: dependencyEnabled,
-          onChanged: enabled ? (onChanged ?? (value) => null) : null,
+          enabled: enabled,
+          loading: loading,
+          onChanged: onChanged,
           selected: selected,
         ),
         dependentBuilder(context, dependencyEnabled)

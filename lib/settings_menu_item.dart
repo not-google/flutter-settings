@@ -353,6 +353,8 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
     controlBuilder: (context, widget) => SingleChoice(
       choices: choices,
       value: widget.value,
+      enabled: widget.enabled,
+      loading: widget.loading,
       onChanged: widget.onChanged,
     ),
     pageContentBuilder: (context, widget) => widget.buildControl(context),

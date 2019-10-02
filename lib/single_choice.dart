@@ -6,14 +6,20 @@ class SingleChoice extends StatelessWidget {
     Key key,
     @required this.choices,
     @required this.value,
+    this.enabled = true,
+    this.loading = false,
     @required this.onChanged
   }) :
     assert(value != null),
+    assert(enabled != null),
+    assert(loading != null),
     assert(choices != null),
     super(key: key);
 
   final List<Choice> choices;
   final String value;
+  final bool loading;
+  final bool enabled;
   final ValueChanged<String> onChanged;
 
   Widget _buildRadioListTile(BuildContext context, int index) {
@@ -27,16 +33,29 @@ class SingleChoice extends StatelessWidget {
       subtitle: option.subtitle,
       value: option.value,
       groupValue: value,
-      onChanged: onChanged,
+      onChanged: enabled ? onChanged : null,
       controlAffinity: ListTileControlAffinity.trailing
     );
   }
 
+  Widget _buildLoading(BuildContext context) {
+    if (loading) return LinearProgressIndicator();
+    return Container();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: choices.length,
-      itemBuilder: _buildRadioListTile
+    return IgnorePointer(
+      ignoring: loading,
+      child: Stack(
+        children: <Widget>[
+          _buildLoading(context),
+          ListView.builder(
+              itemCount: choices.length, // with loading indicator
+              itemBuilder: _buildRadioListTile
+          ),
+        ],
+      )
     );
   }
 }

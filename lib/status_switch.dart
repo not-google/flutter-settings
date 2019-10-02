@@ -23,6 +23,7 @@ class StatusSwitch extends StatelessWidget {
     this.dragStartBehavior = DragStartBehavior.start,
   }) : _switchType = _SwitchType.material,
     assert(loading != null),
+    assert(enabled != null),
     assert(dragStartBehavior != null),
     super(key: key);
 
@@ -42,6 +43,7 @@ class StatusSwitch extends StatelessWidget {
     this.dragStartBehavior = DragStartBehavior.start,
   }) : _switchType = _SwitchType.adaptive,
     assert(loading != null),
+    assert(enabled != null),
     assert(dragStartBehavior != null),
     super(key: key);
 
