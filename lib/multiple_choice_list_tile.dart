@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'settings_localizations.dart';
 import 'types.dart';
 import 'choice.dart';
+import 'multiple_choice.dart';
 
 const double _kListTileHeight = 56.0;
 
@@ -11,37 +11,66 @@ class MultipleChoiceListTile extends StatelessWidget {
     this.leading,
     @required this.title,
     this.statusTextBuilder,
-    @required this.controlBuilder,
     @required this.choices,
     @required this.value,
+    @required this.onChanged,
+    this.onSingleChanged,
     this.enabled = true,
     this.selected = false,
+    this.loading = false,
   }) :
     assert(title != null),
-    assert(controlBuilder != null),
     assert(choices != null),
     assert(value != null),
     assert(enabled != null),
     assert(selected != null),
+    assert(loading != null),
     super(key: key);
 
   final Widget leading;
   final Widget title;
   final ValueBuilder<List<Choice>> statusTextBuilder;
-  final WidgetBuilder controlBuilder;
   final List<Choice> choices;
   final List<String> value;
   final bool enabled;
   final bool selected;
+  final bool loading;
+  final ValueChanged<List<String>> onChanged;
+  final ValueChanged<List<String>> onSingleChanged;
 
   Widget _buildDialog(BuildContext context) {
-    return _ConfirmationDialog(
-      title: title,
-      contentPadding: const EdgeInsets.only(top: 16.0),
-      content: SizedBox(
-        height: choices.length * _kListTileHeight,
-        child: controlBuilder(context),
-      )
+    List<String> _value = value;
+    MaterialLocalizations localizations = MaterialLocalizations.of(context);
+    return AlertDialog(
+        title: title,
+        content: SizedBox(
+          height: choices.length * _kListTileHeight,
+          child: StatefulBuilder(
+            builder: (context, setState) => MultipleChoice(
+              choices: choices,
+              value: _value,
+              enabled: enabled,
+              onChanged: (newValue) {
+                if (onSingleChanged != null) onSingleChanged(newValue);
+                setState(() => _value = newValue);
+              }
+            )
+          ),
+        ),
+        contentPadding: const EdgeInsets.only(top: 16.0),
+        actions: <Widget>[
+          FlatButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(localizations.cancelButtonLabel)
+          ),
+          FlatButton(
+            onPressed: () {
+              onChanged(_value);
+              Navigator.of(context).pop();
+            },
+            child: Text(localizations.okButtonLabel)
+          )
+        ]
     );
   }
 
@@ -72,37 +101,6 @@ class MultipleChoiceListTile extends StatelessWidget {
       ),
       selected: selected,
       enabled: enabled,
-    );
-  }
-}
-
-class _ConfirmationDialog extends StatelessWidget {
-  _ConfirmationDialog({
-    Key key,
-    @required this.title,
-    @required this.content,
-    this.contentPadding = const EdgeInsets.only(top: 16.0),
-  }) : 
-    assert(title != null),
-    assert(content != null),
-    super(key: key);
-
-  final Widget title;
-  final Widget content;
-  final EdgeInsetsGeometry contentPadding;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: title,
-      content: content,
-      contentPadding: contentPadding,
-      actions: <Widget>[
-        FlatButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(SettingsLocalizations.done)
-        )
-      ]
     );
   }
 }

@@ -320,7 +320,10 @@ class _SettingsPageRouteState extends State<_SettingsPageRoute> {
             ],
             defaultValue: ['1', '3'],
             onGetValue: _settings.getStringList,
-            onSetValue: _settings.setStringList,
+            onSetValue: (key, value) async {
+              await Future.delayed(Duration(seconds: 1));
+              return _settings.setStringList(key, value);
+            },
           ),
           SettingsMenuItem.singleChoice(
             key: Key('SETTING_9'),

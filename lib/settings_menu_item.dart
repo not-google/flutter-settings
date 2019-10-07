@@ -384,15 +384,10 @@ class SettingsMenuItem extends SettingsMenuItemBuilder {
       leading: leading ?? Icon(null),
       title: title,
       statusTextBuilder: statusTextBuilder,
-      controlBuilder: (context) => widget.buildControl(context),
       choices: choices,
       value: widget.value,
       enabled: widget.enabled,
       selected: widget.selected,
-    ),
-    controlBuilder: (context, widget) =>  MultipleChoice(
-      choices: choices,
-      value: widget.value,
       onChanged: widget.onChanged
     ),
     title: title,

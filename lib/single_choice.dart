@@ -43,6 +43,13 @@ class SingleChoice extends StatelessWidget {
     return Container();
   }
 
+  Widget _buildListView(BuildContext context) {
+    return ListView.builder(
+      itemCount: choices.length,
+      itemBuilder: _buildRadioListTile
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
@@ -50,10 +57,7 @@ class SingleChoice extends StatelessWidget {
       child: Stack(
         children: <Widget>[
           _buildLoading(context),
-          ListView.builder(
-              itemCount: choices.length, // with loading indicator
-              itemBuilder: _buildRadioListTile
-          ),
+          _buildListView(context)
         ],
       )
     );
